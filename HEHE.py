@@ -7,11 +7,11 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
-from interpolation_statistics_window import InterpolationStatisticsWindow
 
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+        self.stopped_by_link = False  # For the linking feature
         self.initUI()
         
         # Initializing Signals' colors, ranges, types and titles
@@ -24,6 +24,12 @@ class SignalApp(QtWidgets.QWidget):
         self.title1 = "Square Wave Signal"
         self.title2 = "Cosine Wave Signal"
         
+        # Link state Flag
+        self.linked = False
+
+        # Sync Flag
+        self.syncing = False
+
         # Plotting Siganls with initialized properties
         self.plot_signals()
 
@@ -53,32 +59,35 @@ class SignalApp(QtWidgets.QWidget):
         
         # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget1)
+
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
         button_layout1 = self.create_button_layout(
             "Signal 1", self.play_signal1, self.pause_signal1, self.stop_signal1,
-            self.change_color1, self.zoom_in1, self.zoom_out1, self.show_signal1_statistics  
-        )
+            self.change_color1, self.zoom_in1, self.zoom_out1, self.show_signal1_statistics)
+
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
-        # creating import signal button
+
+        # Creating import signal button
         self.import_signal1_button = QtWidgets.QPushButton("Import")
         self.import_signal1_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
         self.import_signal1_button.clicked.connect(lambda: self.import_signal_file("graph1"))
         self.main_layout.addWidget(self.import_signal1_button)
 
-
         # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget2)
+
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
         button_layout2 = self.create_button_layout(
             "Signal 2", self.play_signal2, self.pause_signal2, self.stop_signal2,
-            self.change_color2, self.zoom_in2, self.zoom_out2, self.show_signal2_statistics 
-        )
+            self.change_color2, self.zoom_in2, self.zoom_out2, self.show_signal2_statistics)
+        
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
-        # creating import signal button
+
+        # Creating import signal button
         self.import_signal2_button = QtWidgets.QPushButton("Import")
         self.import_signal2_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
         self.import_signal2_button.clicked.connect(lambda: self.import_signal_file("graph2"))
@@ -95,6 +104,74 @@ class SignalApp(QtWidgets.QWidget):
         self.interpolate_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
         self.interpolate_button.clicked.connect(self.interpolate_signals)
         self.main_layout.addWidget(self.interpolate_button)
+
+        
+        # Link Button
+        self.link_button = QtWidgets.QPushButton("Link Graphs")
+        self.link_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        self.link_button.clicked.connect(self.toggle_link)
+        self.main_layout.addWidget(self.link_button)
+
+    # Generating the function responsible for linking/unlinking graphs
+    def toggle_link(self):
+        self.linked = not self.linked
+        self.link_button.setText("Unlink Graphs" if self.linked else "Link Graphs")
+
+        # Sync play state if linked
+        if self.linked:
+        # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
+            if self.playing1:
+                self.play_signal2()
+            elif self.playing2:
+                self.play_signal1()
+            self.link_viewports()
+        else: 
+            self.unlink_viewports()
+
+        # Ensure consistent signal speeds
+        if self.linked:
+            # Check if both timers are running and have the same interval
+            if self.timer1 is not None and self.timer2 is not None:
+                if self.timer1.interval() != self.timer2.interval():
+                    self.timer2.setInterval(self.timer1.interval())  # Sync intervals
+
+
+    def link_viewports(self):
+        # Sync the range and zoom between both graphs
+        # The sigRangeChanged signal is part of the pyqtgraph library.
+        self.plot_widget1.sigRangeChanged.connect(self.sync_range)
+        self.plot_widget2.sigRangeChanged.connect(self.sync_range)
+        
+        # Sync the initial view range when linking
+        self.sync_viewports()
+
+    def unlink_viewports(self):
+        # Properly disconnect the range syncing behavior to stop linking
+        self.plot_widget1.sigRangeChanged.disconnect(self.sync_range)
+        self.plot_widget2.sigRangeChanged.disconnect(self.sync_range)
+
+    def sync_viewports(self):
+        # Ensure both graphs have the same zoom and pan when linked
+        range1 = self.plot_widget1.viewRange() # returns a list containing two elements: the x-range and y-range
+        self.plot_widget2.setXRange(*range1[0], padding=0) # Padding = 0 is used to prevent signal shrinking by preventing buffer space
+        self.plot_widget2.setYRange(*range1[1], padding=0) # The asterisk in here unpacks the tuple so that setXRange() receives two args: start&end of range
+
+    def sync_range(self):
+        if self.syncing:
+            return  # Prevent recursive syncing
+
+        self.syncing = True
+
+        if self.sender() == self.plot_widget1:
+            range1 = self.plot_widget1.viewRange()
+            self.plot_widget2.setXRange(*range1[0], padding=0)
+            self.plot_widget2.setYRange(*range1[1], padding=0)
+        else:
+            range2 = self.plot_widget2.viewRange()
+            self.plot_widget1.setXRange(*range2[0], padding=0)
+            self.plot_widget1.setYRange(*range2[1], padding=0)
+    
+        self.syncing = False
 
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
@@ -126,20 +203,37 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
     def generate_cosine_wave(self, points):
         t = np.linspace(0, 1, points)
-        return (np.cos(2 * np.pi * 5 * t))  
+        return (np.cos(2*np.pi*5*t))  
 
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
     def plot_signals(self):
         self.plot_widget1.clear()  #The clear method is used to clear the frame each time before making the new frame!
-        self.plot_widget1.plot(self.signal2, pen=self.color2)
         self.plot_widget1.plot(self.signal1, pen=self.color1)
         self.plot_widget1.setTitle(self.title1)
         self.plot_widget1.setYRange(-1, 1)
+
+        # Store original x and y ranges after the first plot
+        self.original_x_range = self.plot_widget1.viewRange()[0]
+        self.original_y_range = self.plot_widget1.viewRange()[1]
+
+        # Enable panning
+        self.plot_widget1.setMouseEnabled(x=True, y=True)
 
         self.plot_widget2.clear() #The clear method is used to clear the frame each time before making the new frame!
         self.plot_widget2.plot(self.signal2, pen=self.color2)
         self.plot_widget2.setTitle(self.title2)
         self.plot_widget2.setYRange(-1, 1)
+
+        # Store original x and y ranges after the first plot
+        self.original_x_range2 = self.plot_widget2.viewRange()[0]
+        self.original_y_range2 = self.plot_widget2.viewRange()[1]
+
+        # Enable panning
+        self.plot_widget2.setMouseEnabled(x=True, y=True)
+
+        # Synchronize the zoom and pan if linked
+        if self.linked:
+            self.sync_viewports()  # Initial sync on plotting
 
     # Generating the function of playing signal 1
     def play_signal1(self):
@@ -149,11 +243,15 @@ class SignalApp(QtWidgets.QWidget):
                 self.timer1 = pg.QtCore.QTimer() # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                 self.timer1.timeout.connect(self.update_plot1)
                 self.timer1.start(100) #Frequent updates every 100ms
+            if self.linked and not self.playing2:
+                self.play_signal2()
 
     # Generating the function of pausing signal 1
     def pause_signal1(self):
         if self.playing1:
             self.playing1 = False
+            if self.linked:
+                self.pause_signal2()
 
     # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
@@ -161,12 +259,11 @@ class SignalApp(QtWidgets.QWidget):
             self.timer1.stop()
             self.timer1 = None
         self.playing1 = False
-        #To solve the problem of stopping after swapping:
-        if self.type1 == 'cosine':
-            self.signal1 = self.generate_cosine_wave(100)
-        else:
-            self.signal1 = self.generate_square_wave(100)
-        self.plot_signals()
+        if self.linked and not self.stopped_by_link:
+            self.stopped_by_link = True
+            self.stop_signal2()
+        self.reset_signal1()
+        self.stopped_by_link = False
 
     # Generating the function of playing signal 2
     def play_signal2(self):
@@ -176,11 +273,15 @@ class SignalApp(QtWidgets.QWidget):
                 self.timer2 = pg.QtCore.QTimer()
                 self.timer2.timeout.connect(self.update_plot2)
                 self.timer2.start(100)
+            if self.linked and not self.playing1:
+                self.play_signal1()
 
     # Generating the function of pausing signal 2
     def pause_signal2(self):
         if self.playing2:
             self.playing2 = False
+            if self.linked:
+                self.pause_signal1()
 
     # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
@@ -188,9 +289,22 @@ class SignalApp(QtWidgets.QWidget):
             self.timer2.stop()
             self.timer2 = None
         self.playing2 = False
-        #To solve the problem of stopping after swapping:
+        if self.linked and not self.stopped_by_link:
+            self.stopped_by_link = True
+            self.stop_signal1()
+        self.reset_signal2()
+        self.stopped_by_link = False
+
+    def reset_signal1(self):
+        if self.type1 == 'cosine':
+            self.signal1 = self.generate_cosine_wave(100)
+        else:
+            self.signal1 = self.generate_square_wave(100)
+        self.plot_signals()
+
+    def reset_signal2(self):
         if self.type2 == 'cosine':
-            self.signal2 = self.generate_cosine_wave(100) 
+            self.signal2 = self.generate_cosine_wave(100)
         else:
             self.signal2 = self.generate_square_wave(100)
         self.plot_signals()
@@ -238,12 +352,30 @@ class SignalApp(QtWidgets.QWidget):
         self.zoom_out(plot_widget=self.plot_widget2)
 
     def zoom_in(self, plot_widget):
-        x_range = plot_widget.viewRange()[0] # Gets the current x-axis range
-        plot_widget.setXRange(x_range[0] * 0.8, x_range[1] * 0.8) # Sets a new x-axis range, reducing the range by 20%
+        # Calculate the new ranges based on the original ranges
+        x_range = plot_widget.viewRange()[0]
+        y_range = plot_widget.viewRange()[1]
+        new_x_range = (x_range[0] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1, x_range[1] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
+        new_y_range = (y_range[0] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1, y_range[1] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
+        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+        # If linked, apply to second plot
+        if self.linked:
+            self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     def zoom_out(self, plot_widget):
-        x_range = plot_widget.viewRange()[0] # Gets the current x-axis range
-        plot_widget.setXRange(x_range[0] * 1.2, x_range[1] * 1.2) # Sets a new x-axis range, increasing the range by 20%
+        # Calculate the new ranges based on the original ranges
+        x_range = plot_widget.viewRange()[0]
+        y_range = plot_widget.viewRange()[1]
+        new_x_range = (x_range[0] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1, x_range[1] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
+        new_y_range = (y_range[0] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1, y_range[1] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
+        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+        # If linked, apply to second plot
+        if self.linked:
+            self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
@@ -265,7 +397,7 @@ class SignalApp(QtWidgets.QWidget):
             elif extension == '.bin':
                 with open(file_name, 'rb') as f:
                     # Load binary data assuming it's float32 by default
-                    signal_data = np.fromfile(f, dtype=dtype)
+                    signal_data = np.fromfile(f, dtype=np.dtype)
             else:
                 self.show_error_message("Unsupported file format.")
 
