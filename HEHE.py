@@ -181,7 +181,7 @@ class SignalApp(QtWidgets.QWidget):
 
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
-        self.linked = not self.linked
+        self.linked = not self.linked   
         self.link_button.setText("Unlink Graphs" if self.linked else "Link Graphs")
 
         # Sync play state if linked
@@ -439,6 +439,10 @@ class SignalApp(QtWidgets.QWidget):
             self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
             self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
+                # Update original ranges after zooming
+        self.original_x_range = new_x_range
+        self.original_y_range = new_y_range
+
     def zoom_out(self, plot_widget):
         # Calculate the new ranges based on the original ranges
         x_range = plot_widget.viewRange()[0]
@@ -452,6 +456,10 @@ class SignalApp(QtWidgets.QWidget):
             self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
             self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
+        # Update original ranges after zooming
+        self.original_x_range = new_x_range
+        self.original_y_range = new_y_range
+        
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
         self.signal1, self.signal2 = self.signal2, self.signal1
