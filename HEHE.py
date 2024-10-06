@@ -1,8 +1,9 @@
-import sys
+import sys, os
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
@@ -36,7 +37,7 @@ class SignalApp(QtWidgets.QWidget):
 
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer") # Window Title
-        self.setWindowIcon(QtGui.QIcon("C:\\Users\\LOQ\\Downloads\\Pulse.png")) # Window Icon
+        self.setWindowIcon(QtGui.QIcon("assets\\Pulse.png")) # Window Icon
         self.setStyleSheet("background-color: #2e2e2e;") # Dark Grey Color for the Window Background
         
         # Setting the Main layout (Organizing Structure On Top Of Each Other)
@@ -50,11 +51,8 @@ class SignalApp(QtWidgets.QWidget):
         self.plot_widget1.setBackground('black')
         self.plot_widget2.setBackground('black')
         
-        # Adding the two plotting widgets to the main "vertical" layout 
+        # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget1)
-        self.main_layout.addWidget(self.plot_widget2)
-
-
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
         button_layout1 = self.create_button_layout(
@@ -63,7 +61,15 @@ class SignalApp(QtWidgets.QWidget):
         )
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
+        # creating import signal button
+        self.import_signal1_button = QtWidgets.QPushButton("Import")
+        self.import_signal1_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        self.import_signal1_button.clicked.connect(lambda: self.import_signal_file("graph1"))
+        self.main_layout.addWidget(self.import_signal1_button)
 
+
+        # Adding the plotting widgets of the first signal to the main "vertical" layout 
+        self.main_layout.addWidget(self.plot_widget2)
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
         button_layout2 = self.create_button_layout(
@@ -72,6 +78,11 @@ class SignalApp(QtWidgets.QWidget):
         )
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
+        # creating import signal button
+        self.import_signal2_button = QtWidgets.QPushButton("Import")
+        self.import_signal2_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        self.import_signal2_button.clicked.connect(lambda: self.import_signal_file("graph2"))
+        self.main_layout.addWidget(self.import_signal2_button)
 
         # Swap Signals Button
         self.swap_button = QtWidgets.QPushButton("Swap Signals")
@@ -120,6 +131,7 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
     def plot_signals(self):
         self.plot_widget1.clear()  #The clear method is used to clear the frame each time before making the new frame!
+        self.plot_widget1.plot(self.signal2, pen=self.color2)
         self.plot_widget1.plot(self.signal1, pen=self.color1)
         self.plot_widget1.setTitle(self.title1)
         self.plot_widget1.setYRange(-1, 1)
@@ -240,6 +252,38 @@ class SignalApp(QtWidgets.QWidget):
         self.title1, self.title2 = self.title2, self.title1
         self.type1, self.type2 = self.type2,self.type1
         self.plot_signals()
+
+    # browsing local signal files, returning signal data as np array
+    def import_signal_file(self, graph):
+        file_name, _ = QFileDialog.getOpenFileName()
+        if file_name:
+            extension = os.path.splitext(file_name)[1].lower()
+            if extension == '.csv':
+                signal_data = np.genfromtxt(file_name, delimiter=',') # Assuming each row in the CSV represents signal data
+            elif extension == '.txt':
+                signal_data = np.loadtxt(file_name) # Assuming space-separated signal data in TXT file
+            elif extension == '.bin':
+                with open(file_name, 'rb') as f:
+                    # Load binary data assuming it's float32 by default
+                    signal_data = np.fromfile(f, dtype=dtype)
+            else:
+                self.show_error_message("Unsupported file format.")
+
+        if 'signal_data' in locals():
+            if graph == 'graph1':
+                self.signal1 = signal_data
+            elif graph == 'graph2':
+                self.signal2 = signal_data
+            
+    
+    def show_error_message(self, message):
+        # Create a QMessageBox for error
+        self.msg_box = QMessageBox()
+        self.msg_box.setIcon(QMessageBox.Critical)
+        self.msg_box.setText(message)
+        self.msg_box.setWindowTitle("Error")
+        self.msg_box.exec_()
+
 
     # Generating the function of interpolating(averaging)(gluing) both signals
     def interpolate_signals(self):
