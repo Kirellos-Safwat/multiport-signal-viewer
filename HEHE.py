@@ -268,7 +268,7 @@ class SignalApp(QtWidgets.QWidget):
                 self.signal2 = signal_data
             
         else:
-            self.show_error_message("Unsupported signal dimension." + str(signal_data.shape))
+            self.show_error_message("Unsupported signal dimension." + str(signal_data.ndim))
             
     
     def show_error_message(self, message):
