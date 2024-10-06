@@ -1,4 +1,5 @@
 import sys, os
+from PyQt5.QtCore import Qt
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
@@ -60,6 +61,20 @@ class SignalApp(QtWidgets.QWidget):
         # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget1)
 
+        # Create title input for Signal 1
+        self.title_input1 = QtWidgets.QLineEdit("Signal 1")
+        self.title_input1.setStyleSheet("color: white; font-size: 16px;")
+        self.title_input1.textChanged.connect(self.update_signal_titles)
+        self.main_layout.addWidget(self.title_input1)
+
+        # Checkbox for Signal 1 visibility
+        self.checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
+        self.checkbox1.setChecked(True)
+        self.checkbox1.stateChanged.connect(self.toggle_signal1)
+        self.checkbox1.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
+        self.main_layout.addWidget(self.checkbox1)
+
+
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
         button_layout1 = self.create_button_layout(
@@ -79,6 +94,19 @@ class SignalApp(QtWidgets.QWidget):
 
         # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget2)
+
+        # Create title input for Signal 2
+        self.title_input2 = QtWidgets.QLineEdit("Signal 2")
+        self.title_input2.setStyleSheet("color: white; font-size: 16px;")
+        self.title_input2.textChanged.connect(self.update_signal_titles)
+        self.main_layout.addWidget(self.title_input2)
+
+        # Checkbox for Signal 2 visibility
+        self.checkbox2 = QtWidgets.QCheckBox("Show Signal 2")
+        self.checkbox2.setChecked(True)
+        self.checkbox2.stateChanged.connect(self.toggle_signal2)
+        self.checkbox2.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
+        self.main_layout.addWidget(self.checkbox2)
 
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
@@ -118,6 +146,39 @@ class SignalApp(QtWidgets.QWidget):
         self.link_button.clicked.connect(self.toggle_link)
         self.main_layout.addWidget(self.link_button)
 
+    def sync_checkboxes(self):
+        if self.linked:
+            # Sync checkbox 1 with checkbox 2
+            if self.sender() == self.checkbox1:
+                self.checkbox2.setChecked(self.checkbox1.isChecked())
+            elif self.sender() == self.checkbox2:
+                self.checkbox1.setChecked(self.checkbox2.isChecked())
+
+    def update_signal_titles(self):
+        """ Updates the plot titles dynamically as the user changes the title inputs. """
+        self.plot_widget1.setTitle(self.title_input1.text())
+        self.plot_widget2.setTitle(self.title_input2.text())
+
+    def toggle_signal1(self, state):
+        if state == Qt.Checked:
+            # Plot signal1 only if it's checked
+            self.plot_widget1.clear()
+            self.plot_widget1.plot(self.signal1, pen=self.color1)
+            self.plot_widget1.setYRange(-1, 1)
+            self.plot_widget1.setTitle(self.title_input1.text())
+        else:
+            self.plot_widget1.clear()  # Clear the plot if unchecked
+
+    def toggle_signal2(self, state):
+        if state == Qt.Checked:
+            # Plot signal2 only if it's checked
+            self.plot_widget2.clear()
+            self.plot_widget2.plot(self.signal2, pen=self.color2)
+            self.plot_widget2.setYRange(-1, 1)
+            self.plot_widget2.setTitle(self.title_input2.text())
+        else:
+            self.plot_widget2.clear()  # Clear the plot if unchecked
+
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
         self.linked = not self.linked
@@ -125,11 +186,14 @@ class SignalApp(QtWidgets.QWidget):
 
         # Sync play state if linked
         if self.linked:
+            # Sync the visibility of the checkboxes
+            self.checkbox2.setChecked(self.checkbox1.isChecked())
         # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.playing1:
                 self.play_signal2()
             elif self.playing2:
                 self.play_signal1()
+
             self.link_viewports()
         else: 
             self.unlink_viewports()
@@ -216,9 +280,7 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
     def plot_signals(self):
         self.plot_widget1.clear()  #The clear method is used to clear the frame every time before making the new frame!
-        self.plot_widget1.plot(self.signal1, pen=self.color1)
-        self.plot_widget1.setTitle(self.title1)
-        self.plot_widget1.setYRange(-1, 1)
+        self.plot_widget2.clear()  #The clear method is used to clear the frame every time before making the new frame!
 
         # Store original x and y ranges after the first plot
         self.original_x_range = self.plot_widget1.viewRange()[0]
@@ -226,11 +288,6 @@ class SignalApp(QtWidgets.QWidget):
 
         # Enable panning
         self.plot_widget1.setMouseEnabled(x=True, y=True)
-
-        self.plot_widget2.clear() #The clear method is used to clear the frame each time before making the new frame!
-        self.plot_widget2.plot(self.signal2, pen=self.color2)
-        self.plot_widget2.setTitle(self.title2)
-        self.plot_widget2.setYRange(-1, 1)
 
         # Store original x and y ranges after the first plot
         self.original_x_range2 = self.plot_widget2.viewRange()[0]
@@ -243,65 +300,83 @@ class SignalApp(QtWidgets.QWidget):
         if self.linked:
             self.sync_viewports()  # Initial sync on plotting
 
+        # Check the visibility states and plot accordingly
+        if self.checkbox1.isChecked():
+            self.plot_widget1.plot(self.signal1, pen=self.color1)
+            self.plot_widget1.setYRange(-1, 1)
+            self.plot_widget1.setTitle(self.title_input1.text())
+        # No need to explicitly hide the plot; just don't plot if the checkbox is unchecked.
+
+        if self.checkbox2.isChecked():
+            self.plot_widget2.plot(self.signal2, pen=self.color2)
+            self.plot_widget2.setYRange(-1, 1)
+            self.plot_widget2.setTitle(self.title_input2.text())
+
     # Generating the function of playing signal 1
     def play_signal1(self):
-        if not self.playing1:
-            self.playing1 = True
-            if self.timer1 is None:
-                self.timer1 = pg.QtCore.QTimer() # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
-                self.timer1.timeout.connect(self.update_plot1)
-                self.timer1.start(100) #Frequent updates every 100ms
-            if self.linked and not self.playing2:
-                self.play_signal2()
+        if self.checkbox1.isChecked(): 
+            if not self.playing1:
+                self.playing1 = True
+                if self.timer1 is None:
+                    self.timer1 = pg.QtCore.QTimer() # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
+                    self.timer1.timeout.connect(self.update_plot1)
+                    self.timer1.start(100) #Frequent updates every 100ms
+                if self.linked and not self.playing2:
+                    self.play_signal2()
 
     # Generating the function of pausing signal 1
     def pause_signal1(self):
-        if self.playing1:
-            self.playing1 = False
-            if self.linked:
-                self.pause_signal2()
+        if self.checkbox1.isChecked(): 
+            if self.playing1:
+                self.playing1 = False
+                if self.linked:
+                    self.pause_signal2()
 
     # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
-        if self.timer1 is not None:
-            self.timer1.stop()
-            self.timer1 = None
-        self.playing1 = False
-        if self.linked and not self.stopped_by_link:
-            self.stopped_by_link = True
-            self.stop_signal2()
-        self.reset_signal1()
-        self.stopped_by_link = False
+        if self.checkbox1.isChecked(): 
+            if self.timer1 is not None:
+                self.timer1.stop()
+                self.timer1 = None
+            self.playing1 = False
+            if self.linked and not self.stopped_by_link:
+                self.stopped_by_link = True
+                self.stop_signal2()
+            self.reset_signal1()
+            self.stopped_by_link = False
 
     # Generating the function of playing signal 2
     def play_signal2(self):
-        if not self.playing2:
-            self.playing2 = True
-            if self.timer2 is None:
-                self.timer2 = pg.QtCore.QTimer()
-                self.timer2.timeout.connect(self.update_plot2)
-                self.timer2.start(100)
-            if self.linked and not self.playing1:
-                self.play_signal1()
+        if self.checkbox2.isChecked(): 
+            if not self.playing2:
+                self.playing2 = True
+                if self.timer2 is None:
+                    self.timer2 = pg.QtCore.QTimer()
+                    self.timer2.timeout.connect(self.update_plot2)
+                    self.timer2.start(100)
+                if self.linked and not self.playing1:
+                    self.play_signal1()
 
     # Generating the function of pausing signal 2
     def pause_signal2(self):
-        if self.playing2:
-            self.playing2 = False
-            if self.linked:
-                self.pause_signal1()
+        if self.checkbox2.isChecked(): 
+            if self.playing2:
+                self.playing2 = False
+                if self.linked:
+                    self.pause_signal1()
 
     # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
-        if self.timer2 is not None:
-            self.timer2.stop()
-            self.timer2 = None
-        self.playing2 = False
-        if self.linked and not self.stopped_by_link:
-            self.stopped_by_link = True
-            self.stop_signal1()
-        self.reset_signal2()
-        self.stopped_by_link = False
+        if self.checkbox2.isChecked(): 
+            if self.timer2 is not None:
+                self.timer2.stop()
+                self.timer2 = None
+            self.playing2 = False
+            if self.linked and not self.stopped_by_link:
+                self.stopped_by_link = True
+                self.stop_signal1()
+            self.reset_signal2()
+            self.stopped_by_link = False
 
     def reset_signal1(self):
         if self.type1 == 'cosine':
@@ -381,8 +456,29 @@ class SignalApp(QtWidgets.QWidget):
     def swap_signals(self):
         self.signal1, self.signal2 = self.signal2, self.signal1
         self.color1, self.color2 = self.color2, self.color1
-        self.title1, self.title2 = self.title2, self.title1
-        self.type1, self.type2 = self.type2,self.type1
+
+        # Swap the text of the title input boxes
+        title_text_1 = self.title_input1.text()
+        title_text_2 = self.title_input2.text()
+        self.title_input1.setText(title_text_2)
+        self.title_input2.setText(title_text_1)
+
+        # Swap the state of the visibility checkboxes
+        checkbox1_state = self.checkbox1.isChecked()
+        checkbox2_state = self.checkbox2.isChecked()
+        self.checkbox1.setChecked(checkbox2_state)
+        self.checkbox2.setChecked(checkbox1_state)
+
+        # Ensure visibility reflects the swapped states
+        self.toggle_signal1(Qt.Checked if checkbox2_state else Qt.Unchecked)
+        self.toggle_signal2(Qt.Checked if checkbox1_state else Qt.Unchecked)
+
+        # Swap the labels of the visibility checkboxes
+        checkbox1_label = self.checkbox1.text()
+        checkbox2_label = self.checkbox2.text()
+        self.checkbox1.setText(checkbox2_label)
+        self.checkbox2.setText(checkbox1_label)
+
         self.plot_signals()
 
     # browsing local signal files, returning signal data as np array
