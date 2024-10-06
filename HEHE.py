@@ -64,13 +64,8 @@ class SignalApp(QtWidgets.QWidget):
         # Creating "horizontal" layout for the buttons of signal 1:
         button_layout1 = self.create_button_layout(
             "Signal 1", self.play_signal1, self.pause_signal1, self.stop_signal1,
-<<<<<<< HEAD
-            self.change_color1, self.zoom_in1, self.zoom_out1, self.show_signal1_statistics)
-
-=======
             lambda: self.change_color(signal_index=1), self.zoom_in1, self.zoom_out1, lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
         )
->>>>>>> 05174f9ff8b332d60159e0f628918d8da3333d9d
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
 
@@ -87,13 +82,8 @@ class SignalApp(QtWidgets.QWidget):
         # Creating "horizontal" layout for the buttons of signal 2:
         button_layout2 = self.create_button_layout(
             "Signal 2", self.play_signal2, self.pause_signal2, self.stop_signal2,
-<<<<<<< HEAD
-            self.change_color2, self.zoom_in2, self.zoom_out2, self.show_signal2_statistics)
-        
-=======
-            lambda: self.change_color(signal_index=2), self.zoom_in2, self.zoom_out2, lambda: self.show_statistics(self.signal2, self.title2signal2, self.color2signal2)
+            lambda: self.change_color(signal_index=2), self.zoom_in2, self.zoom_out2, lambda: self.show_statistics(self.signal2, self.title2, self.color2)
         )
->>>>>>> 05174f9ff8b332d60159e0f628918d8da3333d9d
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
 
@@ -217,11 +207,7 @@ class SignalApp(QtWidgets.QWidget):
 
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
     def plot_signals(self):
-<<<<<<< HEAD
-        self.plot_widget1.clear()  #The clear method is used to clear the frame each time before making the new frame!
-=======
         self.plot_widget1.clear()  #The clear method is used to clear the frame every time before making the new frame!
->>>>>>> 05174f9ff8b332d60159e0f628918d8da3333d9d
         self.plot_widget1.plot(self.signal1, pen=self.color1)
         self.plot_widget1.setTitle(self.title1)
         self.plot_widget1.setYRange(-1, 1)
