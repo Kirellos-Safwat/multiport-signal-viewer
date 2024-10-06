@@ -57,7 +57,7 @@ class SignalApp(QtWidgets.QWidget):
         # Creating "horizontal" layout for the buttons of signal 1:
         button_layout1 = self.create_button_layout(
             "Signal 1", self.play_signal1, self.pause_signal1, self.stop_signal1,
-            self.change_color1, self.zoom_in1, self.zoom_out1, self.show_signal1_statistics  
+            lambda: self.change_color(signal_index=1), self.zoom_in1, self.zoom_out1, lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
         )
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
@@ -74,7 +74,7 @@ class SignalApp(QtWidgets.QWidget):
         # Creating "horizontal" layout for the buttons of signal 2:
         button_layout2 = self.create_button_layout(
             "Signal 2", self.play_signal2, self.pause_signal2, self.stop_signal2,
-            self.change_color2, self.zoom_in2, self.zoom_out2, self.show_signal2_statistics 
+            lambda: self.change_color(signal_index=2), self.zoom_in2, self.zoom_out2, lambda: self.show_statistics(self.signal2, self.title2signal2, self.color2signal2)
         )
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
@@ -121,7 +121,7 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
     def generate_square_wave(self, points):
         t = np.linspace(0, 1, points)
-        return np.where(t < 0.5, 1, 0)
+        return (t < 0.5).astype(int)
     
     # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
     def generate_cosine_wave(self, points):
@@ -130,8 +130,7 @@ class SignalApp(QtWidgets.QWidget):
 
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
     def plot_signals(self):
-        self.plot_widget1.clear()  #The clear method is used to clear the frame each time before making the new frame!
-        self.plot_widget1.plot(self.signal2, pen=self.color2)
+        self.plot_widget1.clear()  #The clear method is used to clear the frame every time before making the new frame!
         self.plot_widget1.plot(self.signal1, pen=self.color1)
         self.plot_widget1.setTitle(self.title1)
         self.plot_widget1.setYRange(-1, 1)
@@ -207,14 +206,6 @@ class SignalApp(QtWidgets.QWidget):
             self.signal2 = np.roll(self.signal2, -1) # This shifts "signal 2" one position to the left simulating the effect of a moving signal
             self.plot_signals()
 
-    # Generating the function of changing the color of signal 1
-    def change_color1(self):
-        self.change_color(signal_index=1)
-
-    # Generating the function of changing the color of signal 2
-    def change_color2(self):
-        self.change_color(signal_index=2)
-
     # Generating the function of color changing in general
     def change_color(self, signal_index):
         color = QtWidgets.QColorDialog.getColor()
@@ -268,12 +259,16 @@ class SignalApp(QtWidgets.QWidget):
                     signal_data = np.fromfile(f, dtype=dtype)
             else:
                 self.show_error_message("Unsupported file format.")
+                return
 
-        if 'signal_data' in locals():
+        if signal_data.ndim == 1:
             if graph == 'graph1':
                 self.signal1 = signal_data
             elif graph == 'graph2':
                 self.signal2 = signal_data
+            
+        else:
+            self.show_error_message("Unsupported signal dimension." + str(signal_data.shape))
             
     
     def show_error_message(self, message):
@@ -293,15 +288,7 @@ class SignalApp(QtWidgets.QWidget):
 
     def show_statistics(self, signal, title, color):
         self.statistics_window = StatisticsWindow(signal, title, color) # Generating the Statistics Window
-        self.statistics_window.show() # Showing the Statistics Window
-
-    # Showing Statistics window of signal 1
-    def show_signal1_statistics(self):
-        self.show_statistics(self.signal1, self.title1, self.color1)    
-    
-    # Showing Statistics window of signal 2
-    def show_signal2_statistics(self):
-        self.show_statistics(self.signal2, self.title2, self.color2)    
+        self.statistics_window.show() # Showing the Statistics Window   
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
