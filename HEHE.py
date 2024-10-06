@@ -64,6 +64,8 @@ class SignalApp(QtWidgets.QWidget):
         # creating import signal button
         self.import_signal1_button = QtWidgets.QPushButton("Import")
         self.import_signal1_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        icon = QtGui.QIcon('assets\\button_icons\\import.png')
+        self.import_signal1_button.setIcon(icon)
         self.import_signal1_button.clicked.connect(lambda: self.import_signal_file("graph1"))
         self.main_layout.addWidget(self.import_signal1_button)
 
@@ -81,12 +83,16 @@ class SignalApp(QtWidgets.QWidget):
         # creating import signal button
         self.import_signal2_button = QtWidgets.QPushButton("Import")
         self.import_signal2_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        icon = QtGui.QIcon('assets\\button_icons\\import.png')
+        self.import_signal2_button.setIcon(icon)
         self.import_signal2_button.clicked.connect(lambda: self.import_signal_file("graph2"))
         self.main_layout.addWidget(self.import_signal2_button)
 
         # Swap Signals Button
         self.swap_button = QtWidgets.QPushButton("Swap Signals")
         self.swap_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        icon = QtGui.QIcon('assets\\button_icons\\swap.png')
+        self.swap_button.setIcon(icon)
         self.swap_button.clicked.connect(self.swap_signals)
         self.main_layout.addWidget(self.swap_button)
 
@@ -100,13 +106,13 @@ class SignalApp(QtWidgets.QWidget):
     # A method for Setting the horizontal layout of the buttons according to the signal_name
     def create_button_layout(self, signal_name, play, pause, stop, color_change, zoom_in, zoom_out, statistics):
         button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(self.create_button(f"Play {signal_name}", play))
-        button_layout.addWidget(self.create_button(f"Pause {signal_name}", pause))
-        button_layout.addWidget(self.create_button(f"Stop {signal_name}", stop))
-        button_layout.addWidget(self.create_button(f"Change Color {signal_name}", color_change))
-        button_layout.addWidget(self.create_button(f"Zoom In {signal_name}", zoom_in))
-        button_layout.addWidget(self.create_button(f"Zoom Out {signal_name}", zoom_out))
-        button_layout.addWidget(self.create_button(f"Statistics {signal_name}", statistics))
+        button_layout.addWidget(self.create_button(f"Play", play))
+        button_layout.addWidget(self.create_button(f"Pause", pause))
+        button_layout.addWidget(self.create_button(f"Stop", stop))
+        button_layout.addWidget(self.create_button(f"Color", color_change))
+        button_layout.addWidget(self.create_button(f"Zoom In", zoom_in))
+        button_layout.addWidget(self.create_button(f"Zoom Out", zoom_out))
+        button_layout.addWidget(self.create_button(f"Statistics", statistics))
         return button_layout
 
 
@@ -114,6 +120,8 @@ class SignalApp(QtWidgets.QWidget):
     def create_button(self, text, method):
         button = QtWidgets.QPushButton(text)
         button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        icon = QtGui.QIcon('assets\\button_icons\\'+text.replace(' ', '_')+'.png')
+        button.setIcon(icon)
         button.clicked.connect(method)
         return button
 
@@ -264,8 +272,10 @@ class SignalApp(QtWidgets.QWidget):
         if signal_data.ndim == 1:
             if graph == 'graph1':
                 self.signal1 = signal_data
+                self.title1 = os.path.splitext(os.path.basename(file_name))[0]
             elif graph == 'graph2':
                 self.signal2 = signal_data
+                self.title2 = os.path.splitext(os.path.basename(file_name))[0]
             
         else:
             self.show_error_message("Unsupported signal dimension." + str(signal_data.ndim))
