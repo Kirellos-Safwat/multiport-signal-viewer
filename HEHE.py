@@ -78,28 +78,25 @@ class SignalApp(QtWidgets.QWidget):
         self.main_layout.addWidget(self.title_input1)
 
         # Checkbox for Signal 1 visibility
-        self.checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
-        self.checkbox1.setChecked(True)
-        self.checkbox1.stateChanged.connect(self.toggle_signal1)
-        self.checkbox1.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
-        self.main_layout.addWidget(self.checkbox1)
+        self.show_hide_checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
+        self.show_hide_checkbox1.setChecked(True)
+        self.show_hide_checkbox1.stateChanged.connect(self.toggle_signal1)
+        self.show_hide_checkbox1.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
+        self.main_layout.addWidget(self.show_hide_checkbox1)
 
 
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
+        self.play_pause_button1 = self.create_button("Play", self.play_pause_signal1, "play")
         button_layout1 = self.create_button_layout(
-            "Signal 1", self.play_signal1, self.pause_signal1, self.stop_signal1,
-            lambda: self.change_color(signal_index=1), self.zoom_in1, self.zoom_out1, lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
+            self.play_pause_button1, self.stop_signal1, lambda: self.change_color(signal_index=1), 
+            lambda: self.zoom_in(self.plot_widget1), lambda: self.zoom_out(self.plot_widget1), lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
         )
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
 
         # Creating import signal button
-        self.import_signal1_button = QtWidgets.QPushButton("Import")
-        self.import_signal1_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        icon = QtGui.QIcon('assets\\button_icons\\import.png')
-        self.import_signal1_button.setIcon(icon)
-        self.import_signal1_button.clicked.connect(lambda: self.import_signal_file("graph1"))
+        self.import_signal1_button = self.create_button("Import", lambda: self.import_signal_file("graph1"), "import")
         self.main_layout.addWidget(self.import_signal1_button)
 
         # Slider for Signal 1
@@ -127,55 +124,38 @@ class SignalApp(QtWidgets.QWidget):
         self.main_layout.addWidget(self.title_input2)
 
         # Checkbox for Signal 2 visibility
-        self.checkbox2 = QtWidgets.QCheckBox("Show Signal 2")
-        self.checkbox2.setChecked(True)
-        self.checkbox2.stateChanged.connect(self.toggle_signal2)
-        self.checkbox2.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
-        self.main_layout.addWidget(self.checkbox2)
+        self.show_hide_checkbox2 = QtWidgets.QCheckBox("Show Signal 2")
+        self.show_hide_checkbox2.setChecked(True)
+        self.show_hide_checkbox2.stateChanged.connect(self.toggle_signal2)
+        self.show_hide_checkbox2.stateChanged.connect(self.sync_checkboxes)  # Sync checkboxes
+        self.main_layout.addWidget(self.show_hide_checkbox2)
 
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
+        self.play_pause_button2 = self.create_button("Play", self.play_pause_signal2, "play")
         button_layout2 = self.create_button_layout(
-            "Signal 2", self.play_signal2, self.pause_signal2, self.stop_signal2,
-            lambda: self.change_color(signal_index=2), self.zoom_in2, self.zoom_out2, lambda: self.show_statistics(self.signal2, self.title2, self.color2)
+            self.play_pause_button2, self.stop_signal2, lambda: self.change_color(signal_index=2), 
+            lambda: self.zoom_in(self.plot_widget2), lambda: self.zoom_out(self.plot_widget2), lambda: self.show_statistics(self.signal2, self.title2, self.color2)
         )
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
 
         # Creating import signal button
-        self.import_signal2_button = QtWidgets.QPushButton("Import")
-        self.import_signal2_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        icon = QtGui.QIcon('assets\\button_icons\\import.png')
-        self.import_signal2_button.setIcon(icon)
-        self.import_signal2_button.clicked.connect(lambda: self.import_signal_file("graph2"))
+        self.import_signal2_button = self.create_button("Import", lambda: self.import_signal_file("graph2"), "import")
         self.main_layout.addWidget(self.import_signal2_button)
-
         # Swap Signals Button
-        self.swap_button = QtWidgets.QPushButton("Swap Signals")
-        self.swap_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        icon = QtGui.QIcon('assets\\button_icons\\swap.png')
-        self.swap_button.setIcon(icon)
-        self.swap_button.clicked.connect(self.swap_signals)
-        self.main_layout.addWidget(self.swap_button)
+        self.swap_button = self.create_button("Swap Signals", self.swap_signals, "swap")
+        # glue Signals Button
+        self.glue_button = self.create_button("glue Signals", self.glue_signals)
 
-        # Interpolate Signals Button
-        self.interpolate_button = QtWidgets.QPushButton("Interpolate Signals")
-        self.interpolate_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        self.interpolate_button.clicked.connect(self.interpolate_signals)
-        self.main_layout.addWidget(self.interpolate_button)
-
-        
         # Link Button
-        self.link_button = QtWidgets.QPushButton("Link Graphs")
-        self.link_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        self.link_button.clicked.connect(self.toggle_link)
-        self.main_layout.addWidget(self.link_button)
+        self.link_button = self.create_button("Link Graphs", self.toggle_link, "link")
 
         # Slider for Signal 2
         self.speed_slider2 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.speed_slider2.setMinimum(0)  # x1/2
         self.speed_slider2.setMaximum(3)  # x4
-        self.speed_slider2.setValue(1)     # Start at original speed
+        self.speed_slider2.setValue(1)    # Start at original speed
         self.speed_slider2.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.speed_slider2.setTickInterval(1) # Each tick represents one unit
 
@@ -185,10 +165,20 @@ class SignalApp(QtWidgets.QWidget):
         self.main_layout.addWidget(QtWidgets.QLabel("Signal 2 Speed Control:"))
         self.main_layout.addWidget(self.speed_slider2)
 
+
+        # self.main_layout.addWidget(self.link_button)
+        buttons_layout_3 = QtWidgets.QHBoxLayout()
+        buttons_layout_3.addWidget(self.swap_button)
+        buttons_layout_3.addWidget(self.glue_button)
+        buttons_layout_3.addWidget(self.link_button)
+        self.main_layout.addLayout(buttons_layout_3)
+
+
+
     def update_timer_speed1(self):
         # Get the current slider value for Signal 1
         current_value = self.speed_slider1.value()
-    
+        
         # Update the timer interval based on the slider value
         new_timer_interval = self.speed_mapping[current_value]
         
@@ -200,7 +190,7 @@ class SignalApp(QtWidgets.QWidget):
             self.speed_slider2.setValue(current_value)
 
     def update_timer_speed2(self):
-          # Get the current slider value for Signal 2
+        # Get the current slider value for Signal 2
         current_value = self.speed_slider2.value()
         
         # Update the timer interval based on the slider value
@@ -216,10 +206,10 @@ class SignalApp(QtWidgets.QWidget):
     def sync_checkboxes(self):
         if self.linked:
             # Sync checkbox 1 with checkbox 2
-            if self.sender() == self.checkbox1:
-                self.checkbox2.setChecked(self.checkbox1.isChecked())
-            elif self.sender() == self.checkbox2:
-                self.checkbox1.setChecked(self.checkbox2.isChecked())
+            if self.sender() == self.show_hide_checkbox1:
+                self.show_hide_checkbox2.setChecked(self.show_hide_checkbox1.isChecked())
+            elif self.sender() == self.show_hide_checkbox2:
+                self.show_hide_checkbox1.setChecked(self.show_hide_checkbox2.isChecked())
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
@@ -246,35 +236,38 @@ class SignalApp(QtWidgets.QWidget):
         else:
             self.plot_widget2.clear()  # Clear the plot if unchecked
 
+    def update_signal_titles(self):
+        """ Updates the plot titles dynamically as the user changes the title inputs. """
+        self.plot_widget1.setTitle(self.title_input1.text())
+        self.plot_widget2.setTitle(self.title_input2.text())
+
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
-        self.linked = not self.linked   
-        self.link_button.setText("Unlink Graphs" if self.linked else "Link Graphs")
-
+        self.linked = not self.linked
         # Sync play state if linked
         if self.linked:
             # Sync the visibility of the checkboxes
-            self.checkbox2.setChecked(self.checkbox1.isChecked())
+            self.show_hide_checkbox2.setChecked(self.show_hide_checkbox1.isChecked())
+            self.link_button = self.update_button(self.link_button, "Unlink Graphs", "unlink")
         # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.playing1:
-                self.play_signal2()
+                self.play_pause_signal2()
             elif self.playing2:
-                self.play_signal1()
-                
+                self.play_pause_signal1()
+
             # Determine the lower speed and set both sliders
             lower_speed_index = min(self.speed_slider1.value(), self.speed_slider2.value())
             self.speed_slider1.setValue(lower_speed_index)
             self.speed_slider2.setValue(lower_speed_index)
-
 
             new_timer_interval = self.speed_mapping[lower_speed_index]
             if self.timer1 is not None:
                 self.timer1.setInterval(new_timer_interval)
             if self.timer2 is not None:
                 self.timer2.setInterval(new_timer_interval)
-
             self.link_viewports()
         else: 
+            self.link_button = self.update_button(self.link_button, "Link Graphs", "link")
             self.unlink_viewports()
 
         # Ensure consistent signal speeds
@@ -324,23 +317,22 @@ class SignalApp(QtWidgets.QWidget):
 
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
-    def create_button_layout(self, signal_name, play, pause, stop, color_change, zoom_in, zoom_out, statistics):
+    def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics):
         button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(self.create_button(f"Play", play))
-        button_layout.addWidget(self.create_button(f"Pause", pause))
-        button_layout.addWidget(self.create_button(f"Stop", stop))
-        button_layout.addWidget(self.create_button(f"Color", color_change))
-        button_layout.addWidget(self.create_button(f"Zoom In", zoom_in))
-        button_layout.addWidget(self.create_button(f"Zoom Out", zoom_out))
-        button_layout.addWidget(self.create_button(f"Statistics", statistics))
+        button_layout.addWidget(play_pause_button)
+        button_layout.addWidget(self.create_button(f"Stop", stop, "stop"))
+        button_layout.addWidget(self.create_button(f"Color", color_change, "color"))
+        button_layout.addWidget(self.create_button(f"Zoom In", zoom_in, "zoom_in"))
+        button_layout.addWidget(self.create_button(f"Zoom Out", zoom_out, "zoom_out"))
+        button_layout.addWidget(self.create_button(f"Statistics", statistics, "statistics"))
         return button_layout
 
 
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
-    def create_button(self, text, method):
+    def create_button(self, text, method, icon_name = ''):
         button = QtWidgets.QPushButton(text)
         button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        icon = QtGui.QIcon('assets\\button_icons\\'+text.replace(' ', '_')+'.png')
+        icon = QtGui.QIcon('assets\\button_icons\\'+icon_name+'.png')
         button.setIcon(icon)
         button.clicked.connect(method)
         return button
@@ -380,44 +372,44 @@ class SignalApp(QtWidgets.QWidget):
             self.sync_viewports()  # Initial sync on plotting
 
         # Check the visibility states and plot accordingly
-        if self.checkbox1.isChecked():
+        if self.show_hide_checkbox1.isChecked():
             self.plot_widget1.plot(self.signal1, pen=self.color1)
             self.plot_widget1.setYRange(-1, 1)
             self.plot_widget1.setTitle(self.title_input1.text())
         # No need to explicitly hide the plot; just don't plot if the checkbox is unchecked.
 
-        if self.checkbox2.isChecked():
+        if self.show_hide_checkbox2.isChecked():
             self.plot_widget2.plot(self.signal2, pen=self.color2)
             self.plot_widget2.setYRange(-1, 1)
             self.plot_widget2.setTitle(self.title_input2.text())
 
     # Generating the function of playing signal 1
-    def play_signal1(self):
-        if self.checkbox1.isChecked(): 
+    def play_pause_signal1(self):
+        if self.show_hide_checkbox1.isChecked(): 
             if not self.playing1:
                 self.playing1 = True
+                self.play_pause_button1 = self.update_button(self.play_pause_button1, "Pause", "pause")
                 if self.timer1 is None:
                     self.timer1 = pg.QtCore.QTimer() # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                     self.timer1.timeout.connect(self.update_plot1)
                     self.timer1.start(100) #Frequent updates every 100ms
                 if self.linked and not self.playing2:
-                    self.play_signal2()
+                    self.play_pause_signal2()
 
-    # Generating the function of pausing signal 1
-    def pause_signal1(self):
-        if self.checkbox1.isChecked(): 
-            if self.playing1:
+            else:
                 self.playing1 = False
-                if self.linked:
-                    self.pause_signal2()
+                self.play_pause_button1 = self.update_button(self.play_pause_button1, "Play", "play")        
+                if self.linked and self.playing2:
+                    self.play_pause_signal2()
 
     # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
-        if self.checkbox1.isChecked(): 
+        if self.show_hide_checkbox1.isChecked(): 
             if self.timer1 is not None:
                 self.timer1.stop()
                 self.timer1 = None
             self.playing1 = False
+            self.play_pause_button1 = self.update_button(self.play_pause_button1, "Play", "play")
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal2()
@@ -425,37 +417,43 @@ class SignalApp(QtWidgets.QWidget):
             self.stopped_by_link = False
 
     # Generating the function of playing signal 2
-    def play_signal2(self):
-        if self.checkbox2.isChecked(): 
+    def play_pause_signal2(self):
+        if self.show_hide_checkbox2.isChecked(): 
             if not self.playing2:
                 self.playing2 = True
+                self.play_pause_button2 = self.update_button(self.play_pause_button2, "Pause", "pause")
                 if self.timer2 is None:
                     self.timer2 = pg.QtCore.QTimer()
                     self.timer2.timeout.connect(self.update_plot2)
                     self.timer2.start(100)
                 if self.linked and not self.playing1:
-                    self.play_signal1()
+                    self.play_pause_signal1()
 
-    # Generating the function of pausing signal 2
-    def pause_signal2(self):
-        if self.checkbox2.isChecked(): 
-            if self.playing2:
+            else:
                 self.playing2 = False
-                if self.linked:
-                    self.pause_signal1()
+                self.play_pause_button2 = self.update_button(self.play_pause_button2, "Play", "play")
+                if self.linked and self.playing1:
+                    self.play_pause_signal1()
 
     # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
-        if self.checkbox2.isChecked(): 
+        if self.show_hide_checkbox2.isChecked(): 
             if self.timer2 is not None:
                 self.timer2.stop()
                 self.timer2 = None
             self.playing2 = False
+            self.play_pause_button2 = self.update_button(self.play_pause_button2, "Play", "play")
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal1()
             self.reset_signal2()
             self.stopped_by_link = False
+
+    def update_button(self, button, text, icon_name):
+        button.setText(text)
+        icon = QtGui.QIcon('assets\\button_icons\\'+str(icon_name)+'.png')
+        button.setIcon(icon)
+        return button
 
     def reset_signal1(self):
         if self.type1 == 'cosine':
@@ -493,18 +491,6 @@ class SignalApp(QtWidgets.QWidget):
         self.plot_signals()
 
     # Generating zoom in/zoom out functions of both signals:
-    def zoom_in1(self):
-        self.zoom_in(plot_widget=self.plot_widget1)
-
-    def zoom_out1(self):
-        self.zoom_out(plot_widget=self.plot_widget1)
-
-    def zoom_in2(self):
-        self.zoom_in(plot_widget=self.plot_widget2)
-
-    def zoom_out2(self):
-        self.zoom_out(plot_widget=self.plot_widget2)
-
     def zoom_in(self, plot_widget):
         # Calculate the new ranges based on the original ranges
         x_range = plot_widget.viewRange()[0]
@@ -551,20 +537,20 @@ class SignalApp(QtWidgets.QWidget):
         self.title_input2.setText(title_text_1)
 
         # Swap the state of the visibility checkboxes
-        checkbox1_state = self.checkbox1.isChecked()
-        checkbox2_state = self.checkbox2.isChecked()
-        self.checkbox1.setChecked(checkbox2_state)
-        self.checkbox2.setChecked(checkbox1_state)
+        show_hide_checkbox1_state = self.show_hide_checkbox1.isChecked()
+        show_hide_checkbox2_state = self.show_hide_checkbox2.isChecked()
+        self.show_hide_checkbox1.setChecked(show_hide_checkbox2_state)
+        self.show_hide_checkbox2.setChecked(show_hide_checkbox1_state)
 
         # Ensure visibility reflects the swapped states
-        self.toggle_signal1(Qt.Checked if checkbox2_state else Qt.Unchecked)
-        self.toggle_signal2(Qt.Checked if checkbox1_state else Qt.Unchecked)
+        self.toggle_signal1(Qt.Checked if show_hide_checkbox2_state else Qt.Unchecked)
+        self.toggle_signal2(Qt.Checked if show_hide_checkbox1_state else Qt.Unchecked)
 
         # Swap the labels of the visibility checkboxes
-        checkbox1_label = self.checkbox1.text()
-        checkbox2_label = self.checkbox2.text()
-        self.checkbox1.setText(checkbox2_label)
-        self.checkbox2.setText(checkbox1_label)
+        show_hide_checkbox1_label = self.show_hide_checkbox1.text()
+        show_hide_checkbox2_label = self.show_hide_checkbox2.text()
+        self.show_hide_checkbox1.setText(show_hide_checkbox2_label)
+        self.show_hide_checkbox2.setText(show_hide_checkbox1_label)
 
         self.plot_signals()
 
@@ -607,9 +593,9 @@ class SignalApp(QtWidgets.QWidget):
 
 
     # Generating the function of interpolating(averaging)(gluing) both signals
-    def interpolate_signals(self):
-        self.interpolated_signal = (self.signal1 + self.signal2) / 2
-        self.interpolation_window = InterpolationWindow(self.interpolated_signal) # Generating the Intepolation Window
+    def glue_signals(self):
+        self.glued_signal = (self.signal1 + self.signal2) / 2
+        self.interpolation_window = InterpolationWindow(self.glued_signal) # Generating the Intepolation Window
         self.interpolation_window.show() # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
