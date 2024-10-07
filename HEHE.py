@@ -3,12 +3,14 @@ from PyQt5.QtCore import Qt
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
-from pyqtgraph import PlotWidget
+from pyqtgraph import PlotWidget, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
 
+
+    
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -42,6 +44,14 @@ class SignalApp(QtWidgets.QWidget):
         self.playing1 = False
         self.playing2 = False
 
+            # Speed Control Mapping
+        self.speed_mapping = {
+                0: 200,  # x1/2 speed
+                1: 100,  # Original speed
+                2: 50,   # x2 speed
+                3: 25    # x4 speed
+            }
+        
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer") # Window Title
         self.setWindowIcon(QtGui.QIcon("assets\\Pulse.png")) # Window Icon
@@ -91,6 +101,21 @@ class SignalApp(QtWidgets.QWidget):
         self.import_signal1_button.setIcon(icon)
         self.import_signal1_button.clicked.connect(lambda: self.import_signal_file("graph1"))
         self.main_layout.addWidget(self.import_signal1_button)
+
+        # Slider for Signal 1
+        self.speed_slider1 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.speed_slider1.setMinimum(0)  # x1/2
+        self.speed_slider1.setMaximum(3)  # x4
+        self.speed_slider1.setValue(1)    # Start at original speed
+        self.speed_slider1.setTickPosition(QtWidgets.QSlider.TicksAbove)
+        self.speed_slider1.setTickInterval(1) # Each tick represents one unit
+
+        # Connect the slider value change to a method
+        self.speed_slider1.valueChanged.connect(self.update_timer_speed1)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Signal 1 Speed Control:"))
+        self.main_layout.addWidget(self.speed_slider1)
+
 
         # Adding the plotting widgets of the first signal to the main "vertical" layout 
         self.main_layout.addWidget(self.plot_widget2)
@@ -146,6 +171,48 @@ class SignalApp(QtWidgets.QWidget):
         self.link_button.clicked.connect(self.toggle_link)
         self.main_layout.addWidget(self.link_button)
 
+        # Slider for Signal 2
+        self.speed_slider2 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.speed_slider2.setMinimum(0)  # x1/2
+        self.speed_slider2.setMaximum(3)  # x4
+        self.speed_slider2.setValue(1)     # Start at original speed
+        self.speed_slider2.setTickPosition(QtWidgets.QSlider.TicksAbove)
+        self.speed_slider2.setTickInterval(1) # Each tick represents one unit
+
+        # Connect the slider value change to a method
+        self.speed_slider2.valueChanged.connect(self.update_timer_speed2)
+
+        self.main_layout.addWidget(QtWidgets.QLabel("Signal 2 Speed Control:"))
+        self.main_layout.addWidget(self.speed_slider2)
+
+    def update_timer_speed1(self):
+        # Get the current slider value for Signal 1
+        current_value = self.speed_slider1.value()
+    
+        # Update the timer interval based on the slider value
+        new_timer_interval = self.speed_mapping[current_value]
+        
+        if self.timer1 is not None:
+            self.timer1.setInterval(new_timer_interval)
+
+        # If signals are linked, update the other slider
+        if self.linked:
+            self.speed_slider2.setValue(current_value)
+
+    def update_timer_speed2(self):
+          # Get the current slider value for Signal 2
+        current_value = self.speed_slider2.value()
+        
+        # Update the timer interval based on the slider value
+        new_timer_interval = self.speed_mapping[current_value]
+        
+        if self.timer2 is not None:
+            self.timer2.setInterval(new_timer_interval)
+
+        # If signals are linked, update the other slider
+        if self.linked:
+            self.speed_slider1.setValue(current_value)
+
     def sync_checkboxes(self):
         if self.linked:
             # Sync checkbox 1 with checkbox 2
@@ -193,6 +260,18 @@ class SignalApp(QtWidgets.QWidget):
                 self.play_signal2()
             elif self.playing2:
                 self.play_signal1()
+                
+            # Determine the lower speed and set both sliders
+            lower_speed_index = min(self.speed_slider1.value(), self.speed_slider2.value())
+            self.speed_slider1.setValue(lower_speed_index)
+            self.speed_slider2.setValue(lower_speed_index)
+
+
+            new_timer_interval = self.speed_mapping[lower_speed_index]
+            if self.timer1 is not None:
+                self.timer1.setInterval(new_timer_interval)
+            if self.timer2 is not None:
+                self.timer2.setInterval(new_timer_interval)
 
             self.link_viewports()
         else: 
