@@ -168,10 +168,10 @@ class SignalApp(QtWidgets.QWidget):
     def sync_checkboxes(self):
         if self.linked:
             # Sync checkbox 1 with checkbox 2
-            if self.sender() == self.checkbox1:
-                self.checkbox2.setChecked(self.checkbox1.isChecked())
-            elif self.sender() == self.checkbox2:
-                self.checkbox1.setChecked(self.checkbox2.isChecked())
+            if self.sender() == self.show_hide_checkbox1:
+                self.show_hide_checkbox2.setChecked(self.show_hide_checkbox1.isChecked())
+            elif self.sender() == self.show_hide_checkbox2:
+                self.show_hide_checkbox1.setChecked(self.show_hide_checkbox2.isChecked())
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
