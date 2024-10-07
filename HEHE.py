@@ -80,7 +80,7 @@ class SignalApp(QtWidgets.QWidget):
         self.play_pause_button1 = self.create_button("Play", self.play_pause_signal1, "play")
         button_layout1 = self.create_button_layout(
             self.play_pause_button1, self.stop_signal1, lambda: self.change_color(signal_index=1), 
-            self.zoom_in1, self.zoom_out1, lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
+            lambda: self.zoom_in(self.plot_widget1), lambda: self.zoom_out(self.plot_widget1), lambda: self.show_statistics(self.signal1, self.title1, self.color1)  
         )
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout1)
@@ -110,7 +110,7 @@ class SignalApp(QtWidgets.QWidget):
         self.play_pause_button2 = self.create_button("Play", self.play_pause_signal2, "play")
         button_layout2 = self.create_button_layout(
             self.play_pause_button2, self.stop_signal2, lambda: self.change_color(signal_index=2), 
-            self.zoom_in2, self.zoom_out2, lambda: self.show_statistics(self.signal2, self.title2, self.color2)
+            lambda: self.zoom_in(self.plot_widget2), lambda: self.zoom_out(self.plot_widget2), lambda: self.show_statistics(self.signal2, self.title2, self.color2)
         )
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout 
         self.main_layout.addLayout(button_layout2)
@@ -165,38 +165,10 @@ class SignalApp(QtWidgets.QWidget):
         else:
             self.plot_widget2.clear()  # Clear the plot if unchecked
 
-    def sync_checkboxes(self):
-        if self.linked:
-            # Sync checkbox 1 with checkbox 2
-            if self.sender() == self.show_hide_checkbox1:
-                self.show_hide_checkbox2.setChecked(self.show_hide_checkbox1.isChecked())
-            elif self.sender() == self.show_hide_checkbox2:
-                self.show_hide_checkbox1.setChecked(self.show_hide_checkbox2.isChecked())
-
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
         self.plot_widget1.setTitle(self.title_input1.text())
         self.plot_widget2.setTitle(self.title_input2.text())
-
-    def toggle_signal1(self, state):
-        if state == Qt.Checked:
-            # Plot signal1 only if it's checked
-            self.plot_widget1.clear()
-            self.plot_widget1.plot(self.signal1, pen=self.color1)
-            self.plot_widget1.setYRange(-1, 1)
-            self.plot_widget1.setTitle(self.title_input1.text())
-        else:
-            self.plot_widget1.clear()  # Clear the plot if unchecked
-
-    def toggle_signal2(self, state):
-        if state == Qt.Checked:
-            # Plot signal2 only if it's checked
-            self.plot_widget2.clear()
-            self.plot_widget2.plot(self.signal2, pen=self.color2)
-            self.plot_widget2.setYRange(-1, 1)
-            self.plot_widget2.setTitle(self.title_input2.text())
-        else:
-            self.plot_widget2.clear()  # Clear the plot if unchecked
 
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
@@ -438,18 +410,6 @@ class SignalApp(QtWidgets.QWidget):
         self.plot_signals()
 
     # Generating zoom in/zoom out functions of both signals:
-    def zoom_in1(self):
-        self.zoom_in(plot_widget=self.plot_widget1)
-
-    def zoom_out1(self):
-        self.zoom_out(plot_widget=self.plot_widget1)
-
-    def zoom_in2(self):
-        self.zoom_in(plot_widget=self.plot_widget2)
-
-    def zoom_out2(self):
-        self.zoom_out(plot_widget=self.plot_widget2)
-
     def zoom_in(self, plot_widget):
         # Calculate the new ranges based on the original ranges
         x_range = plot_widget.viewRange()[0]
