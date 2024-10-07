@@ -103,21 +103,27 @@ class SignalApp(QtWidgets.QWidget):
         icon = QtGui.QIcon('assets\\button_icons\\swap.png')
         self.swap_button.setIcon(icon)
         self.swap_button.clicked.connect(self.swap_signals)
-        self.main_layout.addWidget(self.swap_button)
+        # self.main_layout.addWidget(self.swap_button)
 
-        # Interpolate Signals Button
-        self.interpolate_button = QtWidgets.QPushButton("Interpolate Signals")
-        self.interpolate_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        self.interpolate_button.clicked.connect(self.interpolate_signals)
-        self.main_layout.addWidget(self.interpolate_button)
+        # glue Signals Button
+        self.glue_button = QtWidgets.QPushButton("glue Signals")
+        self.glue_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        self.glue_button.clicked.connect(self.glue_signals)
+        # self.main_layout.addWidget(self.glue_button)
 
         
         # Link Button
         self.link_button = QtWidgets.QPushButton("Link Graphs")
         self.link_button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
+        icon = QtGui.QIcon('assets\\button_icons\\link.png')
+        self.link_button.setIcon(icon)
         self.link_button.clicked.connect(self.toggle_link)
-        self.main_layout.addWidget(self.link_button)
-
+        # self.main_layout.addWidget(self.link_button)
+        buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout.addWidget(self.swap_button)
+        buttons_layout.addWidget(self.glue_button)
+        buttons_layout.addWidget(self.link_button)
+        self.main_layout.addLayout(buttons_layout)
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
         self.linked = not self.linked
@@ -125,6 +131,8 @@ class SignalApp(QtWidgets.QWidget):
 
         # Sync play state if linked
         if self.linked:
+            icon = QtGui.QIcon('assets\\button_icons\\unlink.png')
+            self.link_button.setIcon(icon)
         # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.playing1:
                 self.play_signal2()
@@ -132,6 +140,8 @@ class SignalApp(QtWidgets.QWidget):
                 self.play_signal1()
             self.link_viewports()
         else: 
+            icon = QtGui.QIcon('assets\\button_icons\\link.png')
+            self.link_button.setIcon(icon)
             self.unlink_viewports()
 
         # Ensure consistent signal speeds
@@ -424,9 +434,9 @@ class SignalApp(QtWidgets.QWidget):
 
 
     # Generating the function of interpolating(averaging)(gluing) both signals
-    def interpolate_signals(self):
-        self.interpolated_signal = (self.signal1 + self.signal2) / 2
-        self.interpolation_window = InterpolationWindow(self.interpolated_signal) # Generating the Intepolation Window
+    def glue_signals(self):
+        self.glued_signal = (self.signal1 + self.signal2) / 2
+        self.interpolation_window = InterpolationWindow(self.glued_signal) # Generating the Intepolation Window
         self.interpolation_window.show() # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
