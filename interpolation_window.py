@@ -1,6 +1,12 @@
 from PyQt5 import QtGui, QtWidgets
 from pyqtgraph import PlotWidget
 from interpolation_statistics_window import InterpolationStatisticsWindow
+from fpdf import FPDF
+import numpy as np
+from pyqtgraph.exporters import ImageExporter
+import pyqtgraph as pg
+
+
 
 class InterpolationWindow(QtWidgets.QWidget):
     def __init__(self, signal):
@@ -31,6 +37,7 @@ class InterpolationWindow(QtWidgets.QWidget):
         button_layout.addWidget(self.create_button("Zoom In", self.zoom_in))
         button_layout.addWidget(self.create_button("Zoom Out", self.zoom_out))
         button_layout.addWidget(self.create_button("Statistics", self.show_statistics))
+        button_layout.addWidget(self.create_button("Export Report", self.export_report))  # New export button
         # Adding the Horizontal buttons layout to the Vertical Window Layout
         layout.addLayout(button_layout)
 
@@ -66,3 +73,80 @@ class InterpolationWindow(QtWidgets.QWidget):
         self.plot_widget.setTitle("Interpolated Signal")
         self.plot_widget.setYRange(0, 1)
 
+    def calculate_statistics(self):
+        mean_val = np.mean(self.signal)
+        std_val = np.std(self.signal)
+        min_val = np.min(self.signal)
+        max_val = np.max(self.signal)
+        duration = len(self.signal)  # Assuming duration is the number of samples
+        return mean_val, std_val, min_val, max_val, duration
+
+
+    def export_report(self):
+        # Calculate statistics
+        mean, std, min_val, max_val, duration = self.calculate_statistics()
+        
+        # Prepare PDF report
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # Title
+        pdf.set_font("Arial", 'B', 24)
+        pdf.cell(0, 10, 'Glue Operation Report', 0, 1, 'C')
+        pdf.ln(7)  # Add space after title
+
+        # Statistics title
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, 'Statistical Summary', 0, 1, 'C')
+        pdf.ln(4)  # Add space after section title
+
+        # Center the table on the page
+        pdf.set_x((pdf.w - 160) / 2)  # Center the table (80 + 80 = 160 total width)
+
+        # Statistics table header
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(80, 10, 'Statistic', 1, 0, 'C')
+        pdf.cell(80, 10, 'Value', 1, 1, 'C')  # Header
+
+        pdf.set_font("Arial", '', 12)
+        stats = [
+            ('Mean', f'{mean:.2f}'),
+            ('Standard Deviation', f'{std:.2f}'),
+            ('Minimum Value', f'{min_val:.2f}'),
+            ('Maximum Value', f'{max_val:.2f}'),
+            ('Duration', str(duration))
+        ]
+        
+        # Center the table on the page
+        for label, value in stats:
+            pdf.set_x((pdf.w - 160) / 2)  # Center the table (80 + 80 = 160 total width)
+            pdf.cell(80, 10, label, 1, 0, 'C')  # Center the label
+            pdf.cell(80, 10, value, 1, 1, 'C')  # Center the value
+
+        pdf.ln(10)  # Add space before the caption for the image
+
+        # Save the plot as an image
+        img_path = 'interpolated_signal_snapshot.png'
+        exporter = ImageExporter(self.plot_widget.getPlotItem())
+        exporter.export(img_path)  # Export the plot widget to an image file
+
+        # Center the image on the page and reduce its size
+        pdf.image(img_path, x=(pdf.w - 150) / 2, y=pdf.get_y(), w=150)  # Center the image
+        pdf.ln(115)  # Add space after caption
+
+
+        # Caption for the image
+        pdf.set_font("Arial", 'I', 12)
+        pdf.cell(0, 10, 'Figure 1: Interpolated Signal Snapshot', 0, 1, 'C')  # Center the caption below the image
+        pdf.ln(3)  # Add space after caption
+
+        # Footer
+        pdf.set_y(-35)  # Position at 1.5 cm from bottom
+        pdf.set_font("Arial", 'I', 10)
+        pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')
+
+        # Save the PDF report
+        pdf.output('glue_report.pdf')  # Save PDF report
+
+        # Notify user
+        QtWidgets.QMessageBox.information(self, "Report Exported", "The report has been successfully exported as 'glue_report.pdf'.")
