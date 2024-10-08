@@ -564,7 +564,7 @@ class SignalApp(QtWidgets.QWidget):
     def update_plot2(self):
         if self.playing2 and self.user_interacting:
 
-            window_size = 30
+            window_size = 30 # how much is visible at once
 
             self.window_start2 = (self.window_start2 +
                                   1) % (len(self.signal2) - window_size)
