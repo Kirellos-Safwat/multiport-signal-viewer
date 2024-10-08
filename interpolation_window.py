@@ -5,6 +5,8 @@ from fpdf import FPDF
 import numpy as np
 from pyqtgraph.exporters import ImageExporter
 import pyqtgraph as pg
+import os
+
 
 
 
@@ -13,6 +15,7 @@ class InterpolationWindow(QtWidgets.QWidget):
         super().__init__()
         self.signal = signal
         self.color = 'g'
+        self.snapshot_count = 0  # Initialize snapshot count here
         self.initUI()
 
     def initUI(self):
@@ -37,7 +40,8 @@ class InterpolationWindow(QtWidgets.QWidget):
         button_layout.addWidget(self.create_button("Zoom In", self.zoom_in))
         button_layout.addWidget(self.create_button("Zoom Out", self.zoom_out))
         button_layout.addWidget(self.create_button("Statistics", self.show_statistics))
-        button_layout.addWidget(self.create_button("Export Report", self.export_report))  # New export button
+        button_layout.addWidget(self.create_button("Take Snapshot", self.take_snapshot))  # New snapshot button
+        button_layout.addWidget(self.create_button("Export Report", self.export_report))  # Export report button
         # Adding the Horizontal buttons layout to the Vertical Window Layout
         layout.addLayout(button_layout)
 
@@ -48,6 +52,13 @@ class InterpolationWindow(QtWidgets.QWidget):
         button.setStyleSheet("background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
         button.clicked.connect(slot)
         return button
+
+    def take_snapshot(self):
+        self.snapshot_count += 1  # Increment the snapshot counter
+        img_path = f'snapshot{self.snapshot_count}.png'  # Create a filename for the snapshot
+        exporter = ImageExporter(self.plot_widget.getPlotItem())
+        exporter.export(img_path)  # Save the current plot as an image
+        QtWidgets.QMessageBox.information(self, "Snapshot Saved", f"Snapshot saved as '{img_path}'.")
 
     def change_color(self):
         color = QtWidgets.QColorDialog.getColor()
@@ -91,24 +102,28 @@ class InterpolationWindow(QtWidgets.QWidget):
         pdf.add_page()
         
         # Title
-        pdf.set_font("Arial", 'B', 24)
+        pdf.set_font("Arial", 'B', 28)
+        pdf.set_text_color(0,0,0)  # Dark blue color
         pdf.cell(0, 10, 'Glue Operation Report', 0, 1, 'C')
-        pdf.ln(7)  # Add space after title
+        pdf.ln(10)  # Add space after title
 
         # Statistics title
-        pdf.set_font("Arial", 'B', 16)
+        pdf.set_font("Arial", 'B', 20)
+        pdf.set_text_color(0, 51, 102)  # Dark blue color
         pdf.cell(0, 10, 'Statistical Summary', 0, 1, 'C')
-        pdf.ln(4)  # Add space after section title
+        pdf.ln(5)  # Add space after section title
 
         # Center the table on the page
         pdf.set_x((pdf.w - 160) / 2)  # Center the table (80 + 80 = 160 total width)
 
         # Statistics table header
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(80, 10, 'Statistic', 1, 0, 'C')
-        pdf.cell(80, 10, 'Value', 1, 1, 'C')  # Header
+        pdf.set_font("Arial", 'B', 16)
+        pdf.set_fill_color(220, 220, 220)  # Light gray background for header
+        pdf.cell(80, 10, 'Statistic', 1, 0, 'C', 1)
+        pdf.cell(80, 10, 'Value', 1, 1, 'C', 1)  # Header
 
-        pdf.set_font("Arial", '', 12)
+        pdf.set_font("Arial", '', 14)
+        pdf.set_text_color(0, 0, 0)  # Black color
         stats = [
             ('Mean', f'{mean:.2f}'),
             ('Standard Deviation', f'{std:.2f}'),
@@ -117,33 +132,40 @@ class InterpolationWindow(QtWidgets.QWidget):
             ('Duration', str(duration))
         ]
         
-        # Center the table on the page
         for label, value in stats:
-            pdf.set_x((pdf.w - 160) / 2)  # Center the table (80 + 80 = 160 total width)
+            pdf.set_x((pdf.w - 160) / 2)  # Center the table
             pdf.cell(80, 10, label, 1, 0, 'C')  # Center the label
             pdf.cell(80, 10, value, 1, 1, 'C')  # Center the value
 
-        pdf.ln(10)  # Add space before the caption for the image
-
-        # Save the plot as an image
-        img_path = 'interpolated_signal_snapshot.png'
-        exporter = ImageExporter(self.plot_widget.getPlotItem())
-        exporter.export(img_path)  # Export the plot widget to an image file
-
-        # Center the image on the page and reduce its size
-        pdf.image(img_path, x=(pdf.w - 150) / 2, y=pdf.get_y(), w=150)  # Center the image
-        pdf.ln(115)  # Add space after caption
 
 
-        # Caption for the image
-        pdf.set_font("Arial", 'I', 12)
-        pdf.cell(0, 10, 'Figure 1: Interpolated Signal Snapshot', 0, 1, 'C')  # Center the caption below the image
-        pdf.ln(3)  # Add space after caption
-
-        # Footer
-        pdf.set_y(-35)  # Position at 1.5 cm from bottom
+        # Add footer for the first page
+        pdf.set_y(-35)  # Position at 3.5 cm from bottom
         pdf.set_font("Arial", 'I', 10)
-        pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')
+        pdf.set_text_color(128, 128, 128)  # Gray color for footer
+        pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')  # Center the page number
+
+        # Include all snapshots in the PDF, each on a new page
+        for i in range(1, self.snapshot_count + 1):
+            img_path = f'snapshot{i}.png'
+            if os.path.exists(img_path):  # Check if the snapshot exists
+                pdf.add_page()  # Add a new page for each snapshot
+
+                # Title for the figure
+                pdf.set_font("Arial", 'B', 18)
+                pdf.set_text_color(0, 51, 102)  # Dark blue color
+                pdf.cell(0, 10, f'Snapshot {i}:', 0, 1, 'C')  # Title above the image
+                pdf.ln(5)  # Add space between title and image
+
+                # Add the image to the PDF
+                pdf.image(img_path, x=(pdf.w - 150) / 2, y=20, w=150)  # Center the image
+                pdf.ln(10)  # Add space after the image
+                
+                # Footer with page number
+                pdf.set_y(-35)  # Position at 3.5 cm from bottom
+                pdf.set_font("Arial", 'I', 10)
+                pdf.set_text_color(128, 128, 128)  # Gray color for footer
+                pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')  # Center the page number
 
         # Save the PDF report
         pdf.output('glue_report.pdf')  # Save PDF report
