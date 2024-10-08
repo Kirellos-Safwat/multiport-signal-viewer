@@ -557,7 +557,7 @@ class SignalApp(QtWidgets.QWidget):
             # Move the window over the signal1 and time1 arrays
             self.window_start = (self.window_start +
                                  1) % (len(self.signal1) - window_size)
-            self.window_end = self.window_start + 
+            self.window_end = self.window_start + window_size
 
             self.plot_signals()
 
