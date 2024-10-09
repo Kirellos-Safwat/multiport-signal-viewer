@@ -53,7 +53,7 @@ class SignalApp(QtWidgets.QWidget):
         self.window_end = 30  # Initial window size
 
         self.window_start2 = 0
-        self.window_end2 = 30   
+        self.window_end2 = 30  # Initial window size
 
         self.user_interacting = False  # Flag to allow mouse panning
         # create a time array matching the sample indices
@@ -67,55 +67,98 @@ class SignalApp(QtWidgets.QWidget):
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer")  # Window Title
         self.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))  # Window Icon
+
         # Dark Grey Color for the Window Background
-        self.setStyleSheet("background-color: #2e2e2e;")
+        self.setStyleSheet("background-color: #042630;")
 
         # Setting the Main layout (Organizing Structure On Top Of Each Other)
         # Vertical Layout for the positioning of child widgets within a parent widget
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
 
+        self.graph1_layout = QtWidgets.QHBoxLayout()
+        self.graph2_layout = QtWidgets.QHBoxLayout()
+
+        self.graphbuttons1_layout = QtWidgets.QVBoxLayout()
+        self.graphbuttons2_layout = QtWidgets.QVBoxLayout()
+
         # Creating signals plotting widgets
         self.plot_widget1 = PlotWidget()
         self.plot_widget2 = PlotWidget()
 
-        self.plot_widget1.setBackground('black')
-        self.plot_widget2.setBackground('black')
+        self.plot_widget1.setBackground('#001414')
+        self.plot_widget2.setBackground('#001414')
 
-        # Adding the plotting widgets of the first signal to the main "vertical" layout
-        self.main_layout.addWidget(self.plot_widget1)
-
-        # Create title input for Signal 1
-        self.title_input1 = QtWidgets.QLineEdit("Signal 1")
-        self.title_input1.setStyleSheet("color: white; font-size: 16px;")
-        self.title_input1.textChanged.connect(self.update_signal_titles)
-        self.main_layout.addWidget(self.title_input1)
+        # Fix the dimensions of the plot widgets (width, height)
+        self.plot_widget1.setFixedSize(600, 250)  # Set fixed size for plot_widget1
+        self.plot_widget2.setFixedSize(600, 250)  # Set fixed size for plot_widget2
 
         # Checkbox for Signal 1 visibility
         self.show_hide_checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
+
+        # Style the checkbox with white text and better appearance
+        self.show_hide_checkbox1.setStyleSheet("""
+            QCheckBox {
+                color: #d0d6d6;            /* Set text color to white */
+                font-size: 14px;          /* Adjust font size */
+                padding: 5px;             /* Add padding around the checkbox */
+            }
+            QCheckBox::indicator {
+                width: 18px;              /* Set the size of the checkbox indicator */
+                height: 18px;
+                border-radius: 5px;       /* Make it slightly rounded */
+                border: 2px solid #4c7273;/* Add a border */
+                background-color: #4c7273; /* Set background color of indicator */
+            }
+            QCheckBox::indicator:checked {
+                background-color: #86b9b0; /* Change color when checked */
+                border: 2px solid #4c7273; /* Change border when checked */
+            }
+            QCheckBox::indicator:hover {
+                border: 2px solid #86b9b0; /* Border on hover */
+            }
+        """)
+
+        # Keep the behavior intact
         self.show_hide_checkbox1.setChecked(True)
         self.show_hide_checkbox1.stateChanged.connect(self.toggle_signal1)
-        self.show_hide_checkbox1.stateChanged.connect(
-            self.sync_checkboxes)  # Sync checkboxes
-        self.main_layout.addWidget(self.show_hide_checkbox1)
+        self.show_hide_checkbox1.stateChanged.connect(self.sync_checkboxes)
 
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
-        self.play_pause_button1 = self.create_button(
-            "Play", self.play_pause_signal1, "play")
-        button_layout1 = self.create_button_layout(
-            self.play_pause_button1, self.stop_signal1, lambda: self.change_color(
-                signal_index=1),
-            lambda: self.zoom_in(self.plot_widget1), lambda: self.zoom_out(
-                self.plot_widget1), lambda: self.show_statistics(self.signal1, self.title1, self.color1)
-        )
-        # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
-        self.main_layout.addLayout(button_layout1)
+        self.play_pause_button1 = self.create_button("", self.play_pause_signal1, "play")
 
         # Creating import signal button
-        self.import_signal1_button = self.create_button(
-            "Import", lambda: self.import_signal_file("graph1"), "import")
-        self.main_layout.addWidget(self.import_signal1_button)
+        self.import_signal1_button = self.create_button("", lambda: self.import_signal_file("graph1"), "import")
+
+        button_layout1 = self.create_button_layout(
+            self.play_pause_button1, 
+            self.stop_signal1, 
+            self.change_color_signal1, 
+            self.zoom_in_signal1, 
+            self.zoom_out_signal1, 
+            self.show_statistics_signal1,
+            self.import_signal1_button
+        )
+
+        # Create title input for Signal 1
+        self.title_input1 = QtWidgets.QLineEdit("Signal 1")
+        self.title_input1.setFixedWidth(150)  # Limit the width to 300px
+        self.title_input1.setStyleSheet("""
+            QLineEdit {
+                color: white;
+                font-size: 16px;
+                padding: 5px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                border: 2px solid #4c7273;
+                border-radius: 10px;
+                background-color: #1e1e1e;
+            }
+        """)
+
+        self.title_input1.setAlignment(QtCore.Qt.AlignCenter)  # Center align the text
+        self.title_input1.textChanged.connect(self.update_signal_titles)
 
         # Slider for Signal 1
         self.speed_slider1 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -125,56 +168,155 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_slider1.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.speed_slider1.setTickInterval(1)  # Each tick represents one unit
 
+        # Create a label above the slider
+        self.speed_label1 = QtWidgets.QLabel("Signal 1 speed control: ")
+        self.speed_label1.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 14px;
+                padding-bottom: 5px;
+            }
+        """)
+
+        # Add the label and slider to a vertical layout
+        self.speed_layout1 = QtWidgets.QVBoxLayout()
+        self.speed_layout1.addStretch()
+        self.speed_layout1.addWidget(self.speed_label1)
+        self.speed_layout1.addWidget(self.speed_slider1)
+        # Apply a custom stylesheet for the QSlider
+        self.speed_slider1.setStyleSheet("""
+            QSlider {
+                background-color: #042630;
+                padding: 0px;
+            }
+            QSlider::groove:horizontal {
+                border: 1px solid #4c7273;
+                height: 8px;
+                background: #1e1e1e;
+                border-radius: 4px;
+            }
+            QSlider::handle:horizontal {
+                background: #86b9b0;
+                border: 2px solid #4c7273;
+                width: 16px;
+                height: 16px;
+                margin: -5px 0; /* Centers the handle with the groove */
+                border-radius: 8px;
+            }
+            QSlider::handle:horizontal:hover {
+                background: #083838;
+                border: 2px solid #4c7273;
+            }
+            QSlider::sub-page:horizontal {
+                background: #86b9b0;
+                border-radius: 4px;
+            }
+            QSlider::add-page:horizontal {
+                background: #1e1e1e;
+                border-radius: 4px;
+            }
+            QSlider::tick-position:above {
+                color: white;
+            }
+        """)
+
         # Connect the slider value change to a method
         self.speed_slider1.valueChanged.connect(self.update_timer_speed1)
 
-        self.main_layout.addWidget(QtWidgets.QLabel("Signal 1 Speed Control:"))
-        self.main_layout.addWidget(self.speed_slider1)
-
-        # Adding the plotting widgets of the first signal to the main "vertical" layout
-        self.main_layout.addWidget(self.plot_widget2)
-
         # Create title input for Signal 2
         self.title_input2 = QtWidgets.QLineEdit("Signal 2")
-        self.title_input2.setStyleSheet("color: white; font-size: 16px;")
+        self.title_input2.setFixedWidth(150)  # Limit the width to 300px
+        self.title_input2.setStyleSheet("""
+            QLineEdit {
+                color: white;
+                font-size: 16px;
+                padding: 5px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                border: 2px solid #4c7273;
+                border-radius: 10px;
+                background-color: #1e1e1e;
+            }
+        """)
+        self.title_input2.setAlignment(QtCore.Qt.AlignCenter)  # Center align the text
         self.title_input2.textChanged.connect(self.update_signal_titles)
-        self.main_layout.addWidget(self.title_input2)
 
         # Checkbox for Signal 2 visibility
         self.show_hide_checkbox2 = QtWidgets.QCheckBox("Show Signal 2")
+
+        # Style the checkbox with white text and better appearance
+        self.show_hide_checkbox2.setStyleSheet("""
+            QCheckBox {
+                color: #d0d6d6;            /* Set text color to white */
+                font-size: 14px;          /* Adjust font size */
+                padding: 5px;             /* Add padding around the checkbox */
+            }
+            QCheckBox::indicator {
+                width: 18px;              /* Set the size of the checkbox indicator */
+                height: 18px;
+                border-radius: 5px;       /* Make it slightly rounded */
+                border: 2px solid #4c7273;/* Add a border */
+                background-color: #4c7273; /* Set background color of indicator */
+            }
+            QCheckBox::indicator:checked {
+                background-color: #86b9b0; /* Change color when checked */
+                border: 2px solid #4c7273; /* Change border when checked */
+            }
+            QCheckBox::indicator:hover {
+                border: 2px solid #86b9b0; /* Border on hover */
+            }
+        """)
+
+        # Keep the behavior intact
         self.show_hide_checkbox2.setChecked(True)
         self.show_hide_checkbox2.stateChanged.connect(self.toggle_signal2)
-        self.show_hide_checkbox2.stateChanged.connect(
-            self.sync_checkboxes)  # Sync checkboxes
-        self.main_layout.addWidget(self.show_hide_checkbox2)
+        self.show_hide_checkbox2.stateChanged.connect(self.sync_checkboxes)
 
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
-        self.play_pause_button2 = self.create_button(
-            "Play", self.play_pause_signal2, "play")
-        button_layout2 = self.create_button_layout(
-            self.play_pause_button2, self.stop_signal2, lambda: self.change_color(
-                signal_index=2),
-            lambda: self.zoom_in(self.plot_widget2), lambda: self.zoom_out(
-                self.plot_widget2), lambda: self.show_statistics(self.signal2, self.title2, self.color2)
-        )
-        # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
-        self.main_layout.addLayout(button_layout2)
+        self.play_pause_button2 = self.create_button("", self.play_pause_signal2, "play")
 
         # Creating import signal button
-        self.import_signal2_button = self.create_button(
-            "Import", lambda: self.import_signal_file("graph2"), "import")
-        self.main_layout.addWidget(self.import_signal2_button)
+        self.import_signal2_button = self.create_button("", lambda: self.import_signal_file("graph2"), "import")
+
+        button_layout2 = self.create_button_layout(
+            self.play_pause_button2, 
+            self.stop_signal2, 
+            self.change_color_signal2, 
+            self.zoom_in_signal2, 
+            self.zoom_out_signal2, 
+            self.show_statistics_signal2,
+            self.import_signal2_button
+        )
+
         # Swap Signals Button
-        self.swap_button = self.create_button(
-            "Swap Signals", self.swap_signals, "swap")
+        self.swap_button = self.create_button("", self.swap_signals, "swap")
+
         # glue Signals Button
-        self.glue_button = self.create_button(
-            "glue Signals", self.glue_signals)
+        self.glue_button = self.create_button("Glue Signals", self.glue_signals)
+        self.glue_button.setStyleSheet("""
+            QPushButton {
+                background-color: #86b9b0;  /* Custom color */
+                color: black;
+                font-size: 16px;  /* Override the font size */
+                font-weight: bold;  /* Make the font bold */
+                padding: 12px;  /* Custom padding */
+                width: 100px;  /* Set specific width */
+                border-radius: 15px;  /* Custom border radius */
+                border: 2px solid #4c7273;
+            }
+            QPushButton:hover {
+                background-color: #4c7273;  /* Custom hover color */
+                border-radius: 15px;  /* Custom border radius */
+                border: 2px solid white;                       
+            }
+            QPushButton:pressed {
+                background-color: #86b9b0;
+            }
+        """)
 
         # Link Button
-        self.link_button = self.create_button(
-            "Link Graphs", self.toggle_link, "link")
+        self.link_button = self.create_button("", self.toggle_link, "link")
 
         # Slider for Signal 2
         self.speed_slider2 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -184,18 +326,60 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_slider2.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.speed_slider2.setTickInterval(1)  # Each tick represents one unit
 
+        # Create a label above the slider
+        self.speed_label2 = QtWidgets.QLabel("Signal 2 speed control: ")
+        self.speed_label2.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 14px;
+                padding-bottom: 5px;
+            }
+        """)
+
+        # Add the label and slider to a vertical layout
+        self.speed_layout2 = QtWidgets.QVBoxLayout()
+        self.speed_layout2.addStretch()
+        self.speed_layout2.addWidget(self.speed_label2)
+        self.speed_layout2.addWidget(self.speed_slider2)
+        # Apply a custom stylesheet for the QSlider
+        self.speed_slider2.setStyleSheet("""
+            QSlider {
+                background-color: #042630;
+                padding: 0px;
+            }
+            QSlider::groove:horizontal {
+                border: 1px solid #4c7273;
+                height: 8px;
+                background: #1e1e1e;
+                border-radius: 4px;
+            }
+            QSlider::handle:horizontal {
+                background: #86b9b0;
+                border: 2px solid #4c7273;
+                width: 16px;
+                height: 16px;
+                margin: -5px 0; /* Centers the handle with the groove */
+                border-radius: 8px;
+            }
+            QSlider::handle:horizontal:hover {
+                background: #083838;
+                border: 2px solid #4c7273;
+            }
+            QSlider::sub-page:horizontal {
+                background: #86b9b0;
+                border-radius: 4px;
+            }
+            QSlider::add-page:horizontal {
+                background: #1e1e1e;
+                border-radius: 4px;
+            }
+            QSlider::tick-position:above {
+                color: white;
+            }
+        """)
+
         # Connect the slider value change to a method
         self.speed_slider2.valueChanged.connect(self.update_timer_speed2)
-
-        self.main_layout.addWidget(QtWidgets.QLabel("Signal 2 Speed Control:"))
-        self.main_layout.addWidget(self.speed_slider2)
-
-        # self.main_layout.addWidget(self.link_button)
-        buttons_layout_3 = QtWidgets.QHBoxLayout()
-        buttons_layout_3.addWidget(self.swap_button)
-        buttons_layout_3.addWidget(self.glue_button)
-        buttons_layout_3.addWidget(self.link_button)
-        self.main_layout.addLayout(buttons_layout_3)
 
         # event listeners for mouse panning
         self.plot_widget1.scene().sigMouseClicked.connect(self.on_user_interaction_start)
@@ -205,7 +389,68 @@ class SignalApp(QtWidgets.QWidget):
         self.plot_widget2.scene().sigMouseClicked.connect(self.on_user_interaction_start)
         self.plot_widget2.sigRangeChanged.connect(
             self.on_user_interaction_start)
+        
+        # Adding the plotting widget of the first signal to the horizontal graph_1_layout
+        self.graph1_layout.addWidget(self.plot_widget1)
+        self.graphbuttons1_layout.addWidget(self.title_input1)
+        self.graphbuttons1_layout.addWidget(self.show_hide_checkbox1)
+        self.graphbuttons1_layout.addLayout(self.speed_layout1)
+        self.graph1_layout.addLayout(self.graphbuttons1_layout)
+        self.main_layout.addLayout(self.graph1_layout)
+        # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
+        self.main_layout.addLayout(button_layout1)
+        button_layout1.addStretch()  # Prevents the buttons from stretching
 
+
+
+        self.graph2_layout.addWidget(self.plot_widget2)
+        self.graphbuttons2_layout.addWidget(self.title_input2)
+        self.graphbuttons2_layout.addWidget(self.show_hide_checkbox2)
+        self.graphbuttons2_layout.addLayout(self.speed_layout2)
+        self.graph2_layout.addLayout(self.graphbuttons2_layout)
+        self.main_layout.addLayout(self.graph2_layout)
+        # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
+        self.main_layout.addLayout(button_layout2)
+        button_layout2.addStretch()  # Prevents the buttons from stretching
+
+
+        # self.main_layout.addWidget(self.link_button)
+        buttons_layout_3 = QtWidgets.QHBoxLayout()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addWidget(self.swap_button)
+        buttons_layout_3.addWidget(self.link_button)
+        buttons_layout_3.addWidget(self.glue_button)
+
+        self.main_layout.addLayout(buttons_layout_3)  
+
+
+
+        # Define separate methods for each action of signal 1
+    def change_color_signal1(self):
+        self.change_color(signal_index=1)
+
+    def zoom_in_signal1(self):
+        self.zoom_in(self.plot_widget1)
+
+    def zoom_out_signal1(self):
+        self.zoom_out(self.plot_widget1)
+
+    def show_statistics_signal1(self):
+        self.show_statistics(self.signal1, self.title1, self.color1)
+
+        # Define separate methods for each action of signal 2
+    def change_color_signal2(self):
+        self.change_color(signal_index=2)
+
+    def zoom_in_signal2(self):
+        self.zoom_in(self.plot_widget2)
+
+    def zoom_out_signal2(self):
+        self.zoom_out(self.plot_widget2)
+
+    def show_statistics_signal2(self):
+        self.show_statistics(self.signal2, self.title2, self.color2)
+        
     def on_user_interaction_start(self):
         self.user_interacting = True  # Set the flag to true when the user starts interacting
 
@@ -289,7 +534,7 @@ class SignalApp(QtWidgets.QWidget):
             self.show_hide_checkbox2.setChecked(
                 self.show_hide_checkbox1.isChecked())
             self.link_button = self.update_button(
-                self.link_button, "Unlink Graphs", "unlink")
+                self.link_button, "", "unlink")
         # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.playing1:
                 self.play_pause_signal2()
@@ -310,7 +555,7 @@ class SignalApp(QtWidgets.QWidget):
             self.link_viewports()
         else:
             self.link_button = self.update_button(
-                self.link_button, "Link Graphs", "link")
+                self.link_button, "", "link")
             self.unlink_viewports()
 
         # Ensure consistent signal speeds
@@ -363,30 +608,60 @@ class SignalApp(QtWidgets.QWidget):
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
 
-    def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics):
+    def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics, import_signal_file):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(play_pause_button)
-        button_layout.addWidget(self.create_button(f"Stop", stop, "stop"))
+        button_layout.addWidget(self.create_button(f"", stop, "rewind"))
         button_layout.addWidget(self.create_button(
-            f"Color", color_change, "color"))
+            
+            f"", color_change, "color"))
         button_layout.addWidget(self.create_button(
-            f"Zoom In", zoom_in, "zoom_in"))
+            f"", zoom_in, "zoom_in"))
         button_layout.addWidget(self.create_button(
-            f"Zoom Out", zoom_out, "zoom_out"))
+            f"", zoom_out, "zoom_out"))
         button_layout.addWidget(self.create_button(
-            f"Statistics", statistics, "statistics"))
+            f"", statistics, "statistics"))
+        button_layout.addWidget(import_signal_file)
         return button_layout
 
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
 
     def create_button(self, text, method, icon_name=''):
         button = QtWidgets.QPushButton(text)
-        button.setStyleSheet(
-            "background-color: #0078d7; color: white; font-size: 14px; padding: 10px; border-radius: 5px;")
-        icon = QtGui.QIcon('assets\\button_icons\\'+icon_name+'.png')
-        button.setIcon(icon)
+
+        # Adjust the button to be a perfect circle
+        button.setStyleSheet("""
+            QPushButton {
+                background-color: #86b9b0;
+                color: white;
+                font-size: 14px;
+                padding: 10;
+                border-radius: 25px;  /* Makes the button a perfect circle */
+                width: 30px;  /* Set the width to 50px */
+                height: 30px;  /* Set the height to 50px */
+                border: 2px solid #012121;
+            }
+            QPushButton:hover {
+                background-color: #4c7273;
+                border: 2px solid white;
+            }
+            QPushButton:pressed {
+                background-color: #86b9b0;
+            }
+        """)
+
+        # Optional icon for the button
+        if icon_name:
+            icon = QtGui.QIcon('assets\\button_icons\\' + icon_name + '.png')
+            button.setIcon(icon)
+            button.setIconSize(QtCore.QSize(55,55 ))  # Enlarge the icon size
+
+        
+        # Connect the button to the method
         button.clicked.connect(method)
+        
         return button
+
 
     # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
 
@@ -462,7 +737,7 @@ class SignalApp(QtWidgets.QWidget):
             if not self.playing1:
                 self.playing1 = True
                 self.play_pause_button1 = self.update_button(
-                    self.play_pause_button1, "Pause", "pause")
+                    self.play_pause_button1, "", "pause")
                 if self.timer1 is None:
                     # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                     self.timer1 = pg.QtCore.QTimer()
@@ -474,7 +749,7 @@ class SignalApp(QtWidgets.QWidget):
             else:
                 self.playing1 = False
                 self.play_pause_button1 = self.update_button(
-                    self.play_pause_button1, "Play", "play")
+                    self.play_pause_button1, "", "play")
                 if self.linked and self.playing2:
                     self.play_pause_signal2()
 
@@ -486,7 +761,7 @@ class SignalApp(QtWidgets.QWidget):
                 self.timer1 = None
             self.playing1 = False
             self.play_pause_button1 = self.update_button(
-                self.play_pause_button1, "Play", "play")
+                self.play_pause_button1, "", "play")
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal2()
@@ -499,7 +774,7 @@ class SignalApp(QtWidgets.QWidget):
             if not self.playing2:
                 self.playing2 = True
                 self.play_pause_button2 = self.update_button(
-                    self.play_pause_button2, "Pause", "pause")
+                    self.play_pause_button2, "", "pause")
                 if self.timer2 is None:
                     self.timer2 = pg.QtCore.QTimer()
                     self.timer2.timeout.connect(self.update_plot2)
@@ -510,7 +785,7 @@ class SignalApp(QtWidgets.QWidget):
             else:
                 self.playing2 = False
                 self.play_pause_button2 = self.update_button(
-                    self.play_pause_button2, "Play", "play")
+                    self.play_pause_button2, "", "play")
                 if self.linked and self.playing1:
                     self.play_pause_signal1()
 
@@ -522,7 +797,7 @@ class SignalApp(QtWidgets.QWidget):
                 self.timer2 = None
             self.playing2 = False
             self.play_pause_button2 = self.update_button(
-                self.play_pause_button2, "Play", "play")
+                self.play_pause_button2, "", "play")
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal1()
