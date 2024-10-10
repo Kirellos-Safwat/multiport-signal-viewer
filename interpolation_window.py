@@ -71,7 +71,7 @@ class InterpolationWindow(QtWidgets.QWidget):
         # Adjust the button to be a perfect circle
         button.setStyleSheet("""
             QPushButton {
-                background-color: #86b9b0;
+                background-color: #adb4b4;
                 color: white;
                 font-size: 14px;
                 padding: 10;

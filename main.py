@@ -90,8 +90,8 @@ class SignalApp(QtWidgets.QWidget):
         self.plot_widget2.setBackground('#001414')
 
         # Fix the dimensions of the plot widgets (width, height)
-        self.plot_widget1.setFixedSize(600, 250)  # Set fixed size for plot_widget1
-        self.plot_widget2.setFixedSize(600, 250)  # Set fixed size for plot_widget2
+        self.plot_widget1.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.plot_widget2.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         # Checkbox for Signal 1 visibility
         self.show_hide_checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
@@ -99,23 +99,23 @@ class SignalApp(QtWidgets.QWidget):
         # Style the checkbox with white text and better appearance
         self.show_hide_checkbox1.setStyleSheet("""
             QCheckBox {
-                color: #d0d6d6;            /* Set text color to white */
-                font-size: 14px;          /* Adjust font size */
-                padding: 5px;             /* Add padding around the checkbox */
+                color: #d0d6d6;           
+                font-size: 14px;          
+                padding: 5px;             
             }
             QCheckBox::indicator {
-                width: 18px;              /* Set the size of the checkbox indicator */
+                width: 18px;              
                 height: 18px;
-                border-radius: 5px;       /* Make it slightly rounded */
-                border: 2px solid #4c7273;/* Add a border */
-                background-color: #4c7273; /* Set background color of indicator */
+                border-radius: 5px;       
+                border: 2px solid #4c7273;
+                background-color: #4c7273; 
             }
             QCheckBox::indicator:checked {
-                background-color: #86b9b0; /* Change color when checked */
-                border: 2px solid #4c7273; /* Change border when checked */
+                background-color: #86b9b0; 
+                border: 2px solid #4c7273; 
             }
             QCheckBox::indicator:hover {
-                border: 2px solid #86b9b0; /* Border on hover */
+                border: 2px solid #86b9b0; 
             }
         """)
 
@@ -143,7 +143,7 @@ class SignalApp(QtWidgets.QWidget):
 
         # Create title input for Signal 1
         self.title_input1 = QtWidgets.QLineEdit("Signal 1")
-        self.title_input1.setFixedWidth(150)  # Limit the width to 300px
+        self.title_input1.setFixedWidth(150)  # Limit the width 
         self.title_input1.setStyleSheet("""
             QLineEdit {
                 color: white;
@@ -165,8 +165,9 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_slider1.setMinimum(0)  # x1/2
         self.speed_slider1.setMaximum(3)  # x4
         self.speed_slider1.setValue(1)    # Start at original speed
-        self.speed_slider1.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.speed_slider1.setTickInterval(1)  # Each tick represents one unit
+
+        self.speed_slider1.setFixedWidth(150)  # Set your desired fixed width
 
         # Create a label above the slider
         self.speed_label1 = QtWidgets.QLabel("Signal 1 speed control: ")
@@ -214,9 +215,6 @@ class SignalApp(QtWidgets.QWidget):
             QSlider::add-page:horizontal {
                 background: #1e1e1e;
                 border-radius: 4px;
-            }
-            QSlider::tick-position:above {
-                color: white;
             }
         """)
 
@@ -296,18 +294,18 @@ class SignalApp(QtWidgets.QWidget):
         self.glue_button = self.create_button("Glue Signals", self.glue_signals)
         self.glue_button.setStyleSheet("""
             QPushButton {
-                background-color: #86b9b0;  /* Custom color */
+                background-color: #adb4b4; 
                 color: black;
-                font-size: 16px;  /* Override the font size */
-                font-weight: bold;  /* Make the font bold */
-                padding: 12px;  /* Custom padding */
-                width: 100px;  /* Set specific width */
-                border-radius: 15px;  /* Custom border radius */
+                font-size: 16px;  
+                font-weight: bold;  
+                padding: 12px; 
+                width: 100px; 
+                border-radius: 15px;  
                 border: 2px solid #4c7273;
             }
             QPushButton:hover {
-                background-color: #4c7273;  /* Custom hover color */
-                border-radius: 15px;  /* Custom border radius */
+                background-color: #4c7273; 
+                border-radius: 15px;  
                 border: 2px solid white;                       
             }
             QPushButton:pressed {
@@ -323,8 +321,9 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_slider2.setMinimum(0)  # x1/2
         self.speed_slider2.setMaximum(3)  # x4
         self.speed_slider2.setValue(1)    # Start at original speed
-        self.speed_slider2.setTickPosition(QtWidgets.QSlider.TicksAbove)
         self.speed_slider2.setTickInterval(1)  # Each tick represents one unit
+
+        self.speed_slider2.setFixedWidth(150)  # Set your desired fixed width
 
         # Create a label above the slider
         self.speed_label2 = QtWidgets.QLabel("Signal 2 speed control: ")
@@ -373,9 +372,6 @@ class SignalApp(QtWidgets.QWidget):
                 background: #1e1e1e;
                 border-radius: 4px;
             }
-            QSlider::tick-position:above {
-                color: white;
-            }
         """)
 
         # Connect the slider value change to a method
@@ -400,6 +396,8 @@ class SignalApp(QtWidgets.QWidget):
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
         self.main_layout.addLayout(button_layout1)
         button_layout1.addStretch()  # Prevents the buttons from stretching
+        button_layout1.addStretch()
+
 
 
 
@@ -412,11 +410,18 @@ class SignalApp(QtWidgets.QWidget):
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
         self.main_layout.addLayout(button_layout2)
         button_layout2.addStretch()  # Prevents the buttons from stretching
+        button_layout2.addStretch()
+
 
 
         # self.main_layout.addWidget(self.link_button)
         buttons_layout_3 = QtWidgets.QHBoxLayout()
         buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+
         buttons_layout_3.addWidget(self.swap_button)
         buttons_layout_3.addWidget(self.link_button)
         buttons_layout_3.addWidget(self.glue_button)
@@ -632,23 +637,26 @@ class SignalApp(QtWidgets.QWidget):
         # Adjust the button to be a perfect circle
         button.setStyleSheet("""
             QPushButton {
-                background-color: #86b9b0;
+                background-color: #adb4b4;
                 color: white;
                 font-size: 14px;
                 padding: 10;
                 border-radius: 25px;  /* Makes the button a perfect circle */
                 width: 30px;  /* Set the width to 50px */
                 height: 30px;  /* Set the height to 50px */
-                border: 2px solid #012121;
+                border: 2px solid #4c7273;
             }
             QPushButton:hover {
                 background-color: #4c7273;
                 border: 2px solid white;
             }
             QPushButton:pressed {
+                             
                 background-color: #86b9b0;
             }
         """)
+        # Set size policy to allow stretching
+        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         # Optional icon for the button
         if icon_name:
@@ -928,6 +936,14 @@ class SignalApp(QtWidgets.QWidget):
         self.show_hide_checkbox1.setText(show_hide_checkbox2_label)
         self.show_hide_checkbox2.setText(show_hide_checkbox1_label)
 
+        # Swap the text between speed_label1 and speed_label2
+        label1_text = self.speed_label1.text()
+        label2_text = self.speed_label2.text()
+        
+        # Swap the text content
+        self.speed_label1.setText(label2_text)
+        self.speed_label2.setText(label1_text)        
+        
         self.plot_signals()
 
     # browsing local signal files, returning signal data as np array

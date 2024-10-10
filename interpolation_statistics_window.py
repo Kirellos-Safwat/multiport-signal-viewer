@@ -44,7 +44,7 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
             name_label = QtWidgets.QLabel(stat_name)
             name_label.setStyleSheet("""
                 QLabel {
-                    color: #86b9b0;  /* Light teal color */
+                    color: #adb4b4;  /* Light teal color */
                     font-size: 18px;  /* Larger font size for visibility */
                     font-weight: bold;  /* Make font bold */
                     padding: 5px;      /* Add padding for aesthetics */
@@ -77,7 +77,7 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
         self.back_button = QtWidgets.QPushButton("Back")
         self.back_button.setStyleSheet("""
             QPushButton {
-                background-color: #86b9b0;  /* Custom color */
+                background-color: #adb4b4;  /* Custom color */
                 color: black;
                 font-size: 16px;  /* Override the font size */
                 font-weight: bold;  /* Make the font bold */
