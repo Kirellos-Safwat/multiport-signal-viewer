@@ -27,6 +27,13 @@ class SignalApp(QtWidgets.QWidget):
         self.title1 = "Square Wave Signal"
         self.title2 = "Cosine Wave Signal"
 
+            # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.plot_widget1.viewRange()[0]  # Get the initial x range
+        self.original_y_range = self.plot_widget1.viewRange()[1]  # Get the initial y range
+                   # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.plot_widget2.viewRange()[0]  # Get the initial x range
+        self.original_y_range = self.plot_widget2.viewRange()[1]  # Get the initial y range
+
         # Link state Flag
         self.linked = False
 
@@ -613,12 +620,12 @@ class SignalApp(QtWidgets.QWidget):
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
 
+
     def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics, import_signal_file):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(play_pause_button)
         button_layout.addWidget(self.create_button(f"", stop, "rewind"))
         button_layout.addWidget(self.create_button(
-            
             f"", color_change, "color"))
         button_layout.addWidget(self.create_button(
             f"", zoom_in, "zoom_in"))
@@ -864,48 +871,52 @@ class SignalApp(QtWidgets.QWidget):
             self.color2 = color.name()
         self.plot_signals()
 
-    # Generating zoom in/zoom out functions of both signals:
     def zoom_in(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] + (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] + (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
 
-            # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.16  # Adjust this value if necessary
+            zoom_factor_y = 0.105  # Adjust this value if necessary
+
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] + (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] - (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] + (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] - (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if self.linked:
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     def zoom_out(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] - (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] - (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
 
-        # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.21 # Adjust this value if necessary
+            zoom_factor_y = 0.42 # Adjust this value if necessary
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] - (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] + (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] - (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] + (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if self.linked:
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):

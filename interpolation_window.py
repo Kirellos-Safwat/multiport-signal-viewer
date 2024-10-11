@@ -16,6 +16,7 @@ class InterpolationWindow(QtWidgets.QWidget):
         self.signal = signal
         self.color = 'g'
         self.snapshot_count = 0  # Initialize snapshot count here
+        self.linked = False  
         self.initUI()
 
     def initUI(self):
@@ -34,6 +35,9 @@ class InterpolationWindow(QtWidgets.QWidget):
         # Adding the Plotting Widget to the Vertical Window Layout
         layout.addWidget(self.plot_widget)
 
+    # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.plot_widget.viewRange()[0]  # Get the initial x range
+        self.original_y_range = self.plot_widget.viewRange()[1]  # Get the initial y range
 
         button_layout = self.create_button_layout(
             self.change_color, 
@@ -51,10 +55,10 @@ class InterpolationWindow(QtWidgets.QWidget):
         button_layout.addWidget(self.create_button(
             
             f"", color_change, "color"))
-        button_layout.addWidget(self.create_button(
-            f"", zoom_in, "zoom_in"))
-        button_layout.addWidget(self.create_button(
-            f"", zoom_out, "zoom_out"))
+        button_layout.addWidget(self.create_button(f"", lambda: self.zoom_in(self.plot_widget), "zoom_in"))
+
+        button_layout.addWidget(self.create_button(f"", lambda: self.zoom_out(self.plot_widget), "zoom_out"))
+
         button_layout.addWidget(self.create_button(
             f"", statistics, "statistics"))
         button_layout.addWidget(self.create_button(
@@ -118,48 +122,53 @@ class InterpolationWindow(QtWidgets.QWidget):
             self.color2 = color.name()
         self.plot_signals()
 
-    # Generating zoom in/zoom out functions of both signals:
     def zoom_in(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] + (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] + (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
+            new_x_range = (x_range[0] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1, 
+                        x_range[1] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
+            new_y_range = (y_range[0] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1, 
+                        y_range[1] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
-            # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            if self.linked:  # Check if the plots are linked and apply to another plot
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
+        else:
+            print("Error: plot_widget is not a valid PlotWidget instance.")
+
+
+                # Update original ranges after zooming
+            self.original_x_range = new_x_range
+            self.original_y_range = new_y_range
 
     def zoom_out(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] - (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] - (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):  # Check if plot_widget is a valid instance
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
 
-        # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            # Calculate the new ranges based on the original ranges
+            new_x_range = (x_range[0] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1,
+                        x_range[1] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
+            new_y_range = (y_range[0] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1,
+                        y_range[1] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
+
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            # If linked, apply to another plot
+            if self.linked:
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            # Update original ranges after zooming
+            self.original_x_range = new_x_range
+            self.original_y_range = new_y_range
+        else:
+            print("Error: plot_widget is not a valid PlotWidget instance.")
+
 
 
     def show_statistics(self):
