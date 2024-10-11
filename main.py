@@ -6,7 +6,7 @@ from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-
+from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
 
@@ -76,7 +76,7 @@ class SignalApp(QtWidgets.QWidget):
         self.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))  # Window Icon
 
         # Dark Grey Color for the Window Background
-        self.setStyleSheet("background-color: #042630;")
+        self.setStyleSheet(Utils.window_style_sheet)
 
         # Setting the Main layout (Organizing Structure On Top Of Each Other)
         # Vertical Layout for the positioning of child widgets within a parent widget
@@ -104,27 +104,7 @@ class SignalApp(QtWidgets.QWidget):
         self.show_hide_checkbox1 = QtWidgets.QCheckBox("Show Signal 1")
 
         # Style the checkbox with white text and better appearance
-        self.show_hide_checkbox1.setStyleSheet("""
-            QCheckBox {
-                color: #d0d6d6;           
-                font-size: 14px;          
-                padding: 5px;             
-            }
-            QCheckBox::indicator {
-                width: 18px;              
-                height: 18px;
-                border-radius: 5px;       
-                border: 2px solid #4c7273;
-                background-color: #4c7273; 
-            }
-            QCheckBox::indicator:checked {
-                background-color: #86b9b0; 
-                border: 2px solid #4c7273; 
-            }
-            QCheckBox::indicator:hover {
-                border: 2px solid #86b9b0; 
-            }
-        """)
+        self.show_hide_checkbox1.setStyleSheet(Utils.checkBox_style_sheet)
 
         # Keep the behavior intact
         self.show_hide_checkbox1.setChecked(True)
@@ -133,10 +113,10 @@ class SignalApp(QtWidgets.QWidget):
 
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
-        self.play_pause_button1 = self.create_button("", self.play_pause_signal1, "play")
+        self.play_pause_button1 = Utils.create_button("", self.play_pause_signal1, "play")
 
         # Creating import signal button
-        self.import_signal1_button = self.create_button("", lambda: self.import_signal_file("graph1"), "import")
+        self.import_signal1_button = Utils.create_button("", lambda: self.import_signal_file("graph1"), "import")
 
         button_layout1 = self.create_button_layout(
             self.play_pause_button1, 
@@ -151,18 +131,7 @@ class SignalApp(QtWidgets.QWidget):
         # Create title input for Signal 1
         self.title_input1 = QtWidgets.QLineEdit("Signal 1")
         self.title_input1.setFixedWidth(150)  # Limit the width 
-        self.title_input1.setStyleSheet("""
-            QLineEdit {
-                color: white;
-                font-size: 16px;
-                padding: 5px;
-                margin-top: 10px;
-                margin-bottom: 10px;
-                border: 2px solid #4c7273;
-                border-radius: 10px;
-                background-color: #1e1e1e;
-            }
-        """)
+        self.title_input1.setStyleSheet(Utils.lineEdit_style_sheet)
 
         self.title_input1.setAlignment(QtCore.Qt.AlignCenter)  # Center align the text
         self.title_input1.textChanged.connect(self.update_signal_titles)
@@ -178,13 +147,7 @@ class SignalApp(QtWidgets.QWidget):
 
         # Create a label above the slider
         self.speed_label1 = QtWidgets.QLabel("Signal 1 speed control: ")
-        self.speed_label1.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 14px;
-                padding-bottom: 5px;
-            }
-        """)
+        self.speed_label1.setStyleSheet(Utils.label_style_sheet)
 
         # Add the label and slider to a vertical layout
         self.speed_layout1 = QtWidgets.QVBoxLayout()
@@ -192,38 +155,7 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_layout1.addWidget(self.speed_label1)
         self.speed_layout1.addWidget(self.speed_slider1)
         # Apply a custom stylesheet for the QSlider
-        self.speed_slider1.setStyleSheet("""
-            QSlider {
-                background-color: #042630;
-                padding: 0px;
-            }
-            QSlider::groove:horizontal {
-                border: 1px solid #4c7273;
-                height: 8px;
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: #86b9b0;
-                border: 2px solid #4c7273;
-                width: 16px;
-                height: 16px;
-                margin: -5px 0; /* Centers the handle with the groove */
-                border-radius: 8px;
-            }
-            QSlider::handle:horizontal:hover {
-                background: #083838;
-                border: 2px solid #4c7273;
-            }
-            QSlider::sub-page:horizontal {
-                background: #86b9b0;
-                border-radius: 4px;
-            }
-            QSlider::add-page:horizontal {
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-        """)
+        self.speed_slider1.setStyleSheet(Utils.slider_style_sheet)
 
         # Connect the slider value change to a method
         self.speed_slider1.valueChanged.connect(self.update_timer_speed1)
@@ -231,18 +163,7 @@ class SignalApp(QtWidgets.QWidget):
         # Create title input for Signal 2
         self.title_input2 = QtWidgets.QLineEdit("Signal 2")
         self.title_input2.setFixedWidth(150)  # Limit the width to 300px
-        self.title_input2.setStyleSheet("""
-            QLineEdit {
-                color: white;
-                font-size: 16px;
-                padding: 5px;
-                margin-top: 10px;
-                margin-bottom: 10px;
-                border: 2px solid #4c7273;
-                border-radius: 10px;
-                background-color: #1e1e1e;
-            }
-        """)
+        self.title_input2.setStyleSheet(Utils.lineEdit_style_sheet)
         self.title_input2.setAlignment(QtCore.Qt.AlignCenter)  # Center align the text
         self.title_input2.textChanged.connect(self.update_signal_titles)
 
@@ -250,27 +171,7 @@ class SignalApp(QtWidgets.QWidget):
         self.show_hide_checkbox2 = QtWidgets.QCheckBox("Show Signal 2")
 
         # Style the checkbox with white text and better appearance
-        self.show_hide_checkbox2.setStyleSheet("""
-            QCheckBox {
-                color: #d0d6d6;            /* Set text color to white */
-                font-size: 14px;          /* Adjust font size */
-                padding: 5px;             /* Add padding around the checkbox */
-            }
-            QCheckBox::indicator {
-                width: 18px;              /* Set the size of the checkbox indicator */
-                height: 18px;
-                border-radius: 5px;       /* Make it slightly rounded */
-                border: 2px solid #4c7273;/* Add a border */
-                background-color: #4c7273; /* Set background color of indicator */
-            }
-            QCheckBox::indicator:checked {
-                background-color: #86b9b0; /* Change color when checked */
-                border: 2px solid #4c7273; /* Change border when checked */
-            }
-            QCheckBox::indicator:hover {
-                border: 2px solid #86b9b0; /* Border on hover */
-            }
-        """)
+        self.show_hide_checkbox2.setStyleSheet(Utils.checkBox_style_sheet)
 
         # Keep the behavior intact
         self.show_hide_checkbox2.setChecked(True)
@@ -279,10 +180,10 @@ class SignalApp(QtWidgets.QWidget):
 
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
-        self.play_pause_button2 = self.create_button("", self.play_pause_signal2, "play")
+        self.play_pause_button2 = Utils.create_button("", self.play_pause_signal2, "play")
 
         # Creating import signal button
-        self.import_signal2_button = self.create_button("", lambda: self.import_signal_file("graph2"), "import")
+        self.import_signal2_button = Utils.create_button("", lambda: self.import_signal_file("graph2"), "import")
 
         button_layout2 = self.create_button_layout(
             self.play_pause_button2, 
@@ -295,11 +196,10 @@ class SignalApp(QtWidgets.QWidget):
         )
 
         # Swap Signals Button
-        self.swap_button = self.create_button("", self.swap_signals, "swap")
+        self.swap_button = Utils.create_button("", self.swap_signals, "swap")
 
         # glue Signals Button
-        self.glue_button = self.create_button("Glue Signals", self.glue_signals)
-        self.glue_button.setStyleSheet("""
+        style_sheet = ("""
             QPushButton {
                 background-color: #adb4b4; 
                 color: black;
@@ -319,9 +219,10 @@ class SignalApp(QtWidgets.QWidget):
                 background-color: #86b9b0;
             }
         """)
+        self.glue_button = Utils.create_button("Glue Signals", self.glue_signals, stylesheet=style_sheet)
 
         # Link Button
-        self.link_button = self.create_button("", self.toggle_link, "link")
+        self.link_button = Utils.create_button("", self.toggle_link, "link")
 
         # Slider for Signal 2
         self.speed_slider2 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -334,13 +235,7 @@ class SignalApp(QtWidgets.QWidget):
 
         # Create a label above the slider
         self.speed_label2 = QtWidgets.QLabel("Signal 2 speed control: ")
-        self.speed_label2.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 14px;
-                padding-bottom: 5px;
-            }
-        """)
+        self.speed_label2.setStyleSheet(Utils.label_style_sheet)
 
         # Add the label and slider to a vertical layout
         self.speed_layout2 = QtWidgets.QVBoxLayout()
@@ -348,38 +243,7 @@ class SignalApp(QtWidgets.QWidget):
         self.speed_layout2.addWidget(self.speed_label2)
         self.speed_layout2.addWidget(self.speed_slider2)
         # Apply a custom stylesheet for the QSlider
-        self.speed_slider2.setStyleSheet("""
-            QSlider {
-                background-color: #042630;
-                padding: 0px;
-            }
-            QSlider::groove:horizontal {
-                border: 1px solid #4c7273;
-                height: 8px;
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: #86b9b0;
-                border: 2px solid #4c7273;
-                width: 16px;
-                height: 16px;
-                margin: -5px 0; /* Centers the handle with the groove */
-                border-radius: 8px;
-            }
-            QSlider::handle:horizontal:hover {
-                background: #083838;
-                border: 2px solid #4c7273;
-            }
-            QSlider::sub-page:horizontal {
-                background: #86b9b0;
-                border-radius: 4px;
-            }
-            QSlider::add-page:horizontal {
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-        """)
+        self.speed_slider2.setStyleSheet(Utils.slider_style_sheet)
 
         # Connect the slider value change to a method
         self.speed_slider2.valueChanged.connect(self.update_timer_speed2)
@@ -624,58 +488,20 @@ class SignalApp(QtWidgets.QWidget):
     def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics, import_signal_file):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(play_pause_button)
-        button_layout.addWidget(self.create_button(f"", stop, "rewind"))
-        button_layout.addWidget(self.create_button(
+        button_layout.addWidget(Utils.create_button(f"", stop, "rewind"))
+        button_layout.addWidget(Utils.create_button(
+            
             f"", color_change, "color"))
-        button_layout.addWidget(self.create_button(
+        button_layout.addWidget(Utils.create_button(
             f"", zoom_in, "zoom_in"))
-        button_layout.addWidget(self.create_button(
+        button_layout.addWidget(Utils.create_button(
             f"", zoom_out, "zoom_out"))
-        button_layout.addWidget(self.create_button(
+        button_layout.addWidget(Utils.create_button(
             f"", statistics, "statistics"))
         button_layout.addWidget(import_signal_file)
         return button_layout
 
-    # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
-
-    def create_button(self, text, method, icon_name=''):
-        button = QtWidgets.QPushButton(text)
-
-        # Adjust the button to be a perfect circle
-        button.setStyleSheet("""
-            QPushButton {
-                background-color: #adb4b4;
-                color: white;
-                font-size: 14px;
-                padding: 10;
-                border-radius: 25px;  /* Makes the button a perfect circle */
-                width: 30px;  /* Set the width to 50px */
-                height: 30px;  /* Set the height to 50px */
-                border: 2px solid #4c7273;
-            }
-            QPushButton:hover {
-                background-color: #4c7273;
-                border: 2px solid white;
-            }
-            QPushButton:pressed {
-                             
-                background-color: #86b9b0;
-            }
-        """)
-        # Set size policy to allow stretching
-        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-
-        # Optional icon for the button
-        if icon_name:
-            icon = QtGui.QIcon('assets\\button_icons\\' + icon_name + '.png')
-            button.setIcon(icon)
-            button.setIconSize(QtCore.QSize(55,55 ))  # Enlarge the icon size
-
-        
-        # Connect the button to the method
-        button.clicked.connect(method)
-        
-        return button
+    
 
 
     # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
@@ -1001,9 +827,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of interpolating(averaging)(gluing) both signals
 
     def glue_signals(self):
-        self.glued_signal = (self.signal1 + self.signal2) / 2
+        # self.glued_signal = (self.signal1 + self.signal2) / 2
         self.interpolation_window = InterpolationWindow(
-            self.glued_signal)  # Generating the Intepolation Window
+            self.signal1, self.signal2)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
