@@ -990,9 +990,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of interpolating(averaging)(gluing) both signals
 
     def glue_signals(self):
-        self.glued_signal = (self.signal1 + self.signal2) / 2
+        # self.glued_signal = (self.signal1 + self.signal2) / 2
         self.interpolation_window = InterpolationWindow(
-            self.glued_signal)  # Generating the Intepolation Window
+            self.signal1, self.signal2)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
