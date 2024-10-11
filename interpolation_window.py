@@ -23,6 +23,8 @@ class InterpolationWindow(QWidget):
         # Disable mouse panning when performing selection
         self.mouse_move_connected = False
 
+        self.gap = 0
+
         self.initUI()
 
     def initUI(self):
@@ -150,7 +152,7 @@ class InterpolationWindow(QWidget):
         self.region.hide()  # Hide until used
         self.plot_widget.addItem(self.region)
 
-    def glue_signals(self):
+    def glue_signals(self, gap = 0):
         # Ensure both sub-signals are selected before gluing
         if self.first_sub_signal is None or self.second_sub_signal is None:
             print("Both signals need to be selected before gluing.")
@@ -160,8 +162,8 @@ class InterpolationWindow(QWidget):
         sub_y1 = self.first_sub_signal
         sub_y2 = self.second_sub_signal
 
-        # # Plot the glued signal
-        gap = -20  # Positive for gap, negative for overlap (in samples)
+        # Plot the glued signal
+        # Positive for gap, negative for overlap (in samples)
 
         if gap > 0:
             glued_signal = np.concatenate([sub_y1, np.zeros(gap), sub_y2])
@@ -172,8 +174,6 @@ class InterpolationWindow(QWidget):
 
         self.plot_widget.clear()
         self.plot_widget.plot(glued_signal, pen='r')
-        print(sub_y1.shape, sub_y2.shape)
-        print("Signals Glued and Displayed")
     
     def interpolate_signals(self, signal1, signal2):
         x1 = np.linspace(0, 1, len(signal1))
@@ -184,10 +184,20 @@ class InterpolationWindow(QWidget):
         y = np.concatenate([signal1, signal2])
         
         # Create the interpolating function (linear interpolation)
-        f = interp1d(x, y, kind='nearest')
+        f = interp1d(x, y, kind='linear')
         
         # Generate new interpolated points
         new_x = np.linspace(0, 2, len(signal1) + len(signal2))
         interpolated_signal = f(new_x)
         
         return interpolated_signal
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Left:
+            self.gap -= 1
+            self.glue_signals(self.gap)
+            print("Gap: ", self.gap)
+        elif event.key() == Qt.Key_Right:
+            self.gap += 1
+            self.glue_signals(self.gap)
+            print("Gap: ", self.gap)
