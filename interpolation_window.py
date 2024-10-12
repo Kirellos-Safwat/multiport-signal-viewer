@@ -55,8 +55,7 @@ class InterpolationWindow(QWidget):
         self.plot_widget.scene().sigMouseClicked.connect(self.on_mouse_clicked)
 
         button_layout = QtWidgets.QHBoxLayout()
-        button_layout.addWidget(Utils.create_button(f"Reset", self.reset_graph, "Reset", stylesheet=Utils.button_style_sheet))
-        button_layout.addWidget(Utils.create_button(f"Glue Signals", self.glue_signals, "Glue Signals", stylesheet=Utils.button_style_sheet))
+        button_layout.addWidget(Utils.create_button(f"Reset", self.reset_graph, "Reset"))
 
         self.change_color_button = Utils.create_button(f"", self.change_color, "color", set_enabled=False)
         button_layout.addWidget(self.change_color_button)
@@ -168,7 +167,9 @@ class InterpolationWindow(QWidget):
             self.first_signal_plot = self.plot_widget.removeItem(self.first_signal_plot)
             self.plot_widget.plot(self.signal2, pen='b')
             self.plot_widget.setTitle("Second Signal")
-            print("First Sub-Signal Selected")
+            response = Utils.show_info_message("First Sub-Signal Selected", True)
+            if response == "reset":
+                self.reset_graph()
         else:
                 # Ensure indices are within valid bounds
             start_idx = max(0, min(start_idx, len(self.signal2) - 1))
@@ -180,8 +181,9 @@ class InterpolationWindow(QWidget):
             # Extract the sub-signal
             sub_signal = self.signal2[start_idx:end_idx + 1]
             self.second_sub_signal = sub_signal
-            print("Second Sub-Signal Selected")
-            self.gap_slider.setEnabled(True)
+            response = Utils.show_info_message("Second Sub-Signal Selected", True)
+            if response == "continue":
+                self.glue_signals()
         # Hide the region after selection
         self.region.hide()
 
@@ -193,7 +195,6 @@ class InterpolationWindow(QWidget):
         self.start_pos = None
         self.end_pos = None
         self.region.hide()  # Hide the selection region
-        print("Graph Cleared")
         self.first_signal_plot = self.plot_widget.plot(self.signal1, pen='b')
         self.plot_widget.setTitle("First Signal")
         self.plot_widget.setMouseEnabled(x=False, y=False)
@@ -210,7 +211,7 @@ class InterpolationWindow(QWidget):
     def glue_signals(self, gap = 0):
         # Ensure both sub-signals are selected before gluing
         if self.first_sub_signal is None or self.second_sub_signal is None:
-            print("Both signals need to be selected before gluing.")
+            Utils.show_warning_message("Both signals need to be selected before gluing.")
             return
 
         # Glue the two sub-signals together by concatenating their x and y values
@@ -225,6 +226,7 @@ class InterpolationWindow(QWidget):
 
         self.plot_widget.clear()
         self.plot_widget.plot(self.glued_signal, pen=self.glued_signal_color)
+        self.gap_slider.setEnabled(True)
         self.change_color_button.setEnabled(True)
         self.show_statistics_button.setEnabled(True)
         self.export_report_button.setEnabled(True)
@@ -269,11 +271,11 @@ class InterpolationWindow(QWidget):
         if event.key() == Qt.Key_Left:
             self.gap -= 5
             self.glue_signals(self.gap)
-            print("Gap: ", self.gap)
+            # print("Gap: ", self.gap)
         elif event.key() == Qt.Key_Right:
             self.gap += 5
             self.glue_signals(self.gap)
-            print("Gap: ", self.gap)
+            # print("Gap: ", self.gap)
 
     def update_gap(self):
         self.glue_signals(self.gap_slider.value())

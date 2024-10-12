@@ -5,11 +5,13 @@ from pyqtgraph import PlotWidget
 from PyQt5 import QtGui, QtWidgets
 from utils import Utils
 from pyqtgraph import PlotWidget, QtCore
+from PyQt5.QtCore import Qt
 
 
 class SignalPlotWidget():
     
     is_linked = False
+    syncing = False
     graph_instances = []
     speed_mapping = {
             0: 200,  # x1/2 speed
@@ -18,7 +20,7 @@ class SignalPlotWidget():
             3: 25    # x4 speed
         }
 
-    def __init__(self, is_playing=False, speed=1, window_range=(0, 30), timer=None, name='Graph'):
+    def __init__(self, is_playing=False, speed=1, window_range=(0, 30), timer=None, name=''):
         super().__init__()
         self.is_playing = is_playing
         self.speed = speed
@@ -83,15 +85,6 @@ class SignalPlotWidget():
         self.graph_layout.addLayout(self.controls_layout)
 
         SignalPlotWidget.graph_instances.append(self)
-    # def show_hide_toggle(self, state):
-    #     if state == Qt.Checked:
-    #         # Plot signal1 only if it's checked
-    #         self.first_graph.plot_widget.clear()
-    #         self.first_graph.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
-    #         self.first_graph.plot_widget.setYRange(-1, 1)
-    #         self.first_graph.plot_widget.setTitle(self.title_input1.text())
-    #     else:
-    #         self.first_graph.plot_widget.clear() 
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
@@ -121,4 +114,58 @@ class SignalPlotWidget():
                     other.show_hide_checkbox.setChecked(self.show_hide_checkbox.isChecked())
 
 
-                    
+    def toggle_signal(self, state, signal):
+        if state == Qt.Checked:
+            # Plot signal only if it's checked
+            self.plot_widget.clear()
+            self.plot_widget.plot(signal.data, pen=signal.color)
+            self.plot_widget.setYRange(-1, 1)
+            self.plot_widget.setTitle(self.title_input.text())
+        else:
+            self.plot_widget.clear()  # Clear the plot if unchecked
+
+    def update_plot(self, signal, user_interacting):
+        if self.is_playing and user_interacting:
+            window_size = self.window_end - self.window_start # how much is visible at once
+            self.window_start = (self.window_start + 1) % (len(signal.data) - window_size)
+            self.window_end = self.window_start + window_size
+
+    @staticmethod
+    def link_viewports():
+        # Sync the range and zoom between both graphs
+        # The sigRangeChanged signal is part of the pyqtgraph library.
+        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.connect(SignalPlotWidget.sync_range)
+        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.connect(SignalPlotWidget.sync_range)
+
+        # Sync the initial view range when linking
+        SignalPlotWidget.sync_viewports()    
+
+    @staticmethod
+    def unlink_viewports():
+        # Properly disconnect the range syncing behavior to stop linking
+        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.sync_range)
+        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.sync_range)
+
+    @staticmethod
+    def sync_viewports():
+        # Ensure both graphs have the same zoom and pan when linked
+        # returns a list containing two elements: the x-range and y-range
+        range1 = SignalPlotWidget.graph_instances[0].plot_widget.viewRange()
+        # Padding = 0 is used to prevent signal shrinking by preventing buffer space
+        SignalPlotWidget.graph_instances[1].plot_widget.setXRange(*range1[0], padding=0)
+        # The asterisk in here unpacks the tuple so that setXRange() receives two args: start&end of range
+        SignalPlotWidget.graph_instances[1].plot_widget.setYRange(*range1[1], padding=0)
+
+    @staticmethod
+    def sync_range():
+        if SignalPlotWidget.syncing:
+            return  # Prevent recursive syncing
+        SignalPlotWidget.syncing = True
+
+        range2 = SignalPlotWidget.graph_instances[1].plot_widget.viewRange()
+        SignalPlotWidget.graph_instances[0].plot_widget.setXRange(*range2[0], padding=0)
+        SignalPlotWidget.graph_instances[0].plot_widget.setYRange(*range2[1], padding=0)
+
+        SignalPlotWidget.syncing = False
+
+

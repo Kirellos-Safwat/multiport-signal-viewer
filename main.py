@@ -57,15 +57,15 @@ class SignalApp(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
         # Creating signals plotting widgets
-        self.first_graph = SignalPlotWidget()
-        self.second_graph = SignalPlotWidget()
+        self.first_graph = SignalPlotWidget(name='Graph One')
+        self.second_graph = SignalPlotWidget(name='Graph Two')
 
         # Setting the Control buttons for Signal 1:
         # Creating "horizontal" layout for the buttons of signal 1:
         self.play_pause_button1 = Utils.create_button("", self.play_pause_signal1, "play")
 
         # Creating import signal button
-        self.import_signal1_button = Utils.create_button("", lambda: self.import_signal_file("graph1"), "import")
+        self.import_signal1_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal1), "import")
 
         button_layout1 = self.create_button_layout(
             self.play_pause_button1, 
@@ -82,7 +82,7 @@ class SignalApp(QtWidgets.QWidget):
         self.play_pause_button2 = Utils.create_button("", self.play_pause_signal2, "play")
 
         # Creating import signal button
-        self.import_signal2_button = Utils.create_button("", lambda: self.import_signal_file("graph2"), "import")
+        self.import_signal2_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal2), "import")
 
         button_layout2 = self.create_button_layout(
             self.play_pause_button2, 
@@ -140,35 +140,15 @@ class SignalApp(QtWidgets.QWidget):
         self.main_layout.addLayout(buttons_layout_3)  
 
         # connect methods to buttons
-        self.first_graph.show_hide_checkbox.stateChanged.connect(self.toggle_signal1)
+        self.first_graph.show_hide_checkbox.stateChanged.connect(lambda state: self.first_graph.toggle_signal(state, self.signal1))
 
-        self.second_graph.show_hide_checkbox.stateChanged.connect(self.toggle_signal2)
+        self.second_graph.show_hide_checkbox.stateChanged.connect(lambda state: self.second_graph.toggle_signal(state, self.signal2))
         
     def on_user_interaction_start(self):
         self.user_interacting = True  # Set the flag to true when the user starts interacting
 
     def on_user_interaction_end(self):
         self.user_interacting = False  # Reset the flag after interaction ends
-
-    def toggle_signal1(self, state):
-        if state == Qt.Checked:
-            # Plot signal1 only if it's checked
-            self.first_graph.plot_widget.clear()
-            self.first_graph.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
-            self.first_graph.plot_widget.setYRange(-1, 1)
-            self.first_graph.plot_widget.setTitle(self.first_graph.title_input.text())
-        else:
-            self.first_graph.plot_widget.clear()  # Clear the plot if unchecked
-
-    def toggle_signal2(self, state):
-        if state == Qt.Checked:
-            # Plot signal2 only if it's checked
-            self.second_graph.plot_widget.clear()
-            self.second_graph.plot_widget.plot(self.signal2.data, pen=self.signal2.color)
-            self.second_graph.plot_widget.setYRange(-1, 1)
-            self.second_graph.plot_widget.setTitle(self.second_graph.title_input.text())
-        else:
-            self.second_graph.plot_widget.clear()  # Clear the plot if unchecked
 
     # Generating the function responsible for linking/unlinking graphs
     def toggle_link(self):
@@ -178,7 +158,7 @@ class SignalApp(QtWidgets.QWidget):
             # Sync the visibility of the checkboxes
             self.second_graph.show_hide_checkbox.setChecked(
                 self.first_graph.show_hide_checkbox.isChecked())
-            self.link_button = self.update_button(
+            self.link_button = Utils.update_button(
                 self.link_button, "", "unlink")
         # This is dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.first_graph.is_playing:
@@ -197,11 +177,11 @@ class SignalApp(QtWidgets.QWidget):
                 self.first_graph.timer.setInterval(new_timer_interval)
             if self.second_graph.timer is not None:
                 self.second_graph.timer.setInterval(new_timer_interval)
-            self.link_viewports()
+            SignalPlotWidget.link_viewports()
         else:
-            self.link_button = self.update_button(
+            self.link_button = Utils.update_button(
                 self.link_button, "", "link")
-            self.unlink_viewports()
+            SignalPlotWidget.unlink_viewports()
 
         # Ensure consistent signal speeds
         if SignalPlotWidget.is_linked:
@@ -211,45 +191,6 @@ class SignalApp(QtWidgets.QWidget):
                     self.second_graph.timer.setInterval(
                         self.first_graph.timer.interval())  # Sync intervals
 
-    def link_viewports(self):
-        # Sync the range and zoom between both graphs
-        # The sigRangeChanged signal is part of the pyqtgraph library.
-        self.first_graph.plot_widget.sigRangeChanged.connect(self.sync_range)
-        self.second_graph.plot_widget.sigRangeChanged.connect(self.sync_range)
-
-        # Sync the initial view range when linking
-        self.sync_viewports()
-
-    def unlink_viewports(self):
-        # Properly disconnect the range syncing behavior to stop linking
-        self.first_graph.plot_widget.sigRangeChanged.disconnect(self.sync_range)
-        self.second_graph.plot_widget.sigRangeChanged.disconnect(self.sync_range)
-
-    def sync_viewports(self):
-        # Ensure both graphs have the same zoom and pan when linked
-        # returns a list containing two elements: the x-range and y-range
-        range1 = self.first_graph.plot_widget.viewRange()
-        # Padding = 0 is used to prevent signal shrinking by preventing buffer space
-        self.second_graph.plot_widget.setXRange(*range1[0], padding=0)
-        # The asterisk in here unpacks the tuple so that setXRange() receives two args: start&end of range
-        self.second_graph.plot_widget.setYRange(*range1[1], padding=0)
-
-    def sync_range(self):
-        if self.syncing:
-            return  # Prevent recursive syncing
-
-        self.syncing = True
-
-        if self.sender() == self.first_graph.plot_widget:
-            range1 = self.first_graph.plot_widget.viewRange()
-            self.second_graph.plot_widget.setXRange(*range1[0], padding=0)
-            self.second_graph.plot_widget.setYRange(*range1[1], padding=0)
-        else:
-            range2 = self.second_graph.plot_widget.viewRange()
-            self.first_graph.plot_widget.setXRange(*range2[0], padding=0)
-            self.first_graph.plot_widget.setYRange(*range2[1], padding=0)
-
-        self.syncing = False
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
 
@@ -303,7 +244,7 @@ class SignalApp(QtWidgets.QWidget):
 
         # Synchronize the zoom and pan if linked
         if SignalPlotWidget.is_linked:
-            self.sync_viewports()  # Initial sync on plotting
+            SignalPlotWidget.sync_viewports()  # Initial sync on plotting
 
         if self.first_graph.show_hide_checkbox.isChecked():
             self.first_graph.plot_widget.plot(self.signal1.time_axis, self.signal1.data, pen=self.signal1.color)
@@ -342,19 +283,20 @@ class SignalApp(QtWidgets.QWidget):
         if self.first_graph.show_hide_checkbox.isChecked():
             if not self.first_graph.is_playing:
                 self.first_graph.is_playing = True
-                self.play_pause_button1 = self.update_button(
+                self.play_pause_button1 = Utils.update_button(
                     self.play_pause_button1, "", "pause")
                 if self.first_graph.timer is None:
                     # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                     self.first_graph.timer = pg.QtCore.QTimer()
-                    self.first_graph.timer.timeout.connect(self.update_plot1)
+                    self.first_graph.timer.timeout.connect(lambda: 
+                    (self.first_graph.update_plot(self.signal1, self.user_interacting), self.plot_signals()))
                     self.first_graph.timer.start(100)  # Frequent updates every 100ms
                 if SignalPlotWidget.is_linked and not self.second_graph.is_playing:
                     self.play_pause_signal2()
 
             else:
                 self.first_graph.is_playing = False
-                self.play_pause_button1 = self.update_button(
+                self.play_pause_button1 = Utils.update_button(
                     self.play_pause_button1, "", "play")
                 if SignalPlotWidget.is_linked and self.second_graph.is_playing:
                     self.play_pause_signal2()
@@ -366,7 +308,7 @@ class SignalApp(QtWidgets.QWidget):
                 self.first_graph.timer.stop()
                 self.first_graph.timer = None
             self.first_graph.is_playing = False
-            self.play_pause_button1 = self.update_button(
+            self.play_pause_button1 = Utils.update_button(
                 self.play_pause_button1, "", "play")
             if SignalPlotWidget.is_linked and not self.stopped_by_link:
                 self.stopped_by_link = True
@@ -379,18 +321,19 @@ class SignalApp(QtWidgets.QWidget):
         if self.second_graph.show_hide_checkbox.isChecked():
             if not self.second_graph.is_playing:
                 self.second_graph.is_playing = True
-                self.play_pause_button2 = self.update_button(
+                self.play_pause_button2 = Utils.update_button(
                     self.play_pause_button2, "", "pause")
                 if self.second_graph.timer is None:
                     self.second_graph.timer = pg.QtCore.QTimer()
-                    self.second_graph.timer.timeout.connect(self.update_plot2)
+                    self.second_graph.timer.timeout.connect(lambda: 
+                    (self.second_graph.update_plot(self.signal2, self.user_interacting), self.plot_signals()))
                     self.second_graph.timer.start(100)
                 if SignalPlotWidget.is_linked and not self.first_graph.is_playing:
                     self.play_pause_signal1()
 
             else:
                 self.second_graph.is_playing = False
-                self.play_pause_button2 = self.update_button(
+                self.play_pause_button2 = Utils.update_button(
                     self.play_pause_button2, "", "play")
                 if SignalPlotWidget.is_linked and self.first_graph.is_playing:
                     self.play_pause_signal1()
@@ -402,42 +345,13 @@ class SignalApp(QtWidgets.QWidget):
                 self.second_graph.timer.stop()
                 self.second_graph.timer = None
             self.second_graph.is_playing = False
-            self.play_pause_button2 = self.update_button(
+            self.play_pause_button2 = Utils.update_button(
                 self.play_pause_button2, "", "play")
             if SignalPlotWidget.is_linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal1()
             self.plot_signals()
             self.stopped_by_link = False
-
-    def update_button(self, button, text, icon_name):
-        button.setText(text)
-        icon = QtGui.QIcon('assets\\button_icons\\'+str(icon_name)+'.png')
-        button.setIcon(icon)
-        return button
-
-    def update_plot1(self):
-        if self.first_graph.is_playing and self.user_interacting:
-
-            window_size = 30  # how much is visible at once
-
-            # Move the window over the signal1 and time1 arrays
-            self.first_graph.window_start = (self.first_graph.window_start + 1) % (len(self.signal1.data) - window_size)
-            self.first_graph.window_end = self.first_graph.window_start + window_size
-
-            self.plot_signals()
-
-    def update_plot2(self):
-        if self.second_graph.is_playing and self.user_interacting:
-
-            window_size = self.second_graph.window_end - self.second_graph.window_start # how much is visible at once
-
-            self.second_graph.window_start = (self.second_graph.window_start +
-                                  1) % (len(self.signal2.data) - window_size)
-            self.second_graph.window_end = self.second_graph.window_start + window_size
-
-            self.plot_signals()
-
 
     def zoom_in(self, plot_widget):
         if isinstance(plot_widget, PlotWidget):
@@ -504,10 +418,10 @@ class SignalApp(QtWidgets.QWidget):
         self.second_graph.show_hide_checkbox.setChecked(self.first_graph.show_hide_checkbox1_stat)
 
         # Ensure visibility reflects the swapped states
-        self.toggle_signal1(
-            Qt.Checked if self.second_graph.show_hide_checkbox2_stat else Qt.Unchecked)
-        self.toggle_signal2(
-            Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked)
+        self.first_graph.toggle_signal(
+            Qt.Checked if self.second_graph.show_hide_checkbox2_stat else Qt.Unchecked, self.signal1)
+        self.second_graph.toggle_signal(
+            Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked, self.signal2)
 
         # Swap the labels of the visibility checkboxes
         self.first_graph.show_hide_checkbox1_labe = self.first_graph.show_hide_checkbox.text()
@@ -525,46 +439,6 @@ class SignalApp(QtWidgets.QWidget):
         
         self.plot_signals()
 
-    # browsing local signal files, returning signal data as np array
-    def import_signal_file(self, graph):
-        file_name, _ = QFileDialog.getOpenFileName()
-        if file_name:
-            extension = os.path.splitext(file_name)[1].lower()
-            if extension == '.csv':
-                # Assuming each row in the CSV represents signal data
-                signal_data = np.genfromtxt(file_name, delimiter=',')
-            elif extension == '.txt':
-                # Assuming space-separated signal data in TXT file
-                signal_data = np.loadtxt(file_name)
-            elif extension == '.bin':
-                with open(file_name, 'rb') as f:
-                    # Load binary data assuming it's float32 by default
-                    signal_data = np.fromfile(f, dtype=np.dtype)
-            else:
-                self.show_error_message("Unsupported file format.")
-                return
-
-        if signal_data.ndim == 1:
-            if graph == 'graph1':
-                self.signal1.data = signal_data
-                self.signal1.time_axis = np.linspace(0, 1000, len(self.signal1.data))
-                self.signal1.title = os.path.splitext(os.path.basename(file_name))[0]
-            elif graph == 'graph2':
-                self.signal2.data = signal_data
-                self.signal2.time_axis = np.linspace(0, 1000, len(self.signal2.data))
-                self.signal2.title = os.path.splitext(os.path.basename(file_name))[0]
-
-        else:
-            self.show_error_message(
-                "Unsupported signal dimension." + str(signal_data.ndim))
-
-    def show_error_message(self, message):
-        # Create a QMessageBox for error
-        self.msg_box = QMessageBox()
-        self.msg_box.setIcon(QMessageBox.Critical)
-        self.msg_box.setText(message)
-        self.msg_box.setWindowTitle("Error")
-        self.msg_box.exec_()
 
     # Generating the function of interpolating(averaging)(gluing) both signals
 
