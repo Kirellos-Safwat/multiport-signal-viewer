@@ -36,13 +36,8 @@ class SignalApp(QtWidgets.QWidget):
 
         # Link state Flag
         self.linked = False
-
         # Sync Flag
         self.syncing = False
-
-        # Initializing Timers to refresh the visuals of the signals based on them for a dynamic view
-        self.timer1 = None
-        self.timer2 = None
 
         self.second_graph.is_playing = False
 
@@ -53,12 +48,6 @@ class SignalApp(QtWidgets.QWidget):
             2: 50,   # x2 speed
             3: 25    # x4 speed
         }
-
-        self.window_start = 0
-        self.window_end = 30  # Initial window size
-
-        self.window_start2 = 0
-        self.window_end2 = 30  # Initial window size
 
         self.user_interacting = False  # Flag to allow mouse panning
         # Plotting Siganls with initialized properties
@@ -277,8 +266,8 @@ class SignalApp(QtWidgets.QWidget):
         # Update the timer interval based on the slider value
         new_timer_interval = self.speed_mapping[current_value]
 
-        if self.timer1 is not None:
-            self.timer1.setInterval(new_timer_interval)
+        if self.first_graph.timer is not None:
+            self.first_graph.timer.setInterval(new_timer_interval)
 
         # If signals are linked, update the other slider
         if self.linked:
@@ -291,8 +280,8 @@ class SignalApp(QtWidgets.QWidget):
         # Update the timer interval based on the slider value
         new_timer_interval = self.speed_mapping[current_value]
 
-        if self.timer2 is not None:
-            self.timer2.setInterval(new_timer_interval)
+        if self.second_graph.timer is not None:
+            self.second_graph.timer.setInterval(new_timer_interval)
 
         # If signals are linked, update the other slider
         if self.linked:
@@ -361,10 +350,10 @@ class SignalApp(QtWidgets.QWidget):
             self.speed_slider2.setValue(lower_speed_index)
 
             new_timer_interval = self.speed_mapping[lower_speed_index]
-            if self.timer1 is not None:
-                self.timer1.setInterval(new_timer_interval)
-            if self.timer2 is not None:
-                self.timer2.setInterval(new_timer_interval)
+            if self.first_graph.timer is not None:
+                self.first_graph.timer.setInterval(new_timer_interval)
+            if self.second_graph.timer is not None:
+                self.second_graph.timer.setInterval(new_timer_interval)
             self.link_viewports()
         else:
             self.link_button = self.update_button(
@@ -374,10 +363,10 @@ class SignalApp(QtWidgets.QWidget):
         # Ensure consistent signal speeds
         if self.linked:
             # Check if both timers are running and have the same interval
-            if self.timer1 is not None and self.timer2 is not None:
-                if self.timer1.interval() != self.timer2.interval():
-                    self.timer2.setInterval(
-                        self.timer1.interval())  # Sync intervals
+            if self.first_graph.timer is not None and self.second_graph.timer is not None:
+                if self.first_graph.timer.interval() != self.second_graph.timer.interval():
+                    self.second_graph.timer.setInterval(
+                        self.first_graph.timer.interval())  # Sync intervals
 
     def link_viewports(self):
         # Sync the range and zoom between both graphs
@@ -478,7 +467,7 @@ class SignalApp(QtWidgets.QWidget):
             self.first_graph.plot_widget.plot(self.signal1.time_axis, self.signal1.data, pen=self.signal1.color)
 
             if self.user_interacting:
-                current_time_window = self.signal1.time_axis[self.window_start:self.window_end]
+                current_time_window = self.signal1.time_axis[self.first_graph.window_start:self.first_graph.window_end]
                 self.first_graph.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
@@ -495,7 +484,7 @@ class SignalApp(QtWidgets.QWidget):
 
             # case of user interaction
             if self.user_interacting:
-                current_time_window = self.signal2.time_axis[self.window_start2:self.window_end2]
+                current_time_window = self.signal2.time_axis[self.second_graph.window_start:self.second_graph.window_end]
                 self.second_graph.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
@@ -513,11 +502,11 @@ class SignalApp(QtWidgets.QWidget):
                 self.first_graph.is_playing = True
                 self.play_pause_button1 = self.update_button(
                     self.play_pause_button1, "", "pause")
-                if self.timer1 is None:
+                if self.first_graph.timer is None:
                     # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
-                    self.timer1 = pg.QtCore.QTimer()
-                    self.timer1.timeout.connect(self.update_plot1)
-                    self.timer1.start(100)  # Frequent updates every 100ms
+                    self.first_graph.timer = pg.QtCore.QTimer()
+                    self.first_graph.timer.timeout.connect(self.update_plot1)
+                    self.first_graph.timer.start(100)  # Frequent updates every 100ms
                 if self.linked and not self.second_graph.is_playing:
                     self.play_pause_signal2()
 
@@ -531,9 +520,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
         if self.show_hide_checkbox1.isChecked():
-            if self.timer1 is not None:
-                self.timer1.stop()
-                self.timer1 = None
+            if self.first_graph.timer is not None:
+                self.first_graph.timer.stop()
+                self.first_graph.timer = None
             self.first_graph.is_playing = False
             self.play_pause_button1 = self.update_button(
                 self.play_pause_button1, "", "play")
@@ -550,10 +539,10 @@ class SignalApp(QtWidgets.QWidget):
                 self.second_graph.is_playing = True
                 self.play_pause_button2 = self.update_button(
                     self.play_pause_button2, "", "pause")
-                if self.timer2 is None:
-                    self.timer2 = pg.QtCore.QTimer()
-                    self.timer2.timeout.connect(self.update_plot2)
-                    self.timer2.start(100)
+                if self.second_graph.timer is None:
+                    self.second_graph.timer = pg.QtCore.QTimer()
+                    self.second_graph.timer.timeout.connect(self.update_plot2)
+                    self.second_graph.timer.start(100)
                 if self.linked and not self.first_graph.is_playing:
                     self.play_pause_signal1()
 
@@ -567,9 +556,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
         if self.show_hide_checkbox2.isChecked():
-            if self.timer2 is not None:
-                self.timer2.stop()
-                self.timer2 = None
+            if self.second_graph.timer is not None:
+                self.second_graph.timer.stop()
+                self.second_graph.timer = None
             self.second_graph.is_playing = False
             self.play_pause_button2 = self.update_button(
                 self.play_pause_button2, "", "play")
@@ -605,19 +594,19 @@ class SignalApp(QtWidgets.QWidget):
             window_size = 30  # how much is visible at once
 
             # Move the window over the signal1 and time1 arrays
-            self.window_start = (self.window_start + 1) % (len(self.signal1.data) - window_size)
-            self.window_end = self.window_start + window_size
+            self.first_graph.window_start = (self.first_graph.window_start + 1) % (len(self.signal1.data) - window_size)
+            self.first_graph.window_end = self.first_graph.window_start + window_size
 
             self.plot_signals()
 
     def update_plot2(self):
         if self.second_graph.is_playing and self.user_interacting:
 
-            window_size = 30 # how much is visible at once
+            window_size = self.second_graph.window_end - self.second_graph.window_start # how much is visible at once
 
-            self.window_start2 = (self.window_start2 +
+            self.second_graph.window_start = (self.second_graph.window_start +
                                   1) % (len(self.signal2.data) - window_size)
-            self.window_end2 = self.window_start2 + window_size
+            self.second_graph.window_end = self.second_graph.window_start + window_size
 
             self.plot_signals()
 
