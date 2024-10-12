@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
-
+from realtime_plot import RealTimePlot
 
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
