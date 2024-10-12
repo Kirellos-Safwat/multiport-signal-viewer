@@ -11,22 +11,24 @@ from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
-
+from realtime_plot import RealTimePlot
 
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.stopped_by_link = False  # For the linking feature
+        self.initUI()
 
         # Initializing Signals' colors, ranges, types and titles
-        self.signal1 = Signal(self.generate_square_wave(100), 'b')
-        self.signal2 = Signal(self.generate_cosine_wave(100), 'r')
+        self.color1 = 'b'
+        self.color2 = 'r'
+        self.signal1 = self.generate_square_wave(100)
+        self.signal2 = self.generate_cosine_wave(100)
         self.type1 = 'square'
         self.type2 = 'cosine'
         self.title1 = "Square Wave Signal"
         self.title2 = "Cosine Wave Signal"
 
-        self.initUI()
             # Initialize the original ranges after setting up the plot
         self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # Get the initial x range
         self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # Get the initial y range
@@ -438,6 +440,9 @@ class SignalApp(QtWidgets.QWidget):
         button_layout.addWidget(import_signal_file)
         return button_layout
 
+    
+
+
     # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
 
     def generate_square_wave(self, points):
@@ -528,7 +533,6 @@ class SignalApp(QtWidgets.QWidget):
                 if self.linked and self.second_graph.is_playing:
                     self.play_pause_signal2()
 
-    # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
         if self.show_hide_checkbox1.isChecked():
             if self.timer1 is not None:
@@ -537,11 +541,18 @@ class SignalApp(QtWidgets.QWidget):
             self.first_graph.is_playing = False
             self.play_pause_button1 = self.update_button(
                 self.play_pause_button1, "", "play")
+            
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal2()
-            self.reset_signal1()
-            self.stopped_by_link = False
+            
+            # Reset the signal and its position
+            # Reset playback window to the beginning
+        self.window_start = 0
+        self.window_end = min(30, len(self.signal1))  # Ensure it does not exceed the signal length
+        self.stopped_by_link = False
+        self.plot_signals()
+
 
     # Generating the function of playing signal 2
     def play_pause_signal2(self):
@@ -564,7 +575,6 @@ class SignalApp(QtWidgets.QWidget):
                 if self.linked and self.first_graph.is_playing:
                     self.play_pause_signal1()
 
-    # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
         if self.show_hide_checkbox2.isChecked():
             if self.timer2 is not None:
@@ -573,11 +583,18 @@ class SignalApp(QtWidgets.QWidget):
             self.second_graph.is_playing = False
             self.play_pause_button2 = self.update_button(
                 self.play_pause_button2, "", "play")
+
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal1()
-            self.reset_signal2()
+
+            # Reset the signal and its position
+            # Reset playback window to the beginning
+            self.window_start2 = 0
+            self.window_end2 = min(30, len(self.signal2))  # Ensure it does not exceed the signal length
             self.stopped_by_link = False
+            self.plot_signals()
+
 
     def update_button(self, button, text, icon_name):
         button.setText(text)
@@ -585,19 +602,6 @@ class SignalApp(QtWidgets.QWidget):
         button.setIcon(icon)
         return button
 
-    def reset_signal1(self):
-        if self.type1 == 'cosine':
-            self.signal1.data = self.generate_cosine_wave(100)
-        else:
-            self.signal1.data = self.generate_square_wave(100)
-        self.plot_signals()
-
-    def reset_signal2(self):
-        if self.type2 == 'cosine':
-            self.signal2.data = self.generate_cosine_wave(100)
-        else:
-            self.signal2.data = self.generate_square_wave(100)
-        self.plot_signals()
 
     def update_plot1(self):
         if self.first_graph.is_playing and self.user_interacting:
@@ -605,7 +609,8 @@ class SignalApp(QtWidgets.QWidget):
             window_size = 30  # how much is visible at once
 
             # Move the window over the signal1 and time1 arrays
-            self.window_start = (self.window_start + 1) % (len(self.signal1.data) - window_size)
+            self.window_start = (self.window_start +
+                                 1) % (len(self.signal1) - window_size)
             self.window_end = self.window_start + window_size
 
             self.plot_signals()
@@ -616,11 +621,10 @@ class SignalApp(QtWidgets.QWidget):
             window_size = 30 # how much is visible at once
 
             self.window_start2 = (self.window_start2 +
-                                  1) % (len(self.signal2.data) - window_size)
+                                  1) % (len(self.signal2) - window_size)
             self.window_end2 = self.window_start2 + window_size
 
             self.plot_signals()
-
 
     def zoom_in(self, plot_widget):
         if isinstance(plot_widget, PlotWidget):
@@ -671,8 +675,8 @@ class SignalApp(QtWidgets.QWidget):
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
-        self.signal1.data, self.signal2.data = self.signal2.data, self.signal1.data
-        self.signal1.color, self.signal2.color = self.signal2.color, self.signal1.color
+        self.signal1, self.signal2 = self.signal2, self.signal1
+        self.color1, self.color2 = self.color2, self.color1
 
         # Swap the text of the title input boxes
         title_text_1 = self.title_input1.text()
@@ -732,10 +736,18 @@ class SignalApp(QtWidgets.QWidget):
                 self.signal1.data = signal_data
                 self.signal1.time_axis = np.linspace(0, 1000, len(self.signal1.data))
                 self.title1 = os.path.splitext(os.path.basename(file_name))[0]
+                # Initialize playback window
+                self.window_start = 0
+                self.window_end = min(30, len(self.signal1))  # Adjust window size
+    
             elif graph == 'graph2':
                 self.signal2.data = signal_data
                 self.signal2.time_axis = np.linspace(0, 1000, len(self.signal2.data))
                 self.title2 = os.path.splitext(os.path.basename(file_name))[0]
+
+                # Initialize playback window
+                self.window_start2 = 0
+                self.window_end2 = min(30, len(self.signal2))  # Adjust window size
 
         else:
             self.show_error_message(
@@ -752,9 +764,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of interpolating(averaging)(gluing) both signals
 
     def glue_signals(self):
-        # self.glued_signal = (self.signal1.data + self.signal2.data) / 2
+        # self.glued_signal = (self.signal1 + self.signal2) / 2
         self.interpolation_window = InterpolationWindow(
-            self.signal1.data, self.signal2.data)  # Generating the Intepolation Window
+            self.signal1, self.signal2)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
