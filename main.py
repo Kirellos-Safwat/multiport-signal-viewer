@@ -9,23 +9,29 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
+from signal import Signal
 
 
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.stopped_by_link = False  # For the linking feature
-        self.initUI()
 
         # Initializing Signals' colors, ranges, types and titles
-        self.color1 = 'b'
-        self.color2 = 'r'
-        self.signal1 = self.generate_square_wave(100)
-        self.signal2 = self.generate_cosine_wave(100)
+        self.signal1 = Signal(self.generate_square_wave(100), 'b')
+        self.signal2 = Signal(self.generate_cosine_wave(100), 'r')
         self.type1 = 'square'
         self.type2 = 'cosine'
         self.title1 = "Square Wave Signal"
         self.title2 = "Cosine Wave Signal"
+
+        self.initUI()
+            # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.plot_widget1.viewRange()[0]  # Get the initial x range
+        self.original_y_range = self.plot_widget1.viewRange()[1]  # Get the initial y range
+                   # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.plot_widget2.viewRange()[0]  # Get the initial x range
+        self.original_y_range = self.plot_widget2.viewRange()[1]  # Get the initial y range
 
         # Link state Flag
         self.linked = False
@@ -57,8 +63,8 @@ class SignalApp(QtWidgets.QWidget):
 
         self.user_interacting = False  # Flag to allow mouse panning
         # create a time array matching the sample indices
-        self.time1 = np.linspace(0, 100, len(self.signal1))
-        self.time2 = np.linspace(0, 100, len(self.signal2))
+        self.time1 = np.linspace(0, 100, len(self.signal1.data))
+        self.time2 = np.linspace(0, 100, len(self.signal2.data))
         self.time_step = 1
 
         # Plotting Siganls with initialized properties
@@ -114,10 +120,10 @@ class SignalApp(QtWidgets.QWidget):
         button_layout1 = self.create_button_layout(
             self.play_pause_button1, 
             self.stop_signal1, 
-            self.change_color_signal1, 
-            self.zoom_in_signal1, 
-            self.zoom_out_signal1, 
-            self.show_statistics_signal1,
+            lambda: (self.signal1.change_color(), self.plot_signals()), 
+            lambda: self.zoom_in(self.plot_widget1), 
+            lambda: self.zoom_out(self.plot_widget1), 
+            lambda: self.show_statistics(self.signal1.data, self.title1, self.signal1.color),
             self.import_signal1_button
         )
 
@@ -181,38 +187,17 @@ class SignalApp(QtWidgets.QWidget):
         button_layout2 = self.create_button_layout(
             self.play_pause_button2, 
             self.stop_signal2, 
-            self.change_color_signal2, 
-            self.zoom_in_signal2, 
-            self.zoom_out_signal2, 
-            self.show_statistics_signal2,
+            lambda: (self.signal2.change_color(), self.plot_signals()), 
+            lambda: self.zoom_in(self.plot_widget2), 
+            lambda: self.zoom_out(self.plot_widget2), 
+            lambda: self.show_statistics(self.signal2.data, self.title2, self.signal2.color),
             self.import_signal2_button
         )
 
         # Swap Signals Button
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
 
-        # glue Signals Button
-        style_sheet = ("""
-            QPushButton {
-                background-color: #adb4b4; 
-                color: black;
-                font-size: 16px;  
-                font-weight: bold;  
-                padding: 12px; 
-                width: 100px; 
-                border-radius: 15px;  
-                border: 2px solid #4c7273;
-            }
-            QPushButton:hover {
-                background-color: #4c7273; 
-                border-radius: 15px;  
-                border: 2px solid white;                       
-            }
-            QPushButton:pressed {
-                background-color: #86b9b0;
-            }
-        """)
-        self.glue_button = Utils.create_button("Glue Signals", self.glue_signals, stylesheet=style_sheet)
+        self.glue_button = Utils.create_button("Glue Signals", self.glue_signals)
 
         # Link Button
         self.link_button = Utils.create_button("", self.toggle_link, "link")
@@ -291,34 +276,6 @@ class SignalApp(QtWidgets.QWidget):
         buttons_layout_3.addWidget(self.glue_button)
 
         self.main_layout.addLayout(buttons_layout_3)  
-
-
-
-        # Define separate methods for each action of signal 1
-    def change_color_signal1(self):
-        self.change_color(signal_index=1)
-
-    def zoom_in_signal1(self):
-        self.zoom_in(self.plot_widget1)
-
-    def zoom_out_signal1(self):
-        self.zoom_out(self.plot_widget1)
-
-    def show_statistics_signal1(self):
-        self.show_statistics(self.signal1, self.title1, self.color1)
-
-        # Define separate methods for each action of signal 2
-    def change_color_signal2(self):
-        self.change_color(signal_index=2)
-
-    def zoom_in_signal2(self):
-        self.zoom_in(self.plot_widget2)
-
-    def zoom_out_signal2(self):
-        self.zoom_out(self.plot_widget2)
-
-    def show_statistics_signal2(self):
-        self.show_statistics(self.signal2, self.title2, self.color2)
         
     def on_user_interaction_start(self):
         self.user_interacting = True  # Set the flag to true when the user starts interacting
@@ -373,7 +330,7 @@ class SignalApp(QtWidgets.QWidget):
         if state == Qt.Checked:
             # Plot signal1 only if it's checked
             self.plot_widget1.clear()
-            self.plot_widget1.plot(self.signal1, pen=self.color1)
+            self.plot_widget1.plot(self.signal1.data, pen=self.signal1.color)
             self.plot_widget1.setYRange(-1, 1)
             self.plot_widget1.setTitle(self.title_input1.text())
         else:
@@ -383,7 +340,7 @@ class SignalApp(QtWidgets.QWidget):
         if state == Qt.Checked:
             # Plot signal2 only if it's checked
             self.plot_widget2.clear()
-            self.plot_widget2.plot(self.signal2, pen=self.color2)
+            self.plot_widget2.plot(self.signal2.data, pen=self.signal2.color)
             self.plot_widget2.setYRange(-1, 1)
             self.plot_widget2.setTitle(self.title_input2.text())
         else:
@@ -477,6 +434,7 @@ class SignalApp(QtWidgets.QWidget):
 
     # A method for Setting the horizontal layout of the buttons according to the signal_name
 
+
     def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics, import_signal_file):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(play_pause_button)
@@ -492,9 +450,6 @@ class SignalApp(QtWidgets.QWidget):
             f"", statistics, "statistics"))
         button_layout.addWidget(import_signal_file)
         return button_layout
-
-    
-
 
     # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
 
@@ -533,7 +488,7 @@ class SignalApp(QtWidgets.QWidget):
             self.sync_viewports()  # Initial sync on plotting
 
         if self.show_hide_checkbox1.isChecked():
-            self.plot_widget1.plot(self.time1, self.signal1, pen=self.color1)
+            self.plot_widget1.plot(self.time1, self.signal1.data, pen=self.signal1.color)
 
             if self.user_interacting:
                 current_time_window = self.time1[self.window_start:self.window_end]
@@ -546,10 +501,10 @@ class SignalApp(QtWidgets.QWidget):
 
             # Allow panning but set limis
             self.plot_widget1.setLimits(
-                xMin=min(self.time1), xMax=max(self.time1),yMin=min(self.signal1),yMax=max(self.signal1))
+                xMin=min(self.time1), xMax=max(self.time1),yMin=min(self.signal1.data),yMax=max(self.signal1.data))
 
         if self.show_hide_checkbox2.isChecked():
-            self.plot_widget2.plot(self.time2, self.signal2, pen=self.color2)
+            self.plot_widget2.plot(self.time2, self.signal2.data, pen=self.signal2.color)
 
             # case of user interaction
             if self.user_interacting:
@@ -562,7 +517,7 @@ class SignalApp(QtWidgets.QWidget):
 
             # Allow panning but set limis
             self.plot_widget2.setLimits(
-                xMin=min(self.time2), xMax=max(self.time2),yMin=min(self.signal2),yMax=max(self.signal2))
+                xMin=min(self.time2), xMax=max(self.time2),yMin=min(self.signal2.data),yMax=max(self.signal2.data))
 
     # Generating the function of playing signal 1
     def play_pause_signal1(self):
@@ -645,16 +600,16 @@ class SignalApp(QtWidgets.QWidget):
 
     def reset_signal1(self):
         if self.type1 == 'cosine':
-            self.signal1 = self.generate_cosine_wave(100)
+            self.signal1.data = self.generate_cosine_wave(100)
         else:
-            self.signal1 = self.generate_square_wave(100)
+            self.signal1.data = self.generate_square_wave(100)
         self.plot_signals()
 
     def reset_signal2(self):
         if self.type2 == 'cosine':
-            self.signal2 = self.generate_cosine_wave(100)
+            self.signal2.data = self.generate_cosine_wave(100)
         else:
-            self.signal2 = self.generate_square_wave(100)
+            self.signal2.data = self.generate_square_wave(100)
         self.plot_signals()
 
     def update_plot1(self):
@@ -663,8 +618,7 @@ class SignalApp(QtWidgets.QWidget):
             window_size = 30  # how much is visible at once
 
             # Move the window over the signal1 and time1 arrays
-            self.window_start = (self.window_start +
-                                 1) % (len(self.signal1) - window_size)
+            self.window_start = (self.window_start + 1) % (len(self.signal1.data) - window_size)
             self.window_end = self.window_start + window_size
 
             self.plot_signals()
@@ -675,67 +629,63 @@ class SignalApp(QtWidgets.QWidget):
             window_size = 30 # how much is visible at once
 
             self.window_start2 = (self.window_start2 +
-                                  1) % (len(self.signal2) - window_size)
+                                  1) % (len(self.signal2.data) - window_size)
             self.window_end2 = self.window_start2 + window_size
 
             self.plot_signals()
 
-    # Generating the function of color changing in general
-    def change_color(self, signal_index):
-        color = QtWidgets.QColorDialog.getColor()
-        if signal_index == 1:
-            self.color1 = color.name()
-        else:
-            self.color2 = color.name()
-        self.plot_signals()
 
-    # Generating zoom in/zoom out functions of both signals:
     def zoom_in(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] + (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] - (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] + (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] - (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
 
-            # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.16  # Adjust this value if necessary
+            zoom_factor_y = 0.105  # Adjust this value if necessary
+
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] + (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] - (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] + (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] - (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if self.linked:
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     def zoom_out(self, plot_widget):
-        # Calculate the new ranges based on the original ranges
-        x_range = plot_widget.viewRange()[0]
-        y_range = plot_widget.viewRange()[1]
-        new_x_range = (x_range[0] - (self.original_x_range[1] - self.original_x_range[0])
-                       * 0.1, x_range[1] + (self.original_x_range[1] - self.original_x_range[0]) * 0.1)
-        new_y_range = (y_range[0] - (self.original_y_range[1] - self.original_y_range[0])
-                       * 0.1, y_range[1] + (self.original_y_range[1] - self.original_y_range[0]) * 0.1)
-        plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-        plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
-        # If linked, apply to second plot
-        if self.linked:
-            self.plot_widget2.setXRange(
-                new_x_range[0], new_x_range[1], padding=0)
-            self.plot_widget2.setYRange(
-                new_y_range[0], new_y_range[1], padding=0)
+        if isinstance(plot_widget, PlotWidget):
+            x_range = plot_widget.viewRange()[0]
+            y_range = plot_widget.viewRange()[1]
 
-        # Update original ranges after zooming
-        self.original_x_range = new_x_range
-        self.original_y_range = new_y_range
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.21 # Adjust this value if necessary
+            zoom_factor_y = 0.42 # Adjust this value if necessary
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] - (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] + (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] - (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] + (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if self.linked:
+                self.plot_widget2.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.plot_widget2.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
-        self.signal1, self.signal2 = self.signal2, self.signal1
-        self.color1, self.color2 = self.color2, self.color1
+        self.signal1.data, self.signal2.data = self.signal2.data, self.signal1.data
+        self.signal1.color, self.signal2.color = self.signal2.color, self.signal1.color
 
         # Swap the text of the title input boxes
         title_text_1 = self.title_input1.text()
@@ -792,12 +742,12 @@ class SignalApp(QtWidgets.QWidget):
 
         if signal_data.ndim == 1:
             if graph == 'graph1':
-                self.signal1 = signal_data
-                self.time1 = np.linspace(0, 1000, len(self.signal1))
+                self.signal1.data = signal_data
+                self.time1 = np.linspace(0, 1000, len(self.signal1.data))
                 self.title1 = os.path.splitext(os.path.basename(file_name))[0]
             elif graph == 'graph2':
-                self.signal2 = signal_data
-                self.time2 = np.linspace(0, 1000, len(self.signal2))
+                self.signal2.data = signal_data
+                self.time2 = np.linspace(0, 1000, len(self.signal2.data))
                 self.title2 = os.path.splitext(os.path.basename(file_name))[0]
 
         else:
@@ -815,9 +765,9 @@ class SignalApp(QtWidgets.QWidget):
     # Generating the function of interpolating(averaging)(gluing) both signals
 
     def glue_signals(self):
-        # self.glued_signal = (self.signal1 + self.signal2) / 2
+        # self.glued_signal = (self.signal1.data + self.signal2.data) / 2
         self.interpolation_window = InterpolationWindow(
-            self.signal1, self.signal2)  # Generating the Intepolation Window
+            self.signal1.data, self.signal2.data)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
 
     def show_statistics(self, signal, title, color):
