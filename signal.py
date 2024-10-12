@@ -4,11 +4,10 @@ from PyQt5 import QtWidgets
 
 class Signal():
 
-    def __init__(self, signal_data, color='b', title='signal', playing=False, is_hidden=False):
+    def __init__(self, signal_data, color='b', title='signal', is_hidden=False):
         self.data = signal_data
         self.color = color
         self.title = title
-        self.playing = playing
         self.is_hidden = is_hidden
         self.time_axis = np.linspace(0, 100, len(self.data))
 
