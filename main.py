@@ -594,7 +594,6 @@ class SignalApp(QtWidgets.QWidget):
                 if self.linked and self.playing2:
                     self.play_pause_signal2()
 
-    # Generating the function of stopping/resetting signal 1
     def stop_signal1(self):
         if self.show_hide_checkbox1.isChecked():
             if self.timer1 is not None:
@@ -603,11 +602,18 @@ class SignalApp(QtWidgets.QWidget):
             self.playing1 = False
             self.play_pause_button1 = self.update_button(
                 self.play_pause_button1, "", "play")
+            
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal2()
-            self.reset_signal1()
-            self.stopped_by_link = False
+            
+            # Reset the signal and its position
+            # Reset playback window to the beginning
+        self.window_start = 0
+        self.window_end = min(30, len(self.signal1))  # Ensure it does not exceed the signal length
+        self.stopped_by_link = False
+        self.plot_signals()
+
 
     # Generating the function of playing signal 2
     def play_pause_signal2(self):
@@ -630,7 +636,6 @@ class SignalApp(QtWidgets.QWidget):
                 if self.linked and self.playing1:
                     self.play_pause_signal1()
 
-    # Generating the function of stopping/resetting signal 2
     def stop_signal2(self):
         if self.show_hide_checkbox2.isChecked():
             if self.timer2 is not None:
@@ -639,11 +644,18 @@ class SignalApp(QtWidgets.QWidget):
             self.playing2 = False
             self.play_pause_button2 = self.update_button(
                 self.play_pause_button2, "", "play")
+
             if self.linked and not self.stopped_by_link:
                 self.stopped_by_link = True
                 self.stop_signal1()
-            self.reset_signal2()
+
+            # Reset the signal and its position
+            # Reset playback window to the beginning
+            self.window_start2 = 0
+            self.window_end2 = min(30, len(self.signal2))  # Ensure it does not exceed the signal length
             self.stopped_by_link = False
+            self.plot_signals()
+
 
     def update_button(self, button, text, icon_name):
         button.setText(text)
@@ -651,22 +663,10 @@ class SignalApp(QtWidgets.QWidget):
         button.setIcon(icon)
         return button
 
-    def reset_signal1(self):
-        if self.type1 == 'cosine':
-            self.signal1 = self.generate_cosine_wave(100)
-        else:
-            self.signal1 = self.generate_square_wave(100)
-        self.plot_signals()
-
-    def reset_signal2(self):
-        if self.type2 == 'cosine':
-            self.signal2 = self.generate_cosine_wave(100)
-        else:
-            self.signal2 = self.generate_square_wave(100)
-        self.plot_signals()
 
     def update_plot1(self):
         if self.playing1 and self.user_interacting:
+
 
             window_size = 30  # how much is visible at once
 
@@ -807,10 +807,18 @@ class SignalApp(QtWidgets.QWidget):
                 self.signal1 = signal_data
                 self.time1 = np.linspace(0, 1000, len(self.signal1))
                 self.title1 = os.path.splitext(os.path.basename(file_name))[0]
+                # Initialize playback window
+                self.window_start = 0
+                self.window_end = min(30, len(self.signal1))  # Adjust window size
+    
             elif graph == 'graph2':
                 self.signal2 = signal_data
                 self.time2 = np.linspace(0, 1000, len(self.signal2))
                 self.title2 = os.path.splitext(os.path.basename(file_name))[0]
+
+                # Initialize playback window
+                self.window_start2 = 0
+                self.window_end2 = min(30, len(self.signal2))  # Adjust window size
 
         else:
             self.show_error_message(
