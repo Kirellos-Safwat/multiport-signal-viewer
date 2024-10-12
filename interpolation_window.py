@@ -32,6 +32,7 @@ class InterpolationWindow(QWidget):
 
         self.gap = 0
         self.glued_signal = None
+        self.glued_signal_color = 'r'
         self.interpolation_order = 'linear'
 
         self.initUI()
@@ -56,10 +57,17 @@ class InterpolationWindow(QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         button_layout.addWidget(Utils.create_button(f"Reset", self.reset_graph, "Reset", stylesheet=Utils.button_style_sheet))
         button_layout.addWidget(Utils.create_button(f"Glue Signals", self.glue_signals, "Glue Signals", stylesheet=Utils.button_style_sheet))
-        button_layout.addWidget(Utils.create_button(f"", self.change_color, "color"))
-        button_layout.addWidget(Utils.create_button(f"", self.show_statistics, "statistics"))
+
+        self.change_color_button = Utils.create_button(f"", self.change_color, "color", set_enabled=False)
+        button_layout.addWidget(self.change_color_button)
+
+        self.show_statistics_button = Utils.create_button(f"", self.show_statistics, "statistics", set_enabled=False)
+        button_layout.addWidget(self.show_statistics_button)
+
         button_layout.addWidget(Utils.create_button(f"", self.take_snapshot, "take_snapshot"))
-        button_layout.addWidget(Utils.create_button(f"", self.export_report, "export_report"))
+
+        self.export_report_button =Utils.create_button(f"", self.export_report, "export_report", set_enabled=False)
+        button_layout.addWidget(self.export_report_button)
         layout.addLayout(button_layout)
         # Slider for Signal 1
         self.gap_slider = QtWidgets.QSlider(Qt.Horizontal)
@@ -190,6 +198,9 @@ class InterpolationWindow(QWidget):
         self.plot_widget.setTitle("First Signal")
         self.plot_widget.setMouseEnabled(x=False, y=False)
         self.gap_slider.setEnabled(False)
+        self.change_color_button.setEnabled(False)
+        self.show_statistics_button.setEnabled(False)
+        self.export_report_button.setEnabled(False)
         # Re-enable region selection after clearing
         self.region = pg.LinearRegionItem()
         self.region.setZValue(10)  # Make sure it's on top of the plot
@@ -213,7 +224,10 @@ class InterpolationWindow(QWidget):
         self.glued_signal = np.concatenate([sub_y1[:-overlap], interpolated_part, sub_y2[overlap:]])
 
         self.plot_widget.clear()
-        self.plot_widget.plot(self.glued_signal, pen='r')
+        self.plot_widget.plot(self.glued_signal, pen=self.glued_signal_color)
+        self.change_color_button.setEnabled(True)
+        self.show_statistics_button.setEnabled(True)
+        self.export_report_button.setEnabled(True)
         self.plot_widget.setTitle("Glued Signal")
     
     def interpolate_signals(self, sub_y1, sub_y2, gap, interpolation_order = 'linear'):
@@ -268,26 +282,31 @@ class InterpolationWindow(QWidget):
         self.interpolation_order = str(text).lower()
 
     def show_statistics(self):
-        self.statistics_window = InterpolationStatisticsWindow(self.signal, self.color)
+        self.statistics_window = InterpolationStatisticsWindow(self.glued_signal, self.glued_signal_color)
         self.statistics_window.show()
 
     def update_plot(self):
         self.plot_widget.clear()
-        self.plot_widget.plot(self.signal, pen=self.color)
+        self.plot_widget.plot(self.glued_signal, pen=self.color)
         self.plot_widget.setTitle("Interpolated Signal")
         self.plot_widget.setYRange(0, 1)
 
 
     def calculate_statistics(self):
-        mean_val = np.mean(self.signal)
-        std_val = np.std(self.signal)
-        min_val = np.min(self.signal)
-        max_val = np.max(self.signal)
-        duration = len(self.signal)  # Assuming duration is the number of samples
+        mean_val = np.mean(self.glued_signal)
+        std_val = np.std(self.glued_signal)
+        min_val = np.min(self.glued_signal)
+        max_val = np.max(self.glued_signal)
+        duration = len(self.glued_signal)  # Assuming duration is the number of samples
         return mean_val, std_val, min_val, max_val, duration
 
     def change_color(self, signal_index):
-        pass
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            self.glued_signal_color = color.name()
+            self.plot_widget.clear()
+            self.plot_widget.plot(self.glued_signal, pen=self.glued_signal_color)
+            self.plot_widget.setTitle("Glued Signal")
 
     def take_snapshot(self):
         self.snapshot_count += 1  # Increment the snapshot counter

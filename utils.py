@@ -135,7 +135,7 @@ class Utils:
         """
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
     @staticmethod
-    def create_button(text, method, icon_name='', stylesheet=button_style_sheet):
+    def create_button(text, method, icon_name='', stylesheet=button_style_sheet, set_enabled=True):
         button = QtWidgets.QPushButton(text)
 
         # Adjust the button to be a perfect circle
@@ -153,6 +153,7 @@ class Utils:
             button.setText(text)
         # Connect the button to the method
         button.clicked.connect(method)
+        button.setEnabled(set_enabled)
         
         return button
 
