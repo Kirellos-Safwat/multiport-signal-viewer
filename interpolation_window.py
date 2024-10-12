@@ -1,10 +1,14 @@
 import numpy as np
 from scipy.interpolate import interp1d
 import sys
+import os
+from pyqtgraph.exporters import ImageExporter
+from fpdf import FPDF
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QLabel, QHBoxLayout
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt
+from interpolation_statistics_window import InterpolationStatisticsWindow
 from utils import Utils
 
 class InterpolationWindow(QWidget):
