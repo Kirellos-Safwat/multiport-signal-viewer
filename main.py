@@ -11,7 +11,7 @@ from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
-
+from realtime_plot import RealTimePlot
 
 class SignalApp(QtWidgets.QWidget):
     def __init__(self):
