@@ -9,8 +9,13 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
+from polar import PolarPlotWidget
+from realtime_plot import RealTimePlot
+import pandas as pd
 
 
 class SignalApp(QtWidgets.QWidget):
@@ -25,12 +30,16 @@ class SignalApp(QtWidgets.QWidget):
         self.type2 = 'cosine'
 
         self.initUI()
-            # Initialize the original ranges after setting up the plot
-        self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # Get the initial x range
-        self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # Get the initial y range
-                   # Initialize the original ranges after setting up the plot
-        self.original_x_range = self.second_graph.plot_widget.viewRange()[0]  # Get the initial x range
-        self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # Get the initial y range
+        # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.first_graph.plot_widget.viewRange()[
+            0]  # Get the initial x range
+        self.original_y_range = self.first_graph.plot_widget.viewRange()[
+            1]  # Get the initial y range
+        # Initialize the original ranges after setting up the plot
+        self.original_x_range = self.second_graph.plot_widget.viewRange()[
+            0]  # Get the initial x range
+        self.original_y_range = self.second_graph.plot_widget.viewRange()[
+            1]  # Get the initial y range
 
         # Link state Flag
         SignalPlotWidget.is_linked = False
@@ -38,7 +47,6 @@ class SignalApp(QtWidgets.QWidget):
         self.syncing = False
 
         self.second_graph.is_playing = False
-
 
         self.user_interacting = False  # Flag to allow mouse panning
         # Plotting Siganls with initialized properties
@@ -51,99 +59,139 @@ class SignalApp(QtWidgets.QWidget):
         # Dark Grey Color for the Window Background
         self.setStyleSheet(Utils.window_style_sheet)
 
-        # Setting the Main layout (Organizing Structure On Top Of Each Other)
-        # Vertical Layout for the positioning of child widgets within a parent widget
-        self.main_layout = QtWidgets.QVBoxLayout()
+        # Create QTabWidget
+        self.tab_widget = QtWidgets.QTabWidget()
+
+        # Add the tabs
+        self.tab_widget.addTab(self.main_tab(), "Main")
+        self.tab_widget.addTab(self.Polar_tab(), "Polar")
+        self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
+
+        # Set the layout of the main window to hold the tab widget
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
 
-        # Creating signals plotting widgets
+    def main_tab(self):
+        main_tab = QtWidgets.QWidget()
+
+        # Setting the Main layout (Organizing Structure On Top Of Each Other)
+        # Vertical Layout for the positioning of child widgets within a parent widget
+        main_layout = QtWidgets.QVBoxLayout(main_tab)
+
         self.first_graph = SignalPlotWidget(name='Graph One')
         self.second_graph = SignalPlotWidget(name='Graph Two')
 
-        # Setting the Control buttons for Signal 1:
-        # Creating "horizontal" layout for the buttons of signal 1:
-        self.play_pause_button1 = Utils.create_button("", self.play_pause_signal1, "play")
-
-        # Creating import signal button
-        self.import_signal1_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal1), "import")
+        # Setting the Control buttons for Signal 1
+        self.play_pause_button1 = Utils.create_button(
+            "", self.play_pause_signal1, "play")
+        self.import_signal1_button = Utils.create_button(
+            "", lambda: Utils.import_signal_file(self.signal1), "import")
 
         button_layout1 = self.create_button_layout(
-            self.play_pause_button1, 
-            self.stop_signal1, 
-            lambda: (self.signal1.change_color(), self.plot_signals()), 
-            lambda: self.zoom_in(self.first_graph.plot_widget), 
-            lambda: self.zoom_out(self.first_graph.plot_widget), 
-            lambda: self.show_statistics(self.signal1.data, self.signal1.title, self.signal1.color),
+            self.play_pause_button1,
+            self.stop_signal1,
+            lambda: (self.signal1.change_color(), self.plot_signals()),
+            lambda: self.zoom_in(self.first_graph.plot_widget),
+            lambda: self.zoom_out(self.first_graph.plot_widget),
+            lambda: self.show_statistics(
+                self.signal1.data, self.signal1.title, self.signal1.color),
             self.import_signal1_button
         )
 
-        # Setting the Control buttons for Signal 2:
-        # Creating "horizontal" layout for the buttons of signal 2:
-        self.play_pause_button2 = Utils.create_button("", self.play_pause_signal2, "play")
-
-        # Creating import signal button
-        self.import_signal2_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal2), "import")
+        # Setting the Control buttons for Signal 2
+        self.play_pause_button2 = Utils.create_button(
+            "", self.play_pause_signal2, "play")
+        self.import_signal2_button = Utils.create_button(
+            "", lambda: Utils.import_signal_file(self.signal2), "import")
 
         button_layout2 = self.create_button_layout(
-            self.play_pause_button2, 
-            self.stop_signal2, 
-            lambda: (self.signal2.change_color(), self.plot_signals()), 
-            lambda: self.zoom_in(self.second_graph.plot_widget), 
-            lambda: self.zoom_out(self.second_graph.plot_widget), 
-            lambda: self.show_statistics(self.signal2.data, self.signal2.title, self.signal2.color),
+            self.play_pause_button2,
+            self.stop_signal2,
+            lambda: (self.signal2.change_color(), self.plot_signals()),
+            lambda: self.zoom_in(self.second_graph.plot_widget),
+            lambda: self.zoom_out(self.second_graph.plot_widget),
+            lambda: self.show_statistics(
+                self.signal2.data, self.signal2.title, self.signal2.color),
             self.import_signal2_button
         )
 
         # Swap Signals Button
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
-
-        self.glue_button = Utils.create_button("Glue Signals", self.glue_signals)
-
-        # Link Button
+        self.glue_button = Utils.create_button(
+            "Glue Signals", self.glue_signals)
         self.link_button = Utils.create_button("", self.toggle_link, "link")
 
         # event listeners for mouse panning
-        self.first_graph.plot_widget.scene().sigMouseClicked.connect(self.on_user_interaction_start)
-        self.first_graph.plot_widget.sigRangeChanged.connect(self.on_user_interaction_start)
+        self.first_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_user_interaction_start)
+        self.first_graph.plot_widget.sigRangeChanged.connect(
+            self.on_user_interaction_start)
 
-        self.second_graph.plot_widget.scene().sigMouseClicked.connect(self.on_user_interaction_start)
-        self.second_graph.plot_widget.sigRangeChanged.connect(self.on_user_interaction_start)
-        self.main_layout.addLayout(self.first_graph.graph_layout)
-        
-        # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
-        self.main_layout.addLayout(button_layout1)
-        button_layout1.addStretch()  # Prevents the buttons from stretching
+        self.second_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_user_interaction_start)
+        self.second_graph.plot_widget.sigRangeChanged.connect(
+            self.on_user_interaction_start)
+
+        # Add widgets and layouts to the main layout
+        main_layout.addLayout(self.first_graph.graph_layout)
+        main_layout.addLayout(button_layout1)
         button_layout1.addStretch()
 
-
-
-        self.main_layout.addLayout(self.second_graph.graph_layout)
-        # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
-        self.main_layout.addLayout(button_layout2)
-        button_layout2.addStretch()  # Prevents the buttons from stretching
+        main_layout.addLayout(self.second_graph.graph_layout)
+        main_layout.addLayout(button_layout2)
         button_layout2.addStretch()
 
-
-
-        # self.main_layout.addWidget(self.link_button)
+        # Swap, Link, and Glue Buttons layout
         buttons_layout_3 = QtWidgets.QHBoxLayout()
-        buttons_layout_3.addStretch()
-        buttons_layout_3.addStretch()
-        buttons_layout_3.addStretch()
-        buttons_layout_3.addStretch()
-        buttons_layout_3.addStretch()
-
         buttons_layout_3.addWidget(self.swap_button)
         buttons_layout_3.addWidget(self.link_button)
         buttons_layout_3.addWidget(self.glue_button)
+        main_layout.addLayout(buttons_layout_3)
 
-        self.main_layout.addLayout(buttons_layout_3)  
+        # Return the main tab widget
+        return main_tab
 
-        # connect methods to buttons
-        self.first_graph.show_hide_checkbox.stateChanged.connect(lambda state: self.first_graph.toggle_signal(state, self.signal1))
+    def Polar_tab(self):
+        settings_tab = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(settings_tab)
 
-        self.second_graph.show_hide_checkbox.stateChanged.connect(lambda state: self.second_graph.toggle_signal(state, self.signal2))
-        
+        # Create an instance of PolarPlotWidget for the Matplotlib graph
+        self.polar_plot_widget = PolarPlotWidget()
+        layout.addWidget(self.polar_plot_widget)
+
+        # Add Play and Pause buttons
+        button_layout = QtWidgets.QHBoxLayout()
+
+        self.play_button = Utils.create_button(
+            "", self.play_animation, "play")
+        button_layout.addWidget(self.play_button)
+
+        self.pause_button = Utils.create_button(
+            "", self.pause_animation, "pause")
+
+        self.pause_button.clicked.connect(self.pause_animation)
+        button_layout.addWidget(self.pause_button)
+
+        layout.addLayout(button_layout)
+
+        return settings_tab
+
+    def play_animation(self):
+        if hasattr(self.polar_plot_widget, 'ani'):
+            self.polar_plot_widget.ani.event_source.start()  # Resume the animation
+
+    def pause_animation(self):
+        if hasattr(self.polar_plot_widget, 'ani'):
+            self.polar_plot_widget.ani.event_source.stop()  # Pause the animation
+
+    def real_time_tab(self):
+        # Create an instance of RealTimePlot for the real-time graph
+        self.real_time_plot = RealTimePlot()
+
+        return self.real_time_plot 
+
+
     def on_user_interaction_start(self):
         self.user_interacting = True  # Set the flag to true when the user starts interacting
 
@@ -191,7 +239,6 @@ class SignalApp(QtWidgets.QWidget):
                     self.second_graph.timer.setInterval(
                         self.first_graph.timer.interval())  # Sync intervals
 
-
     # A method for Setting the horizontal layout of the buttons according to the signal_name
 
     def create_button_layout(self, play_pause_button, stop, color_change, zoom_in, zoom_out, statistics, import_signal_file):
@@ -199,7 +246,7 @@ class SignalApp(QtWidgets.QWidget):
         button_layout.addWidget(play_pause_button)
         button_layout.addWidget(Utils.create_button(f"", stop, "rewind"))
         button_layout.addWidget(Utils.create_button(
-            
+
             f"", color_change, "color"))
         button_layout.addWidget(Utils.create_button(
             f"", zoom_in, "zoom_in"))
@@ -247,36 +294,42 @@ class SignalApp(QtWidgets.QWidget):
             SignalPlotWidget.sync_viewports()  # Initial sync on plotting
 
         if self.first_graph.show_hide_checkbox.isChecked():
-            self.first_graph.plot_widget.plot(self.signal1.time_axis, self.signal1.data, pen=self.signal1.color)
+            self.first_graph.plot_widget.plot(
+                self.signal1.time_axis, self.signal1.data, pen=self.signal1.color)
 
             if self.user_interacting:
-                current_time_window = self.signal1.time_axis[self.first_graph.window_start:self.first_graph.window_end]
+                current_time_window = self.signal1.time_axis[
+                    self.first_graph.window_start:self.first_graph.window_end]
                 self.first_graph.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
             # Keep Y-axis range fixed for signal1
             self.first_graph.plot_widget.setYRange(-1, 1)
-            self.first_graph.plot_widget.setTitle(self.first_graph.title_input.text())
+            self.first_graph.plot_widget.setTitle(
+                self.first_graph.title_input.text())
 
             # Allow panning but set limis
             self.first_graph.plot_widget.setLimits(
-                xMin=min(self.signal1.time_axis), xMax=max(self.signal1.time_axis),yMin=min(self.signal1.data),yMax=max(self.signal1.data))
+                xMin=min(self.signal1.time_axis), xMax=max(self.signal1.time_axis), yMin=min(self.signal1.data), yMax=max(self.signal1.data))
 
         if self.second_graph.show_hide_checkbox.isChecked():
-            self.second_graph.plot_widget.plot(self.signal2.time_axis, self.signal2.data, pen=self.signal2.color)
+            self.second_graph.plot_widget.plot(
+                self.signal2.time_axis, self.signal2.data, pen=self.signal2.color)
 
             # case of user interaction
             if self.user_interacting:
-                current_time_window = self.signal2.time_axis[self.second_graph.window_start:self.second_graph.window_end]
+                current_time_window = self.signal2.time_axis[
+                    self.second_graph.window_start:self.second_graph.window_end]
                 self.second_graph.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
             self.second_graph.plot_widget.setYRange(-1, 1)
-            self.second_graph.plot_widget.setTitle(self.second_graph.title_input.text())
+            self.second_graph.plot_widget.setTitle(
+                self.second_graph.title_input.text())
 
             # Allow panning but set limis
             self.second_graph.plot_widget.setLimits(
-                xMin=min(self.signal2.time_axis), xMax=max(self.signal2.time_axis),yMin=min(self.signal2.data),yMax=max(self.signal2.data))
+                xMin=min(self.signal2.time_axis), xMax=max(self.signal2.time_axis), yMin=min(self.signal2.data), yMax=max(self.signal2.data))
 
     # Generating the function of playing signal 1
     def play_pause_signal1(self):
@@ -288,9 +341,10 @@ class SignalApp(QtWidgets.QWidget):
                 if self.first_graph.timer is None:
                     # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                     self.first_graph.timer = pg.QtCore.QTimer()
-                    self.first_graph.timer.timeout.connect(lambda: 
-                    (self.first_graph.update_plot(self.signal1, self.user_interacting), self.plot_signals()))
-                    self.first_graph.timer.start(100)  # Frequent updates every 100ms
+                    self.first_graph.timer.timeout.connect(lambda:
+                                                           (self.first_graph.update_plot(self.signal1, self.user_interacting), self.plot_signals()))
+                    # Frequent updates every 100ms
+                    self.first_graph.timer.start(100)
                 if SignalPlotWidget.is_linked and not self.second_graph.is_playing:
                     self.play_pause_signal2()
 
@@ -325,8 +379,8 @@ class SignalApp(QtWidgets.QWidget):
                     self.play_pause_button2, "", "pause")
                 if self.second_graph.timer is None:
                     self.second_graph.timer = pg.QtCore.QTimer()
-                    self.second_graph.timer.timeout.connect(lambda: 
-                    (self.second_graph.update_plot(self.signal2, self.user_interacting), self.plot_signals()))
+                    self.second_graph.timer.timeout.connect(lambda:
+                                                            (self.second_graph.update_plot(self.signal2, self.user_interacting), self.plot_signals()))
                     self.second_graph.timer.start(100)
                 if SignalPlotWidget.is_linked and not self.first_graph.is_playing:
                     self.play_pause_signal1()
@@ -362,20 +416,21 @@ class SignalApp(QtWidgets.QWidget):
             zoom_factor_x = 0.16  # Adjust this value if necessary
             zoom_factor_y = 0.105  # Adjust this value if necessary
 
-
             # Calculate the new ranges
             new_x_range = (x_range[0] + (x_range[1] - x_range[0]) * zoom_factor_x,
-                        x_range[1] - (x_range[1] - x_range[0]) * zoom_factor_x)
+                           x_range[1] - (x_range[1] - x_range[0]) * zoom_factor_x)
             new_y_range = (y_range[0] + (y_range[1] - y_range[0]) * zoom_factor_y,
-                        y_range[1] - (y_range[1] - y_range[0]) * zoom_factor_y)
+                           y_range[1] - (y_range[1] - y_range[0]) * zoom_factor_y)
 
             # Set new ranges
             plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
             plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
             if SignalPlotWidget.is_linked:
-                self.second_graph.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-                self.second_graph.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+                self.second_graph.plot_widget.setXRange(
+                    new_x_range[0], new_x_range[1], padding=0)
+                self.second_graph.plot_widget.setYRange(
+                    new_y_range[0], new_y_range[1], padding=0)
 
     def zoom_out(self, plot_widget):
         if isinstance(plot_widget, PlotWidget):
@@ -383,22 +438,24 @@ class SignalApp(QtWidgets.QWidget):
             y_range = plot_widget.viewRange()[1]
 
             # Use the same scale factor for both zoom in and out
-            zoom_factor_x = 0.21 # Adjust this value if necessary
-            zoom_factor_y = 0.42 # Adjust this value if necessary
+            zoom_factor_x = 0.21  # Adjust this value if necessary
+            zoom_factor_y = 0.42  # Adjust this value if necessary
 
             # Calculate the new ranges
             new_x_range = (x_range[0] - (x_range[1] - x_range[0]) * zoom_factor_x,
-                        x_range[1] + (x_range[1] - x_range[0]) * zoom_factor_x)
+                           x_range[1] + (x_range[1] - x_range[0]) * zoom_factor_x)
             new_y_range = (y_range[0] - (y_range[1] - y_range[0]) * zoom_factor_y,
-                        y_range[1] + (y_range[1] - y_range[0]) * zoom_factor_y)
+                           y_range[1] + (y_range[1] - y_range[0]) * zoom_factor_y)
 
             # Set new ranges
             plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
             plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
 
             if SignalPlotWidget.is_linked:
-                self.second_graph.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
-                self.second_graph.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+                self.second_graph.plot_widget.setXRange(
+                    new_x_range[0], new_x_range[1], padding=0)
+                self.second_graph.plot_widget.setYRange(
+                    new_y_range[0], new_y_range[1], padding=0)
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
@@ -414,8 +471,10 @@ class SignalApp(QtWidgets.QWidget):
         # Swap the state of the visibility checkboxes
         self.first_graph.show_hide_checkbox1_stat = self.first_graph.show_hide_checkbox.isChecked()
         self.second_graph.show_hide_checkbox2_stat = self.second_graph.show_hide_checkbox.isChecked()
-        self.first_graph.show_hide_checkbox.setChecked(self.second_graph.show_hide_checkbox2_stat)
-        self.second_graph.show_hide_checkbox.setChecked(self.first_graph.show_hide_checkbox1_stat)
+        self.first_graph.show_hide_checkbox.setChecked(
+            self.second_graph.show_hide_checkbox2_stat)
+        self.second_graph.show_hide_checkbox.setChecked(
+            self.first_graph.show_hide_checkbox1_stat)
 
         # Ensure visibility reflects the swapped states
         self.first_graph.toggle_signal(
@@ -426,19 +485,20 @@ class SignalApp(QtWidgets.QWidget):
         # Swap the labels of the visibility checkboxes
         self.first_graph.show_hide_checkbox1_labe = self.first_graph.show_hide_checkbox.text()
         self.second_graph.show_hide_checkbox2_labe = self.second_graph.show_hide_checkbox.text()
-        self.first_graph.show_hide_checkbox.setText(self.second_graph.show_hide_checkbox2_labe)
-        self.second_graph.show_hide_checkbox.setText(self.first_graph.show_hide_checkbox1_labe)
+        self.first_graph.show_hide_checkbox.setText(
+            self.second_graph.show_hide_checkbox2_labe)
+        self.second_graph.show_hide_checkbox.setText(
+            self.first_graph.show_hide_checkbox1_labe)
 
         # Swap the text between speed_label1 and speed_label2
         label1_text = self.first_graph.speed_label.text()
         label2_text = self.second_graph.speed_label.text()
-        
+
         # Swap the text content
         self.first_graph.speed_label.setText(label2_text)
-        self.second_graph.speed_label.setText(label1_text)        
-        
-        self.plot_signals()
+        self.second_graph.speed_label.setText(label1_text)
 
+        self.plot_signals()
 
     # Generating the function of interpolating(averaging)(gluing) both signals
 
