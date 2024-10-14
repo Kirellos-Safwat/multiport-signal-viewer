@@ -186,7 +186,7 @@ class SignalPlotWidget():
             # Plot signal only if it's checked
             self.plot_widget.clear()
             for signal in self.signals:
-                self.plot_widget.plot(self.time_axis,
+                self.plot_widget.plot(signal.time_axis,
                                       signal.data, pen=signal.color)
             self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
