@@ -187,8 +187,11 @@ class SignalPlotWidget():
             self.plot_widget.clear()
             for signal in self.signals:
                 self.plot_widget.plot(signal.time_axis,
+                                      
                                       signal.data, pen=signal.color)
-            self.plot_widget.setYRange(-1, 1)
+                
+            global_min, global_max = self.get_global_min_and_max()
+            self.plot_widget.setYRange(global_min, global_max)
             self.plot_widget.setTitle(self.title_input.text())
         else:
             self.plot_widget.clear()  # Clear the plot if unchecked
@@ -309,7 +312,8 @@ class SignalPlotWidget():
 
             # Keep Y-axis range fixed for signal1
             if not self.preserve_zoom:
-                self.plot_widget.setYRange(-1, 1)
+                global_min, global_max = self.get_global_min_and_max()
+                self.plot_widget.setYRange(global_min, global_max)
             self.plot_widget.setTitle(self.title_input.text())
 
             # Allow panning but set limis
@@ -444,3 +448,14 @@ class SignalPlotWidget():
 
     def update_max_time(self, new_max_time):
         self.max_time_axis = new_max_time
+
+    def get_global_min_and_max(self):
+        # Extract both the minimum and maximum values from each signal's data
+        min_values = [np.min(signal.data) for signal in self.signals]
+        max_values = [np.max(signal.data) for signal in self.signals]
+        
+        # Get the global minimum and maximum values across all signals
+        global_min = min(min_values)
+        global_max = max(max_values)
+        
+        return global_min, global_max
