@@ -55,11 +55,8 @@ class SignalApp(QtWidgets.QWidget):
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer")  # Window Title
         self.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))  # Window Icon
-
-        # Dark Grey Color for the Window Background
         self.setStyleSheet(Utils.window_style_sheet)
 
-        # Create QTabWidget
         self.tab_widget = QtWidgets.QTabWidget()
 
         # Add the tabs
@@ -153,8 +150,8 @@ class SignalApp(QtWidgets.QWidget):
         return main_tab
 
     def Polar_tab(self):
-        settings_tab = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(settings_tab)
+        polar_tab = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(polar_tab)
 
         # Create an instance of PolarPlotWidget for the Matplotlib graph
         self.polar_plot_widget = PolarPlotWidget()
@@ -163,25 +160,25 @@ class SignalApp(QtWidgets.QWidget):
         # Add Play and Pause buttons
         button_layout = QtWidgets.QHBoxLayout()
 
-        self.play_button = Utils.create_button(
-            "", self.play_animation, "play")
-        button_layout.addWidget(self.play_button)
+        self.polar_play_button = Utils.create_button(
+            "", self.polar_play_animation, "play")
+        button_layout.addWidget(self.polar_play_button)
 
-        self.pause_button = Utils.create_button(
-            "", self.pause_animation, "pause")
+        self.polar_pause_button = Utils.create_button(
+            "", self.polar_pause_animation, "pause")
 
-        self.pause_button.clicked.connect(self.pause_animation)
-        button_layout.addWidget(self.pause_button)
+        self.polar_pause_button.clicked.connect(self.polar_pause_animation)
+        button_layout.addWidget(self.polar_pause_button)
 
         layout.addLayout(button_layout)
 
-        return settings_tab
+        return polar_tab
 
-    def play_animation(self):
+    def polar_play_animation(self):
         if hasattr(self.polar_plot_widget, 'ani'):
             self.polar_plot_widget.ani.event_source.start()  # Resume the animation
 
-    def pause_animation(self):
+    def polar_pause_animation(self):
         if hasattr(self.polar_plot_widget, 'ani'):
             self.polar_plot_widget.ani.event_source.stop()  # Pause the animation
 
