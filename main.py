@@ -189,8 +189,7 @@ class SignalApp(QtWidgets.QWidget):
         # Create an instance of RealTimePlot for the real-time graph
         self.real_time_plot = RealTimePlot()
 
-        return self.real_time_plot 
-
+        return self.real_time_plot
 
     def on_user_interaction_start(self):
         self.user_interacting = True  # Set the flag to true when the user starts interacting

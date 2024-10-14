@@ -61,18 +61,17 @@ class PolarPlotWidget(QtWidgets.QWidget):
         # Create and add a slider for phi values
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setMinimum(0)
-        self.slider.setMaximum(37)
+        self.slider.setMaximum(len(self.phi) - 1)
         self.slider.valueChanged.connect(
             self.slider_changed)  # Sync with user input
         layout.addWidget(self.slider)
 
-        # Create the animation
-        self.ani = FuncAnimation(
-            self.canvas.figure, self.update_plot, frames=len(self.phi), interval=500)
+        # Set up animation control
+        self.current_frame = 0  # Initialize the current frame
 
-        # Track whether the animation is playing
-        self.is_paused = False
-        self.current_frame = 0
+        # Create the animation, using the current_frame as the starting point
+        self.ani = FuncAnimation(
+            self.canvas.figure, self.update_plot, frames=self.frame_sequence, interval=500, repeat=True)
 
         self.plot_3d()  # Plot the 3D data once
 
@@ -94,6 +93,14 @@ class PolarPlotWidget(QtWidgets.QWidget):
         self.canvas.ax_3d.set_ylabel('Y')
         self.canvas.ax_3d.set_zlabel('Z')
 
+    def frame_sequence(self):
+        """Generator function to return frames starting from the current frame."""
+        while True:
+            yield self.current_frame
+            self.current_frame += 1
+            if self.current_frame >= len(self.phi):
+                self.current_frame = 0  # Loop back to the beginning
+
     def update_plot(self, phi_index):
 
         # Clear the previous polar plot
@@ -104,9 +111,11 @@ class PolarPlotWidget(QtWidgets.QWidget):
             f'Polar Plot of Horn Antenna Propagation', pad=20)
         self.canvas.ax_polar.legend(
             title="Phi Angles", loc='upper right', bbox_to_anchor=(1.1, 1), borderaxespad=0.)
-        self.slider.setValue(phi_index)
-        self.canvas.draw()  # Refresh the canvas
+
+        self.slider.setValue(phi_index)  # Sync the slider with the animation
+        self.canvas.draw()
 
     def slider_changed(self, value):
-        self.slider.setValue(value)
-        self.update_plot(value)
+
+        self.current_frame = value  # Set the current frame based on the slider value
+        self.update_plot(value)  # Update plot manually when slider is moved

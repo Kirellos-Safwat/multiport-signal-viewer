@@ -20,13 +20,19 @@ class RealTimePlot(QMainWindow):
         self.series_lon.setName("Longitude")
         self.data = {'time': [], 'latitude': [], 'longitude': []}
         self.start_time = datetime.now()
-        
+
         self.initUI()
+        # !!! IMPORTANT !!!
+        # those options are for the driver to run on wsl , if you are running on windows you can remove them
         options = Options()
         options.add_argument("--headless")  # Run in headless mode
         options.add_argument("--no-sandbox")  # Needed for certain environments
-        options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        # Overcome limited resource problems
+        options.add_argument("--disable-dev-shm-usage")
+        ################################################
+        self.driver = webdriver.Chrome(service=Service(
+            ChromeDriverManager().install()), options=options)
+
         self.driver.get('https://www.orbtrack.org/#/?satName=ISS%20(ZARYA)')
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_data)
@@ -34,7 +40,7 @@ class RealTimePlot(QMainWindow):
 
     def initUI(self):
         self.layout = QVBoxLayout()
-        
+
         # Labels
         self.lat_label = QLabel('Latitude: ')
         self.lon_label = QLabel('Longitude: ')
@@ -42,8 +48,7 @@ class RealTimePlot(QMainWindow):
         self.layout.addWidget(self.lat_label)
         self.layout.addWidget(self.lon_label)
         self.layout.addWidget(self.time_label)
-        
-       
+
         # Latitude chart setup
         self.chart_lat = QChart()
         self.chart_lat.addSeries(self.series_lat)
@@ -68,7 +73,6 @@ class RealTimePlot(QMainWindow):
         # self.axis_x.setTickCount(10)
         self.axis_x_lon.setFormat("hh:mm:ss")
         self.axis_x_lon.setTitleText("Time (HH:MM:SS)")
-        
 
         self.axis_y_lat = QValueAxis()
         self.axis_y_lat.setLabelFormat("%f")
@@ -91,12 +95,12 @@ class RealTimePlot(QMainWindow):
         self.chart_view_lat = QChartView(self.chart_lat)
         self.chart_view_lat.setRenderHint(QPainter.Antialiasing)
         self.chart_view_lat.setRubberBand(QChartView.RectangleRubberBand)
-        self.chart_lat.axisY(self.series_lat).setRange(-20, 80) 
+        self.chart_lat.axisY(self.series_lat).setRange(-20, 80)
 
         self.chart_view_lon = QChartView(self.chart_lon)
         self.chart_view_lon.setRenderHint(QPainter.Antialiasing)
         self.chart_view_lon.setRubberBand(QChartView.RectangleRubberBand)
-        self.chart_lon.axisY(self.series_lon).setRange(-120, 30) 
+        self.chart_lon.axisY(self.series_lon).setRange(-120, 30)
 
         self.layout.addWidget(self.chart_view_lat)
         self.layout.addWidget(self.chart_view_lon)
@@ -105,18 +109,20 @@ class RealTimePlot(QMainWindow):
         self.play_pause_button = QPushButton("Pause")
         self.play_pause_button.clicked.connect(self.toggle_timer)
         self.layout.addWidget(self.play_pause_button)
-        
+
         central_widget = QWidget()
         central_widget.setLayout(self.layout)
         self.setCentralWidget(central_widget)
-        
+
         self.setWindowTitle('Real-time ISS Location')
         self.show()
 
     def update_data(self):
         try:
-            latitude = self.driver.find_element(By.ID, 'satLat').text.replace('°', '').strip()
-            longitude = self.driver.find_element(By.ID, 'satLon').text.replace('°', '').strip()
+            latitude = self.driver.find_element(
+                By.ID, 'satLat').text.replace('°', '').strip()
+            longitude = self.driver.find_element(
+                By.ID, 'satLon').text.replace('°', '').strip()
             time_str = self.driver.find_element(By.ID, 'satUTC').text.strip()
 
             self.lat_label.setText(f'Latitude: {latitude}')
@@ -133,23 +139,28 @@ class RealTimePlot(QMainWindow):
                 longitude = 0.0
             else:
                 longitude = float(longitude.replace(',', '.'))
-            
-            
+
             # Calculate elapsed time
             current_time = datetime.now()
             self.data['time'].append(current_time)
             self.data['latitude'].append(latitude)
             self.data['longitude'].append(longitude)
-            
-            # Update series
-            self.series_lat.append(int(current_time.timestamp() * 1000), latitude)
-            self.series_lon.append(int(current_time.timestamp() * 1000), longitude)
-            
-            self.axis_x_lat.setMin(QDateTime.fromMSecsSinceEpoch(int(self.data['time'][0].timestamp() * 1000)))
-            self.axis_x_lat.setMax(QDateTime.fromMSecsSinceEpoch(int(self.data['time'][-1].timestamp() * 1000)))
 
-            self.axis_x_lon.setMin(QDateTime.fromMSecsSinceEpoch(int(self.data['time'][0].timestamp() * 1000)))
-            self.axis_x_lon.setMax(QDateTime.fromMSecsSinceEpoch(int(self.data['time'][-1].timestamp() * 1000)))
+            # Update series
+            self.series_lat.append(
+                int(current_time.timestamp() * 1000), latitude)
+            self.series_lon.append(
+                int(current_time.timestamp() * 1000), longitude)
+
+            self.axis_x_lat.setMin(QDateTime.fromMSecsSinceEpoch(
+                int(self.data['time'][0].timestamp() * 1000)))
+            self.axis_x_lat.setMax(QDateTime.fromMSecsSinceEpoch(
+                int(self.data['time'][-1].timestamp() * 1000)))
+
+            self.axis_x_lon.setMin(QDateTime.fromMSecsSinceEpoch(
+                int(self.data['time'][0].timestamp() * 1000)))
+            self.axis_x_lon.setMax(QDateTime.fromMSecsSinceEpoch(
+                int(self.data['time'][-1].timestamp() * 1000)))
 
             # Force refresh the chart
             self.chart_view_lat.update()
@@ -173,6 +184,7 @@ class RealTimePlot(QMainWindow):
     def closeEvent(self, event):
         self.driver.quit()
         event.accept()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
