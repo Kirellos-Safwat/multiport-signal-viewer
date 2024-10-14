@@ -1,7 +1,6 @@
 import sys
 import os
 from PyQt5.QtCore import Qt
-import numpy as np
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, QtCore
@@ -14,7 +13,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -58,8 +57,10 @@ class SignalApp(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(main_tab)
 
         # Creating signals plotting widgets
-        self.first_graph = SignalPlotWidget(name='Graph One', signal=Signal(self.generate_square_wave(100), 'b'))
-        self.second_graph = SignalPlotWidget(name='Graph Two', signal=Signal(self.generate_cosine_wave(100), 'r'))
+        self.first_graph = SignalPlotWidget(name='Graph One', signals=[
+            Signal(Utils.generate_square_wave(100), 'b'),
+            Signal(Utils.generate_sine_wave(100), 'r')])
+        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'r')])
 
         # Swap Signals Button
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
@@ -113,9 +114,9 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        self.real_time_plot = RealTimePlot()
+        # self.real_time_plot = RealTimePlot()
 
-        return self.real_time_plot
+        # return self.real_time_plot
         pass
 
 
@@ -159,18 +160,11 @@ class SignalApp(QtWidgets.QWidget):
                 if self.first_graph.timer.interval() != self.second_graph.timer.interval():
                     self.second_graph.timer.setInterval(
                         self.first_graph.timer.interval())  # Sync intervals
-    # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
-    def generate_square_wave(self, points):
-        t = np.linspace(0, 1, points)
-        return (t < 0.5).astype(int)
 
-    # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
-    def generate_cosine_wave(self, points):
-        t = np.linspace(0, 1, points)
-        return (np.cos(2*np.pi*5*t))
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
+        """ 
         self.first_graph.signal, self.second_graph.signal = self.second_graph.signal, self.first_graph.signal
 
         # Swap the text of the title input boxes
@@ -208,15 +202,17 @@ class SignalApp(QtWidgets.QWidget):
         self.first_graph.speed_label.setText(label2_text)
         self.second_graph.speed_label.setText(label1_text)        
         
-        self.first_graph.plot_signals()
+        self.first_graph.plot_signals() """
+        pass
 
     # Generating the function of interpolating(averaging)(gluing) both signals
     def glue_signals(self):
-        # self.glued_signal = (self.signal1.data + self.second_graph.signal.data) / 2
+        """         # self.glued_signal = (self.signal1.data + self.second_graph.signal.data) / 2
         self.interpolation_window = InterpolationWindow(
             self.first_graph.signal.data, self.second_graph.signal.data)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
-
+        """    
+        pass
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

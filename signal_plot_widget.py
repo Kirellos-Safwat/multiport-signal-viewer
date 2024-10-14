@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QVBoxLayout, QPushButton, QWidget
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget
@@ -6,7 +7,7 @@ from PyQt5 import QtGui, QtWidgets
 from utils import Utils
 from pyqtgraph import PlotWidget, QtCore
 from PyQt5.QtCore import Qt
-
+from signal import Signal
 
 class SignalPlotWidget():
     
@@ -22,9 +23,9 @@ class SignalPlotWidget():
             3: 25    # x4 speed
         }
 
-    def __init__(self, is_playing=False, speed=1, window_range=(0, 30), timer=None, name='', signal=None):
+    def __init__(self, signals, is_playing=False, speed=1, window_range=(0, 30), timer=None, name=''):
         super().__init__()
-        self.signal = signal
+        self.signals = signals
         self.is_playing = is_playing
         self.speed = speed
         self.window_range = window_range
@@ -32,7 +33,14 @@ class SignalPlotWidget():
         self.name = name
         self.window_start, self.window_end = window_range
 
+        self.selected_signal = self.signals[0]
+        self.max_length = len(max(self.signals).data)
+        self.max_time_axis = np.linspace(0, 100, self.max_length)
         self.other = None
+
+        self.yMin = min(min(signal.data) for signal in self.signals) if self.signals else self.yMin
+        self.yMax = max(max(signal.data) for signal in self.signals) if self.signals else self.yMax
+
         # graph layout
         self.graph_layout = QtWidgets.QHBoxLayout()
         # buttons layout
@@ -90,8 +98,6 @@ class SignalPlotWidget():
         # Setting the Control buttons for Signal 2:
         # Creating "horizontal" layout for the buttons of signal 2:
         self.play_pause_button = Utils.create_button("", self.play_pause_signal, "play")
-        # Creating import signal button
-        self.import_signal_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal), "import")
 
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addWidget(self.play_pause_button)
@@ -100,7 +106,7 @@ class SignalPlotWidget():
         self.button_layout.addWidget(self.stop_signal_button)
 
         # change color button
-        self.button_layout.addWidget(Utils.create_button(f"", lambda:(self.signal.change_color(), self.plot_signals()), "color"))
+        self.button_layout.addWidget(Utils.create_button(f"", lambda:(self.selected_signal.change_color(), self.plot_signals()), "color"))
 
         self.zoom_in_button = Utils.create_button(f"", self.zoom_in, "zoom_in")
         self.button_layout.addWidget(self.zoom_in_button)
@@ -109,7 +115,7 @@ class SignalPlotWidget():
         self.button_layout.addWidget(self.zoom_out_button)
 
         self.button_layout.addWidget(Utils.create_button(f"", self.show_statistics, "statistics"))
-        self.button_layout.addWidget(Utils.create_button("", lambda: Utils.import_signal_file(self.signal), "import"))
+        self.button_layout.addWidget(Utils.create_button("", lambda: Utils.import_signal_file(self), "import"))
 
         self.button_layout.addStretch()  # Prevents the buttons from stretching
 
@@ -154,16 +160,17 @@ class SignalPlotWidget():
         if state == Qt.Checked:
             # Plot signal only if it's checked
             self.plot_widget.clear()
-            self.plot_widget.plot(self.signal.data, pen=self.signal.color)
+            for signal in self.signals:
+                self.plot_widget.plot(self.max_time_axis, signal.data, pen=signal.color)
             self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
         else:
             self.plot_widget.clear()  # Clear the plot if unchecked
 
-    def update_plot(self, signal, user_interacting):
+    def update_plot(self, user_interacting):
         if self.is_playing and user_interacting:
             window_size = self.window_end - self.window_start # how much is visible at once
-            self.window_start = (self.window_start + 1) % (len(signal.data) - window_size)
+            self.window_start = (self.window_start + 1) % (len(self.selected_signal.data) - window_size) # ??
             self.window_end = self.window_start + window_size
             self.plot_signals()
 
@@ -207,8 +214,9 @@ class SignalPlotWidget():
 
     def show_statistics(self):
         self.statistics_window = StatisticsWindow(
-            self.signal.data, self.signal.title, self.signal.color)  # Generating the Statistics Window
+            self.selected_signal.data, self.selected_signal.title, self.selected_signal.color)  # Generating the Statistics Window
         self.statistics_window.show()  # Showing the Statistics Window
+    
     def play_pause_signal(self):
         if self.show_hide_checkbox.isChecked():
             if not self.is_playing:
@@ -219,7 +227,7 @@ class SignalPlotWidget():
                     # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
                     self.timer = pg.QtCore.QTimer()
                     self.timer.timeout.connect(lambda: 
-                    (self.update_plot(self.signal, SignalPlotWidget.user_interacting)))
+                    (self.update_plot(SignalPlotWidget.user_interacting)))
                     self.timer.start(100)  # Frequent updates every 100ms
                 if SignalPlotWidget.is_linked and not self.other.is_playing:
                     self.other.play_pause_signal()
@@ -243,25 +251,26 @@ class SignalPlotWidget():
         self.original_x_range = self.plot_widget.viewRange()[0]
         self.original_y_range = self.plot_widget.viewRange()[1]
 
-        # Enable panning
-        self.plot_widget.setMouseEnabled(x=True, y=True)
+        # # Enable panning
+        # self.plot_widget.setMouseEnabled(x=True, y=True)
 
         # Store original x and y ranges after the first plot
         self.original_x_range2 = self.other.plot_widget.viewRange()[0]
         self.original_y_range2 = self.other.plot_widget.viewRange()[1]
 
-        # Enable panning
-        self.other.plot_widget.setMouseEnabled(x=True, y=True)
+        # # Enable panning
+        # self.other.plot_widget.setMouseEnabled(x=True, y=True)
 
         # Synchronize the zoom and pan if linked
         if SignalPlotWidget.is_linked:
             SignalPlotWidget.sync_viewports()  # Initial sync on plotting
 
         if self.show_hide_checkbox.isChecked():
-            self.plot_widget.plot(self.signal.time_axis, self.signal.data, pen=self.signal.color)
+            for signal in self.signals:
+                self.plot_widget.plot(self.max_time_axis, signal.data, pen=signal.color)
 
             if SignalPlotWidget.user_interacting:
-                current_time_window = self.signal.time_axis[self.window_start:self.window_end]
+                current_time_window = self.max_time_axis[self.window_start:self.window_end]
                 self.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
@@ -271,14 +280,15 @@ class SignalPlotWidget():
 
             # Allow panning but set limis
             self.plot_widget.setLimits(
-                xMin=min(self.signal.time_axis), xMax=max(self.signal.time_axis),yMin=min(self.signal.data),yMax=max(self.signal.data))
+                xMin=min(self.max_time_axis), xMax=max(self.max_time_axis),yMin=self.yMin,yMax=self.yMax)
 
         if self.other.show_hide_checkbox.isChecked():
-            self.other.plot_widget.plot(self.other.signal.time_axis, self.other.signal.data, pen=self.other.signal.color)
+            for signal in self.other.signals:
+                self.other.plot_widget.plot(self.other.max_time_axis, signal.data, pen=signal.color)
 
             # case of user interaction
             if SignalPlotWidget.user_interacting:
-                current_time_window = self.other.signal.time_axis[self.other.window_start:self.other.window_end]
+                current_time_window = self.other.max_time_axis[self.other.window_start:self.other.window_end]
                 self.other.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
@@ -287,7 +297,7 @@ class SignalPlotWidget():
 
             # Allow panning but set limis
             self.other.plot_widget.setLimits(
-                xMin=min(self.other.signal.time_axis), xMax=max(self.other.signal.time_axis),yMin=min(self.other.signal.data),yMax=max(self.other.signal.data))
+                xMin=min(self.other.max_time_axis), xMax=max(self.other.max_time_axis), yMin=self.other.yMin, yMax=self.other.yMax)
 
     def stop_signal(self):
         if self.show_hide_checkbox.isChecked():
@@ -299,7 +309,7 @@ class SignalPlotWidget():
             # Reset the signal and its position
             # Reset playback window to the beginning
         self.window_start = 0
-        self.window_end = min(30, len(self.signal.data))  # Ensure it does not exceed the signal length
+        self.window_end = min(30, self.max_length)  # Ensure it does not exceed the signal length
         SignalPlotWidget.stopped_by_link = False
         self.plot_signals()
 

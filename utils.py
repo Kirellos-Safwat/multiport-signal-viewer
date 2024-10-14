@@ -138,6 +138,22 @@ class Utils:
             }
         """
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
+        # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
+    @staticmethod
+    def generate_square_wave(points):
+        t = np.linspace(0, 1, points)
+        return (t < 0.5).astype(int)
+
+    # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
+    @staticmethod
+    def generate_cosine_wave(points):
+        t = np.linspace(0, 1, points)
+        return (np.cos(2*np.pi*5*t))
+
+    @staticmethod
+    def generate_sine_wave(points):
+        t = np.linspace(0, 1, points)
+        return (np.sin(2*np.pi*5*t))
 
     @staticmethod
     def create_button(text, method, icon_name='', stylesheet=button_style_sheet, set_enabled=True):
@@ -217,6 +233,8 @@ class Utils:
     @staticmethod
     # browsing local signal files, returning signal data as np array
     def import_signal_file(signal):
+        pass
+    """ 
         file_name, _ = QFileDialog.getOpenFileName()
         if file_name:
             extension = os.path.splitext(file_name)[1].lower()
@@ -246,5 +264,5 @@ class Utils:
         else:
             Utils.show_error_message(
                 "Unsupported signal dimension." + str(signal_data.ndim))
-
-# Example usage within a PyQt application
+"""
+# Ex ample usage within a PyQt application
