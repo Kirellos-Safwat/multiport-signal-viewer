@@ -71,7 +71,7 @@ class PolarPlotWidget(QtWidgets.QWidget):
 
         # Create the animation, using the current_frame as the starting point
         self.ani = FuncAnimation(
-            self.canvas.figure, self.update_plot, frames=self.frame_sequence, interval=500, repeat=True , cache_frame_data= False)
+            self.canvas.figure, self.update_plot, frames=self.frame_sequence, interval=500, repeat=True, cache_frame_data=False)
 
         self.plot_3d()  # Plot the 3D data once
 
