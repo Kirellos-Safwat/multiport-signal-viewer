@@ -49,7 +49,7 @@ class InterpolationWindow(QWidget):
         self.plot_widget.setBackground('#001414')
         self.plot_widget.setTitle("First Signal")
         layout.addWidget(self.plot_widget)
-        self.first_signal_plot = self.plot_widget.plot(self.signal1, pen='b')
+        self.first_signal_plot = self.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
         # Disable mouse panning when performing selection
         self.plot_widget.setMouseEnabled(x=False, y=False)
         self.plot_widget.scene().sigMouseClicked.connect(self.on_mouse_clicked)
@@ -154,32 +154,32 @@ class InterpolationWindow(QWidget):
         # Store the first or second sub-signal
         if self.first_sub_signal is None:
             # Ensure indices are within valid bounds
-            start_idx = max(0, min(start_idx, len(self.signal1) - 1))
-            end_idx = max(0, min(end_idx, len(self.signal1) - 1))
+            start_idx = max(0, min(start_idx, len(self.signal1.data) - 1))
+            end_idx = max(0, min(end_idx, len(self.signal1.data) - 1))
 
             if start_idx > end_idx:  # Ensure the order of the indices is correct
                 start_idx, end_idx = end_idx, start_idx
 
             # Extract the sub-signal
-            sub_signal = self.signal1[start_idx:end_idx + 1]
+            sub_signal = self.signal1.data[start_idx:end_idx + 1]
             self.first_sub_signal = sub_signal
             # self.plot_widget.clear()
             self.first_signal_plot = self.plot_widget.removeItem(self.first_signal_plot)
-            self.plot_widget.plot(self.signal2, pen='b')
+            self.plot_widget.plot(self.signal2.data, pen=self.signal2.color)
             self.plot_widget.setTitle("Second Signal")
             response = Utils.show_info_message("First Sub-Signal Selected", True)
             if response == "reset":
                 self.reset_graph()
         else:
                 # Ensure indices are within valid bounds
-            start_idx = max(0, min(start_idx, len(self.signal2) - 1))
-            end_idx = max(0, min(end_idx, len(self.signal2) - 1))
+            start_idx = max(0, min(start_idx, len(self.signal2.data) - 1))
+            end_idx = max(0, min(end_idx, len(self.signal2.data) - 1))
 
             if start_idx > end_idx:  # Ensure the order of the indices is correct
                 start_idx, end_idx = end_idx, start_idx
 
             # Extract the sub-signal
-            sub_signal = self.signal2[start_idx:end_idx + 1]
+            sub_signal = self.signal2.data[start_idx:end_idx + 1]
             self.second_sub_signal = sub_signal
             response = Utils.show_info_message("Second Sub-Signal Selected", True)
             if response == "continue":
@@ -195,7 +195,7 @@ class InterpolationWindow(QWidget):
         self.start_pos = None
         self.end_pos = None
         self.region.hide()  # Hide the selection region
-        self.first_signal_plot = self.plot_widget.plot(self.signal1, pen='b')
+        self.first_signal_plot = self.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
         self.plot_widget.setTitle("First Signal")
         self.plot_widget.setMouseEnabled(x=False, y=False)
         self.gap_slider.setEnabled(False)

@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -114,8 +114,8 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        self.real_time_plot = RealTimePlot()
-        return self.real_time_plot
+        # self.real_time_plot = RealTimePlot()
+        # return self.real_time_plot
         pass
 
 
@@ -163,8 +163,8 @@ class SignalApp(QtWidgets.QWidget):
 
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
     def swap_signals(self):
-        """ 
-        self.first_graph.signal, self.second_graph.signal = self.second_graph.signal, self.first_graph.signal
+        
+        self.first_graph.signals, self.second_graph.signals = self.second_graph.signals, self.first_graph.signals
 
         # Swap the text of the title input boxes
         self.first_graph.title_input.setText(self.second_graph.title_input.text())
@@ -201,17 +201,14 @@ class SignalApp(QtWidgets.QWidget):
         self.first_graph.speed_label.setText(label2_text)
         self.second_graph.speed_label.setText(label1_text)        
         
-        self.first_graph.plot_signals() """
-        pass
+        self.first_graph.plot_signals()
 
     # Generating the function of interpolating(averaging)(gluing) both signals
     def glue_signals(self):
-        """         # self.glued_signal = (self.signal1.data + self.second_graph.signal.data) / 2
+        # self.glued_signal = (self.signal1.data + self.second_graph.signal.data) / 2
         self.interpolation_window = InterpolationWindow(
-            self.first_graph.signal.data, self.second_graph.signal.data)  # Generating the Intepolation Window
+            self.first_graph.selected_signal, self.second_graph.selected_signal)  # Generating the Intepolation Window
         self.interpolation_window.show()  # Showing the Interpolation Window
-        """    
-        pass
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
