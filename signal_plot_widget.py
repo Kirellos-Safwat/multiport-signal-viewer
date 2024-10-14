@@ -91,7 +91,7 @@ class SignalPlotWidget():
         self.speed_slider.setFixedWidth(150)  # Set your desired fixed width
 
         # Create a label above the slider
-        self.speed_label = QtWidgets.QLabel("Signal 1 speed control: ")
+        self.speed_label = QtWidgets.QLabel("Signal speed control: ")
         self.speed_label.setStyleSheet(Utils.label_style_sheet)
 
         # Add the label and slider to a vertical layout
@@ -443,4 +443,3 @@ class SignalPlotWidget():
 
     def update_max_time(self, new_max_time):
         self.max_time_axis = new_max_time
-        
