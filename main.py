@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-# from realtime_plot import RealTimePlot
+from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -114,9 +114,8 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        # self.real_time_plot = RealTimePlot()
-
-        # return self.real_time_plot
+        self.real_time_plot = RealTimePlot()
+        return self.real_time_plot
         pass
 
 

@@ -23,7 +23,7 @@ class SignalPlotWidget():
             3: 25    # x4 speed
         }
 
-    def __init__(self, signals, is_playing=False, speed=1, window_range=(0, 30), timer=None, name=''):
+    def __init__(self, signals, is_playing=False, speed=1, window_range=(0, 30), timer=None, name='', preserve_zoom = False):
         super().__init__()
         self.signals = signals
         self.is_playing = is_playing
@@ -32,6 +32,7 @@ class SignalPlotWidget():
         self.timer = timer
         self.name = name
         self.window_start, self.window_end = window_range
+        self.preserve_zoom = preserve_zoom  # Flag to preserve zoom level
 
         self.selected_signal = self.signals[0]
         self.max_length = len(max(self.signals).data)
@@ -253,15 +254,17 @@ class SignalPlotWidget():
         self.other.plot_widget.clear()
 
         # Store original x and y ranges after the first plot
-        self.original_x_range = self.plot_widget.viewRange()[0]
-        self.original_y_range = self.plot_widget.viewRange()[1]
+        if not self.preserve_zoom:
+            self.original_x_range = self.plot_widget.viewRange()[0]
+            self.original_y_range = self.plot_widget.viewRange()[1]
 
         # # Enable panning
         # self.plot_widget.setMouseEnabled(x=True, y=True)
 
         # Store original x and y ranges after the first plot
-        self.original_x_range2 = self.other.plot_widget.viewRange()[0]
-        self.original_y_range2 = self.other.plot_widget.viewRange()[1]
+        if not self.preserve_zoom:
+            self.original_x_range2 = self.other.plot_widget.viewRange()[0]
+            self.original_y_range2 = self.other.plot_widget.viewRange()[1]
 
         # # Enable panning
         # self.other.plot_widget.setMouseEnabled(x=True, y=True)
@@ -280,7 +283,8 @@ class SignalPlotWidget():
                     min(current_time_window), max(current_time_window), padding=0)
 
             # Keep Y-axis range fixed for signal1
-            self.plot_widget.setYRange(-1, 1)
+            if not self.preserve_zoom:    
+                self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
 
             # Allow panning but set limis
@@ -297,7 +301,7 @@ class SignalPlotWidget():
                 self.other.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
-            self.other.plot_widget.setYRange(-1, 1)
+            # self.other.plot_widget.setYRange(-1, 1)
             self.other.plot_widget.setTitle(self.other.title_input.text())
 
             # Allow panning but set limis
@@ -341,6 +345,7 @@ class SignalPlotWidget():
             if SignalPlotWidget.is_linked:
                 self.other.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
                 self.other.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+            self.preserve_zoom = True
 
     def zoom_out(self):
         if isinstance(self.plot_widget, PlotWidget):
@@ -364,3 +369,4 @@ class SignalPlotWidget():
             if SignalPlotWidget.is_linked:
                 self.other.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
                 self.other.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+            self.preserve_zoom = True
