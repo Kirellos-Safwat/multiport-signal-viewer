@@ -144,18 +144,18 @@ class Utils:
 
     @staticmethod
     def generate_square_wave(points):
-        t = np.linspace(0, 1, points)
+        t = np.linspace(0, points/100, points)
         return (t < 0.5).astype(int)
 
     # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
     @staticmethod
     def generate_cosine_wave(points):
-        t = np.linspace(0, 1, points)
+        t = np.linspace(0, points/100, points)
         return (np.cos(2*np.pi*5*t))
 
     @staticmethod
     def generate_sine_wave(points):
-        t = np.linspace(0, 1, points)
+        t = np.linspace(0, points/100, points)
         return (np.sin(2*np.pi*5*t))
 
     @staticmethod
@@ -237,11 +237,19 @@ class Utils:
     # browsing local signal files, returning signal data as np array
     def import_signal_file(plot):
         file_name, _ = QFileDialog.getOpenFileName()
+        sampling_rate = 1
         if file_name:
             extension = os.path.splitext(file_name)[1].lower()
             if extension == '.csv':
-                # Assuming each row in the CSV represents signal data
-                signal_data = np.genfromtxt(file_name, delimiter=',')
+                with open(file_name, mode='r') as file:
+                    # Read the sampling rate from the first line
+                    sampling_rate = float(file.readline().strip())
+
+                    # Load the remaining data into a NumPy array
+                    signal_data = np.genfromtxt(file, delimiter=',')
+
+                # Optionally, you can return or use the sampling rate as needed
+                print("Sampling Rate:", sampling_rate)
             elif extension == '.txt':
                 # Assuming space-separated signal data in TXT file
                 signal_data = np.loadtxt(file_name)
@@ -256,15 +264,17 @@ class Utils:
             return
 
         if signal_data.ndim == 1:
-            plot.signals.append(Signal(
+            new_signal = Signal(
                 signal_data=signal_data,
                 color=Utils.generate_random_light_color(),
-                title=os.path.splitext(os.path.basename(file_name))[0]))
-            plot.max_length = max(plot.max_length, len(signal_data))
-            plot.update_max_time(np.linspace(0, plot.max_length,100))
+                title=os.path.splitext(os.path.basename(file_name))[0],
+                f_sample=sampling_rate
+            )
             
-            print("max_length: ", plot.max_length)
-            print("max_time_axis: ", plot.max_time_axis)
+            # Append the newly created Signal instance to the signals list
+            plot.signals.append(new_signal)
+            plot.max_length = max(plot.max_length, len(signal_data))
+            plot.update_max_time(np.linspace(0, plot.max_length / sampling_rate, plot.max_length))
             plot.plot_signals()
 
         else:

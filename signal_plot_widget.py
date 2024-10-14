@@ -38,7 +38,7 @@ class SignalPlotWidget():
         self.preserve_zoom = preserve_zoom  # Flag to preserve zoom level
 
         self.max_length = len(max(self.signals).data)
-        self.max_time_axis = np.linspace(0, 100, self.max_length)
+        self.max_time_axis = np.linspace(0, self.max_length/100, self.max_length)
         self.other = None
 
         self.yMin = min(min(signal.data)
@@ -148,7 +148,8 @@ class SignalPlotWidget():
     def update_graph(self):
         self.selected_signal = self.signals[-1]
         self.max_length = len(max(self.signals).data)
-        self.max_time_axis = np.linspace(0, self.max_length, 100)
+        sample_rate = (max(self.signals)).f_sample
+        self.max_time_axis = np.linspace(0, self.max_length / sample_rate, self.max_length)
         self.yMin = min(min(self.signals[-1].data), self.yMin)
         self.yMax = max(max(self.signals[-1].data), self.yMin)
         self.plot_signals()
@@ -185,7 +186,7 @@ class SignalPlotWidget():
             # Plot signal only if it's checked
             self.plot_widget.clear()
             for signal in self.signals:
-                self.plot_widget.plot(self.max_time_axis,
+                self.plot_widget.plot(self.time_axis,
                                       signal.data, pen=signal.color)
             self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
@@ -243,7 +244,7 @@ class SignalPlotWidget():
 
     def show_statistics(self):
         self.statistics_window = StatisticsWindow(
-            self.selected_signal.data, self.selected_signal.title, self.selected_signal.color)  # Generating the Statistics Window
+            self.selected_signal.data, self.selected_signal.title, self.selected_signal.color, self.selected_signal)  # Generating the Statistics Window
         self.statistics_window.show()  # Showing the Statistics Window
 
     def play_pause_signal(self):
