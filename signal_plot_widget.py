@@ -156,7 +156,7 @@ class SignalPlotWidget():
             # Plot signal only if it's checked
             self.plot_widget.clear()
             self.plot_widget.plot(self.signal.data, pen=self.signal.color)
-            self.plot_widget.setYRange(-1, 1)
+            # self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
         else:
             self.plot_widget.clear()  # Clear the plot if unchecked
@@ -286,7 +286,7 @@ class SignalPlotWidget():
                 self.other.plot_widget.setXRange(
                     min(current_time_window), max(current_time_window), padding=0)
 
-            self.other.plot_widget.setYRange(-1, 1)
+            # self.other.plot_widget.setYRange(-1, 1)
             self.other.plot_widget.setTitle(self.other.title_input.text())
 
             # Allow panning but set limis
