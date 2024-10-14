@@ -140,7 +140,8 @@ class Utils:
             }
         """
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
-        # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
+    # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
+
     @staticmethod
     def generate_square_wave(points):
         t = np.linspace(0, 1, points)
@@ -256,8 +257,8 @@ class Utils:
 
         if signal_data.ndim == 1:
             plot.signals.append(Signal(
-                signal_data=signal_data, 
-                color=Utils.generate_random_light_color(), 
+                signal_data=signal_data,
+                color=Utils.generate_random_light_color(),
                 title=os.path.splitext(os.path.basename(file_name))[0]))
 
         else:
