@@ -12,6 +12,8 @@ class SignalPlotWidget():
     
     is_linked = False
     syncing = False
+    user_interacting = False
+    stopped_by_link = False
     graph_instances = []
     speed_mapping = {
             0: 200,  # x1/2 speed
@@ -20,8 +22,9 @@ class SignalPlotWidget():
             3: 25    # x4 speed
         }
 
-    def __init__(self, is_playing=False, speed=1, window_range=(0, 30), timer=None, name=''):
+    def __init__(self, is_playing=False, speed=1, window_range=(0, 30), timer=None, name='', signal=None):
         super().__init__()
+        self.signal = signal
         self.is_playing = is_playing
         self.speed = speed
         self.window_range = window_range
@@ -29,6 +32,7 @@ class SignalPlotWidget():
         self.name = name
         self.window_start, self.window_end = window_range
 
+        self.other = None
         # graph layout
         self.graph_layout = QtWidgets.QHBoxLayout()
         # buttons layout
@@ -39,6 +43,10 @@ class SignalPlotWidget():
         self.plot_widget.setBackground('#001414')
         # Fix the dimensions of the plot widgets (width, height)
         self.plot_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        
+        # event listeners for mouse panning
+        self.plot_widget.scene().sigMouseClicked.connect(self.on_user_interaction_start)
+        self.plot_widget.sigRangeChanged.connect(self.on_user_interaction_start)
 
         # show/hide checkBox
         self.show_hide_checkbox = QtWidgets.QCheckBox("Show" + self.name)
@@ -46,7 +54,7 @@ class SignalPlotWidget():
         self.show_hide_checkbox.setStyleSheet(Utils.checkBox_style_sheet)
         # Keep the behavior intact
         self.show_hide_checkbox.setChecked(True)
-        # self.show_hide_checkbox.stateChanged.connect(lambda: print('test'))
+        self.show_hide_checkbox.stateChanged.connect(self.toggle_signal)
         self.show_hide_checkbox.stateChanged.connect(self.sync_checkboxes)
         
         # Create title input for Signal 1
@@ -78,6 +86,33 @@ class SignalPlotWidget():
         # Connect lambda: print('test')d
         self.speed_slider.valueChanged.connect(self.update_timer_speed)
 
+                
+        # Setting the Control buttons for Signal 2:
+        # Creating "horizontal" layout for the buttons of signal 2:
+        self.play_pause_button = Utils.create_button("", self.play_pause_signal, "play")
+        # Creating import signal button
+        self.import_signal_button = Utils.create_button("", lambda: Utils.import_signal_file(self.signal), "import")
+
+        self.button_layout = QtWidgets.QHBoxLayout()
+        self.button_layout.addWidget(self.play_pause_button)
+
+        self.stop_signal_button = Utils.create_button(f"", self.stop_signal, "rewind")
+        self.button_layout.addWidget(self.stop_signal_button)
+
+        # change color button
+        self.button_layout.addWidget(Utils.create_button(f"", lambda:(self.signal.change_color(), self.plot_signals()), "color"))
+
+        self.zoom_in_button = Utils.create_button(f"", self.zoom_in, "zoom_in")
+        self.button_layout.addWidget(self.zoom_in_button)
+
+        self.zoom_out_button = Utils.create_button(f"", self.zoom_out, "zoom_out")
+        self.button_layout.addWidget(self.zoom_out_button)
+
+        self.button_layout.addWidget(Utils.create_button(f"", self.show_statistics, "statistics"))
+        self.button_layout.addWidget(Utils.create_button("", lambda: Utils.import_signal_file(self.signal), "import"))
+
+        self.button_layout.addStretch()  # Prevents the buttons from stretching
+
         self.graph_layout.addWidget(self.plot_widget)
         self.controls_layout.addWidget(self.title_input)
         self.controls_layout.addWidget(self.show_hide_checkbox)
@@ -85,6 +120,12 @@ class SignalPlotWidget():
         self.graph_layout.addLayout(self.controls_layout)
 
         SignalPlotWidget.graph_instances.append(self)
+        if len(SignalPlotWidget.graph_instances) == 2:
+            self.other = SignalPlotWidget.graph_instances[0]
+            self.other.other = self
+
+    def on_user_interaction_start(self):
+        SignalPlotWidget.user_interacting = True  # Set the flag to true when the user starts interacting
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
@@ -102,23 +143,18 @@ class SignalPlotWidget():
 
         # If signals are linked, update the other slider
         if SignalPlotWidget.is_linked:
-            for other in SignalPlotWidget.graph_instances:
-                if other is not self:
-                    other.speed_slider.setValue(current_value)
+            self.other.speed_slider.setValue(current_value)
 
     def sync_checkboxes(self):
         if SignalPlotWidget.is_linked:
-            for other in SignalPlotWidget.graph_instances:
-                if other is not self:
-                    # Sync checkbox 1 with checkbox 2
-                    other.show_hide_checkbox.setChecked(self.show_hide_checkbox.isChecked())
+            self.other.show_hide_checkbox.setChecked(self.show_hide_checkbox.isChecked())
 
 
-    def toggle_signal(self, state, signal):
+    def toggle_signal(self, state):
         if state == Qt.Checked:
             # Plot signal only if it's checked
             self.plot_widget.clear()
-            self.plot_widget.plot(signal.data, pen=signal.color)
+            self.plot_widget.plot(self.signal.data, pen=self.signal.color)
             self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
         else:
@@ -129,6 +165,7 @@ class SignalPlotWidget():
             window_size = self.window_end - self.window_start # how much is visible at once
             self.window_start = (self.window_start + 1) % (len(signal.data) - window_size)
             self.window_end = self.window_start + window_size
+            self.plot_signals()
 
     @staticmethod
     def link_viewports():
@@ -168,4 +205,147 @@ class SignalPlotWidget():
 
         SignalPlotWidget.syncing = False
 
+    def show_statistics(self):
+        self.statistics_window = StatisticsWindow(
+            self.signal.data, self.signal.title, self.signal.color)  # Generating the Statistics Window
+        self.statistics_window.show()  # Showing the Statistics Window
+    def play_pause_signal(self):
+        if self.show_hide_checkbox.isChecked():
+            if not self.is_playing:
+                self.is_playing = True
+                self.play_pause_button = Utils.update_button(
+                    self.play_pause_button, "", "pause")
+                if self.timer is None:
+                    # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
+                    self.timer = pg.QtCore.QTimer()
+                    self.timer.timeout.connect(lambda: 
+                    (self.update_plot(self.signal, SignalPlotWidget.user_interacting)))
+                    self.timer.start(100)  # Frequent updates every 100ms
+                if SignalPlotWidget.is_linked and not self.other.is_playing:
+                    self.other.play_pause_signal()
 
+            else:
+                self.is_playing = False
+                self.play_pause_button = Utils.update_button(
+                    self.play_pause_button, "", "play")
+                if SignalPlotWidget.is_linked and self.other.is_playing:
+                    self.other.play_pause_signal()
+
+
+    # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
+    def plot_signals(self):
+        # The clear method is used to clear the frame every time before making the new frame!
+        self.plot_widget.clear()
+        # The clear method is used to clear the frame every time before making the new frame!
+        self.other.plot_widget.clear()
+
+        # Store original x and y ranges after the first plot
+        self.original_x_range = self.plot_widget.viewRange()[0]
+        self.original_y_range = self.plot_widget.viewRange()[1]
+
+        # Enable panning
+        self.plot_widget.setMouseEnabled(x=True, y=True)
+
+        # Store original x and y ranges after the first plot
+        self.original_x_range2 = self.other.plot_widget.viewRange()[0]
+        self.original_y_range2 = self.other.plot_widget.viewRange()[1]
+
+        # Enable panning
+        self.other.plot_widget.setMouseEnabled(x=True, y=True)
+
+        # Synchronize the zoom and pan if linked
+        if SignalPlotWidget.is_linked:
+            SignalPlotWidget.sync_viewports()  # Initial sync on plotting
+
+        if self.show_hide_checkbox.isChecked():
+            self.plot_widget.plot(self.signal.time_axis, self.signal.data, pen=self.signal.color)
+
+            if SignalPlotWidget.user_interacting:
+                current_time_window = self.signal.time_axis[self.window_start:self.window_end]
+                self.plot_widget.setXRange(
+                    min(current_time_window), max(current_time_window), padding=0)
+
+            # Keep Y-axis range fixed for signal1
+            self.plot_widget.setYRange(-1, 1)
+            self.plot_widget.setTitle(self.title_input.text())
+
+            # Allow panning but set limis
+            self.plot_widget.setLimits(
+                xMin=min(self.signal.time_axis), xMax=max(self.signal.time_axis),yMin=min(self.signal.data),yMax=max(self.signal.data))
+
+        if self.other.show_hide_checkbox.isChecked():
+            self.other.plot_widget.plot(self.other.signal.time_axis, self.other.signal.data, pen=self.other.signal.color)
+
+            # case of user interaction
+            if SignalPlotWidget.user_interacting:
+                current_time_window = self.other.signal.time_axis[self.other.window_start:self.other.window_end]
+                self.other.plot_widget.setXRange(
+                    min(current_time_window), max(current_time_window), padding=0)
+
+            self.other.plot_widget.setYRange(-1, 1)
+            self.other.plot_widget.setTitle(self.other.title_input.text())
+
+            # Allow panning but set limis
+            self.other.plot_widget.setLimits(
+                xMin=min(self.other.signal.time_axis), xMax=max(self.other.signal.time_axis),yMin=min(self.other.signal.data),yMax=max(self.other.signal.data))
+
+    def stop_signal(self):
+        if self.show_hide_checkbox.isChecked():
+            self.is_playing = not self.is_playing
+            self.play_pause_signal()
+            if SignalPlotWidget.is_linked and not SignalPlotWidget.stopped_by_link:
+                SignalPlotWidget.stopped_by_link = True
+                self.other.stop_signal()
+            # Reset the signal and its position
+            # Reset playback window to the beginning
+        self.window_start = 0
+        self.window_end = min(30, len(self.signal.data))  # Ensure it does not exceed the signal length
+        SignalPlotWidget.stopped_by_link = False
+        self.plot_signals()
+
+    def zoom_in(self):
+        if isinstance(self.plot_widget, PlotWidget):
+            x_range = self.plot_widget.viewRange()[0]
+            y_range = self.plot_widget.viewRange()[1]
+
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.16  # Adjust this value if necessary
+            zoom_factor_y = 0.105  # Adjust this value if necessary
+
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] + (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] - (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] + (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] - (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            self.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            self.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if SignalPlotWidget.is_linked:
+                self.other.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.other.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+    def zoom_out(self):
+        if isinstance(self.plot_widget, PlotWidget):
+            x_range = self.plot_widget.viewRange()[0]
+            y_range = self.plot_widget.viewRange()[1]
+
+            # Use the same scale factor for both zoom in and out
+            zoom_factor_x = 0.21 # Adjust this value if necessary
+            zoom_factor_y = 0.42 # Adjust this value if necessary
+
+            # Calculate the new ranges
+            new_x_range = (x_range[0] - (x_range[1] - x_range[0]) * zoom_factor_x,
+                        x_range[1] + (x_range[1] - x_range[0]) * zoom_factor_x)
+            new_y_range = (y_range[0] - (y_range[1] - y_range[0]) * zoom_factor_y,
+                        y_range[1] + (y_range[1] - y_range[0]) * zoom_factor_y)
+
+            # Set new ranges
+            self.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+            self.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
+
+            if SignalPlotWidget.is_linked:
+                self.other.plot_widget.setXRange(new_x_range[0], new_x_range[1], padding=0)
+                self.other.plot_widget.setYRange(new_y_range[0], new_y_range[1], padding=0)
