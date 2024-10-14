@@ -2,6 +2,7 @@ import numpy as np
 import sys
 from PyQt5 import QtWidgets
 
+
 class Signal():
 
     def __init__(self, signal_data, color='b', title='signal', is_hidden=False):
@@ -9,7 +10,7 @@ class Signal():
         self.color = color
         self.title = title
         self.is_hidden = is_hidden
-        self.time_axis = np.linspace(0, 100, len(self.data))
+        self.time_axis = np.linspace(0, len(self.data), len(self.data))
 
     def change_color(self):
         # Open the color picker dialog
@@ -19,6 +20,4 @@ class Signal():
             # print(self.color)
 
     def __lt__(self, other):
-        return len(self.data) < len(other.data) 
-
-        
+        return len(self.data) < len(other.data)

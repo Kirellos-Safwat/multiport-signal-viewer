@@ -260,6 +260,12 @@ class Utils:
                 signal_data=signal_data,
                 color=Utils.generate_random_light_color(),
                 title=os.path.splitext(os.path.basename(file_name))[0]))
+            plot.max_length = max(plot.max_length, len(signal_data))
+            plot.update_max_time(np.linspace(0, plot.max_length,100))
+            
+            print("max_length: ", plot.max_length)
+            print("max_time_axis: ", plot.max_time_axis)
+            plot.plot_signals()
 
         else:
             Utils.show_error_message(

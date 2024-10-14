@@ -148,7 +148,7 @@ class SignalPlotWidget():
     def update_graph(self):
         self.selected_signal = self.signals[-1]
         self.max_length = len(max(self.signals).data)
-        self.max_time_axis = np.linspace(0, 100, self.max_length)
+        self.max_time_axis = np.linspace(0, self.max_length, 100)
         self.yMin = min(min(self.signals[-1].data), self.yMin)
         self.yMax = max(max(self.signals[-1].data), self.yMin)
         self.plot_signals()
@@ -440,3 +440,7 @@ class SignalPlotWidget():
             print("Selected Signal:", closest_signal.color)
 
             self.plot_signals()
+
+    def update_max_time(self, new_max_time):
+        self.max_time_axis = new_max_time
+        
