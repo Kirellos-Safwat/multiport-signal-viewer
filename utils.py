@@ -4,6 +4,7 @@ from pyqtgraph import PlotWidget, QtCore
 import os
 import numpy as np
 
+
 class Utils:
     button_style_sheet = """
             QPushButton {
@@ -26,7 +27,7 @@ class Utils:
                 background-color: #86b9b0;
             }
         """
-    
+
     slider_style_sheet = """
             QSlider {
                 background-color: #042630;
@@ -59,7 +60,7 @@ class Utils:
                 border-radius: 4px;
             }
         """
-    
+
     window_style_sheet = "background-color: #042630;"
 
     checkBox_style_sheet = """
@@ -96,7 +97,7 @@ class Utils:
                 background-color: #1e1e1e;
             }
         """
-    
+
     label_style_sheet = """
             QLabel {
                 color: white;
@@ -137,6 +138,7 @@ class Utils:
             }
         """
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
+
     @staticmethod
     def create_button(text, method, icon_name='', stylesheet=button_style_sheet, set_enabled=True):
         button = QtWidgets.QPushButton(text)
@@ -144,22 +146,26 @@ class Utils:
         # Adjust the button to be a perfect circle
         button.setStyleSheet(stylesheet)
         # Set size policy to allow stretching
-        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                             QtWidgets.QSizePolicy.Fixed)
 
         # Optional icon for the button
         if icon_name:
-            icon = QtGui.QIcon('assets\\button_icons\\' + icon_name + '.png')
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(
+                base_path, 'assets', 'button_icons', icon_name + '.png')
+            icon = QtGui.QIcon(icon_path)
             button.setIcon(icon)
-            button.setIconSize(QtCore.QSize(55,55 ))  # Enlarge the icon size
+            button.setIconSize(QtCore.QSize(55, 55))  # Enlarge the icon size
 
         else:
             button.setText(text)
         # Connect the button to the method
         button.clicked.connect(method)
         button.setEnabled(set_enabled)
-        
+
         return button
-    
+
     @staticmethod
     def update_button(button, text, icon_name):
         button.setText(text)
@@ -188,7 +194,8 @@ class Utils:
         if glue:
             # Add custom buttons for glue
             reset_button = msg_box.addButton("Reset", QMessageBox.ActionRole)
-            continue_button = msg_box.addButton("Continue", QMessageBox.AcceptRole)
+            continue_button = msg_box.addButton(
+                "Continue", QMessageBox.AcceptRole)
             # Execute the message box
             msg_box.exec_()
             # Determine which button was clicked
@@ -196,7 +203,7 @@ class Utils:
                 return "reset"
             else:
                 return "continue"
-        
+
     @staticmethod
     def show_warning_message(message):
         # Create a QMessageBox for warning
@@ -207,9 +214,8 @@ class Utils:
         msg_box.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))
         msg_box.exec_()
 
-    
     @staticmethod
-        # browsing local signal files, returning signal data as np array
+    # browsing local signal files, returning signal data as np array
     def import_signal_file(signal):
         file_name, _ = QFileDialog.getOpenFileName()
         if file_name:
