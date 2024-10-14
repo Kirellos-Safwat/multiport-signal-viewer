@@ -3,6 +3,8 @@ from PyQt5 import QtGui, QtWidgets
 from pyqtgraph import PlotWidget, QtCore
 import os
 import numpy as np
+import random
+from signal import Signal
 
 
 class Utils:
@@ -232,9 +234,7 @@ class Utils:
 
     @staticmethod
     # browsing local signal files, returning signal data as np array
-    def import_signal_file(signal):
-        pass
-    """ 
+    def import_signal_file(plot):
         file_name, _ = QFileDialog.getOpenFileName()
         if file_name:
             extension = os.path.splitext(file_name)[1].lower()
@@ -251,18 +251,23 @@ class Utils:
             else:
                 Utils.show_error_message("Unsupported file format.")
                 return
+        else:
+            return
 
         if signal_data.ndim == 1:
-            signal.data = signal_data
-            signal.time_axis = np.linspace(0, 1000, len(signal.data))
-            signal.title = os.path.splitext(os.path.basename(file_name))[0]
-
-            # signal2.data = signal_data
-            # signal2.time_axis = np.linspace(0, 1000, len(signal2.data))
-            # signal2.title = os.path.splitext(os.path.basename(file_name))[0]
+            plot.signals.append(Signal(
+                signal_data=signal_data, 
+                color=Utils.generate_random_light_color(), 
+                title=os.path.splitext(os.path.basename(file_name))[0]))
 
         else:
             Utils.show_error_message(
                 "Unsupported signal dimension." + str(signal_data.ndim))
-"""
-# Ex ample usage within a PyQt application
+
+    @staticmethod
+    def generate_random_light_color():
+        # Generate RGB values that are in a range that avoids dark colors
+        r = random.randint(128, 255)
+        g = random.randint(128, 255)
+        b = random.randint(128, 255)
+        return (r, g, b)

@@ -115,7 +115,7 @@ class SignalPlotWidget():
         self.button_layout.addWidget(self.zoom_out_button)
 
         self.button_layout.addWidget(Utils.create_button(f"", self.show_statistics, "statistics"))
-        self.button_layout.addWidget(Utils.create_button("", lambda: Utils.import_signal_file(self), "import"))
+        self.button_layout.addWidget(Utils.create_button("", lambda: (Utils.import_signal_file(self), self.update_graph()), "import"))
 
         self.button_layout.addStretch()  # Prevents the buttons from stretching
 
@@ -129,6 +129,14 @@ class SignalPlotWidget():
         if len(SignalPlotWidget.graph_instances) == 2:
             self.other = SignalPlotWidget.graph_instances[0]
             self.other.other = self
+
+    def update_graph(self):
+        self.selected_signal = self.signals[-1]
+        self.max_length = len(max(self.signals).data)
+        self.max_time_axis = np.linspace(0, 100, self.max_length)
+        self.yMin = min(min(self.signals[-1].data), self.yMin)
+        self.yMax = max(max(self.signals[-1].data), self.yMin)
+        self.plot_signals()
 
     def on_user_interaction_start(self):
         SignalPlotWidget.user_interacting = True  # Set the flag to true when the user starts interacting
@@ -178,17 +186,15 @@ class SignalPlotWidget():
     def link_viewports():
         # Sync the range and zoom between both graphs
         # The sigRangeChanged signal is part of the pyqtgraph library.
-        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.connect(SignalPlotWidget.sync_range)
-        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.connect(SignalPlotWidget.sync_range)
-
+        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.connect(SignalPlotWidget.graph_instances[0].sync_range)
+        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.connect(SignalPlotWidget.graph_instances[1].sync_range)
         # Sync the initial view range when linking
         SignalPlotWidget.sync_viewports()    
 
-    @staticmethod
-    def unlink_viewports():
+    def unlink_viewports(self):
         # Properly disconnect the range syncing behavior to stop linking
-        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.sync_range)
-        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.sync_range)
+        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.graph_instances[0].sync_range)
+        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.graph_instances[1].sync_range)
 
     @staticmethod
     def sync_viewports():
@@ -200,15 +206,14 @@ class SignalPlotWidget():
         # The asterisk in here unpacks the tuple so that setXRange() receives two args: start&end of range
         SignalPlotWidget.graph_instances[1].plot_widget.setYRange(*range1[1], padding=0)
 
-    @staticmethod
-    def sync_range():
+    def sync_range(self):
         if SignalPlotWidget.syncing:
             return  # Prevent recursive syncing
         SignalPlotWidget.syncing = True
 
-        range2 = SignalPlotWidget.graph_instances[1].plot_widget.viewRange()
-        SignalPlotWidget.graph_instances[0].plot_widget.setXRange(*range2[0], padding=0)
-        SignalPlotWidget.graph_instances[0].plot_widget.setYRange(*range2[1], padding=0)
+        range_ = self.plot_widget.viewRange()
+        self.other.plot_widget.setXRange(*range_[0], padding=0)
+        self.other.plot_widget.setYRange(*range_[1], padding=0)
 
         SignalPlotWidget.syncing = False
 
@@ -267,7 +272,7 @@ class SignalPlotWidget():
 
         if self.show_hide_checkbox.isChecked():
             for signal in self.signals:
-                self.plot_widget.plot(self.max_time_axis, signal.data, pen=signal.color)
+                self.plot_widget.plot(signal.time_axis, signal.data, pen=signal.color)
 
             if SignalPlotWidget.user_interacting:
                 current_time_window = self.max_time_axis[self.window_start:self.window_end]
@@ -284,7 +289,7 @@ class SignalPlotWidget():
 
         if self.other.show_hide_checkbox.isChecked():
             for signal in self.other.signals:
-                self.other.plot_widget.plot(self.other.max_time_axis, signal.data, pen=signal.color)
+                self.other.plot_widget.plot(signal.time_axis, signal.data, pen=signal.color)
 
             # case of user interaction
             if SignalPlotWidget.user_interacting:
