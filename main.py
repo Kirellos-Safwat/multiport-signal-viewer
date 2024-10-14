@@ -157,30 +157,20 @@ class SignalApp(QtWidgets.QWidget):
         self.polar_plot_widget = PolarPlotWidget()
         layout.addWidget(self.polar_plot_widget)
 
-        # Add Play and Pause buttons
         button_layout = QtWidgets.QHBoxLayout()
 
         self.polar_play_button = Utils.create_button(
-            "", self.polar_play_animation, "play")
+            "", self.polar_plot_widget.play_animation, "play")
         button_layout.addWidget(self.polar_play_button)
 
         self.polar_pause_button = Utils.create_button(
-            "", self.polar_pause_animation, "pause")
+            "", self.polar_plot_widget.pause_animation, "pause")
 
-        self.polar_pause_button.clicked.connect(self.polar_pause_animation)
         button_layout.addWidget(self.polar_pause_button)
 
         layout.addLayout(button_layout)
 
         return polar_tab
-
-    def polar_play_animation(self):
-        if hasattr(self.polar_plot_widget, 'ani'):
-            self.polar_plot_widget.ani.event_source.start()  # Resume the animation
-
-    def polar_pause_animation(self):
-        if hasattr(self.polar_plot_widget, 'ani'):
-            self.polar_plot_widget.ani.event_source.stop()  # Pause the animation
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph

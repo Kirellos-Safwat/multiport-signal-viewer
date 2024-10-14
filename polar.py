@@ -119,3 +119,10 @@ class PolarPlotWidget(QtWidgets.QWidget):
 
         self.current_frame = value  # Set the current frame based on the slider value
         self.update_plot(value)  # Update plot manually when slider is moved
+
+    def play_animation(self):
+        if hasattr(self, 'ani'):
+            self.ani.event_source.start()  # Resume the animation
+    def pause_animation(self):
+        if hasattr(self, 'ani'):
+            self.ani.event_source.stop()  # Pause the animation
