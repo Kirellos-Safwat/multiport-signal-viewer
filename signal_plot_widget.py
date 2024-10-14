@@ -75,7 +75,7 @@ class SignalPlotWidget():
         self.show_hide_checkbox.stateChanged.connect(self.sync_checkboxes)
 
         # Create title input for Signal 1
-        self.title_input = QtWidgets.QLineEdit(self.name)
+        self.title_input = QtWidgets.QLineEdit(self.selected_signal.title)
         self.title_input.setFixedWidth(150)  # Limit the width
         self.title_input.setStyleSheet(Utils.lineEdit_style_sheet)
         self.title_input.setAlignment(
@@ -146,11 +146,15 @@ class SignalPlotWidget():
             self.other.other = self
 
     def update_graph(self):
-        self.selected_signal = self.signals[-1]
-        self.max_length = len(max(self.signals).data)
-        self.max_time_axis = np.linspace(0, 100, self.max_length)
-        self.yMin = min(min(self.signals[-1].data), self.yMin)
-        self.yMax = max(max(self.signals[-1].data), self.yMin)
+        if self.signals:
+            self.selected_signal = self.signals[-1]
+            self.title_input.setText(self.selected_signal.title)
+            self.max_length = len(max(self.signals).data)
+            self.max_time_axis = np.linspace(0, 100, self.max_length)
+            self.yMin = min(min(self.signals[-1].data), self.yMin)
+            self.yMax = max(max(self.signals[-1].data), self.yMin)
+        else:
+            self.selected_signal = None
         self.plot_signals()
 
     def on_user_interaction_start(self):
@@ -159,7 +163,8 @@ class SignalPlotWidget():
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
-        self.plot_widget.setTitle(self.title_input.text())
+        self.selected_signal.title = self.title_input.text()
+        self.plot_widget.setTitle(self.selected_signal.title)
 
     def update_timer_speed(self):
         # Get the current slider value for Signal 1
@@ -185,8 +190,12 @@ class SignalPlotWidget():
             # Plot signal only if it's checked
             self.plot_widget.clear()
             for signal in self.signals:
+                if signal == self.selected_signal:
+                    pen = pg.mkPen(color=signal.color, width=4)
+                else:
+                    pen = pg.mkPen(color=signal.color, width=1)
                 self.plot_widget.plot(self.max_time_axis,
-                                      signal.data, pen=signal.color)
+                                      signal.data, pen=pen)
             self.plot_widget.setYRange(-1, 1)
             self.plot_widget.setTitle(self.title_input.text())
         else:
@@ -247,26 +256,26 @@ class SignalPlotWidget():
         self.statistics_window.show()  # Showing the Statistics Window
 
     def play_pause_signal(self):
-        if self.show_hide_checkbox.isChecked():
-            if not self.is_playing:
-                self.is_playing = True
-                self.play_pause_button = Utils.update_button(
-                    self.play_pause_button, "", "pause")
-                if self.timer is None:
-                    # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
-                    self.timer = pg.QtCore.QTimer()
-                    self.timer.timeout.connect(lambda:
-                                               (self.update_plot(SignalPlotWidget.user_interacting)))
-                    self.timer.start(100)  # Frequent updates every 100ms
-                if SignalPlotWidget.is_linked and not self.other.is_playing:
-                    self.other.play_pause_signal()
+        # if self.show_hide_checkbox.isChecked():
+        if not self.is_playing:
+            self.is_playing = True
+            self.play_pause_button = Utils.update_button(
+                self.play_pause_button, "", "pause")
+            if self.timer is None:
+                # Creates a timer where the plot would be updated with new data, allowing real-time visualization of signal.
+                self.timer = pg.QtCore.QTimer()
+                self.timer.timeout.connect(lambda:
+                                            (self.update_plot(SignalPlotWidget.user_interacting)))
+                self.timer.start(100)  # Frequent updates every 100ms
+            if SignalPlotWidget.is_linked and not self.other.is_playing:
+                self.other.play_pause_signal()
 
-            else:
-                self.is_playing = False
-                self.play_pause_button = Utils.update_button(
-                    self.play_pause_button, "", "play")
-                if SignalPlotWidget.is_linked and self.other.is_playing:
-                    self.other.play_pause_signal()
+        else:
+            self.is_playing = False
+            self.play_pause_button = Utils.update_button(
+                self.play_pause_button, "", "play")
+            if SignalPlotWidget.is_linked and self.other.is_playing:
+                self.other.play_pause_signal()
 
     # Generating the function of plotting the signals, giving them titles, and setting their Y-range from -1 to 1
 
@@ -298,8 +307,12 @@ class SignalPlotWidget():
 
         if self.show_hide_checkbox.isChecked():
             for signal in self.signals:
+                if signal == self.selected_signal:
+                    pen = pg.mkPen(color=signal.color, width=4)
+                else:
+                    pen = pg.mkPen(color=signal.color, width=1)
                 self.plot_widget.plot(
-                    signal.time_axis, signal.data, pen=signal.color)
+                    signal.time_axis, signal.data, pen=pen)
 
             if SignalPlotWidget.user_interacting:
                 current_time_window = self.max_time_axis[self.window_start:self.window_end]
@@ -317,8 +330,13 @@ class SignalPlotWidget():
 
         if self.other.show_hide_checkbox.isChecked():
             for signal in self.other.signals:
+                if signal == self.other.selected_signal:
+                    pen = pg.mkPen(color=signal.color, width=4)
+                else:
+                    pen = pg.mkPen(color=signal.color, width=1)
+
                 self.other.plot_widget.plot(
-                    signal.time_axis, signal.data, pen=signal.color)
+                    signal.time_axis, signal.data, pen=pen)
 
             # case of user interaction
             if SignalPlotWidget.user_interacting:
@@ -437,6 +455,6 @@ class SignalPlotWidget():
         if closest_signal:
             # Set the selected signal
             self.selected_signal = closest_signal
-            print("Selected Signal:", closest_signal.color)
-
+            self.title_input.setText(self.selected_signal.title)
             self.plot_signals()
+ 
