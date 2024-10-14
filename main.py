@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-# from realtime_plot import RealTimePlot
+from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -24,11 +24,15 @@ class SignalApp(QtWidgets.QWidget):
         self.initUI()
         self.selected_signal = None
         # Initialize the original ranges after setting up the plot
-        self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # Get the initial x range
-        self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # Get the initial y range
+        self.original_x_range = self.first_graph.plot_widget.viewRange()[
+            0]  # Get the initial x range
+        self.original_y_range = self.first_graph.plot_widget.viewRange()[
+            1]  # Get the initial y range
         # Initialize the original ranges after setting up the plot
-        self.original_x_range = self.second_graph.plot_widget.viewRange()[0]  # Get the initial x range
-        self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # Get the initial y range
+        self.original_x_range = self.second_graph.plot_widget.viewRange()[
+            0]  # Get the initial x range
+        self.original_y_range = self.second_graph.plot_widget.viewRange()[
+            1]  # Get the initial y range
 
         SignalPlotWidget.user_interacting = False  # Flag to allow mouse panning
         # Plotting Siganls with initialized properties
@@ -45,15 +49,18 @@ class SignalApp(QtWidgets.QWidget):
         self.tab_widget.addTab(self.main_tab(), "Main")
         self.tab_widget.addTab(self.Polar_tab(), "Polar")
         self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
+        self.tab_widget.setStyleSheet(Utils.tab_style_sheet)
 
         # Set the layout of the main window to hold the tab widget
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
 
-             # Connect mouse events for selecting and moving signals
-        self.first_graph.plot_widget.scene().sigMouseClicked.connect(self.on_signal_clicked_first_graph)
-        self.second_graph.plot_widget.scene().sigMouseClicked.connect(self.on_signal_clicked_second_graph)
+        # Connect mouse events for selecting and moving signals
+        self.first_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_signal_clicked_first_graph)
+        self.second_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_signal_clicked_second_graph)
 
     def main_tab(self):
         main_tab = QtWidgets.QWidget()
@@ -66,17 +73,19 @@ class SignalApp(QtWidgets.QWidget):
         self.first_graph = SignalPlotWidget(name='Graph One', signals=[
             Signal(Utils.generate_square_wave(100), 'b'),
             Signal(Utils.generate_sine_wave(100), 'r')])
-        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'r')])
+        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[
+                                             Signal(Utils.generate_cosine_wave(100), 'r')])
 
         # Swap Signals Button
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
 
-        self.glue_button = Utils.create_button("Glue Signals", self.glue_signals)
+        self.glue_button = Utils.create_button(
+            "Glue Signals", self.glue_signals)
         # Link Button
         self.link_button = Utils.create_button("", self.toggle_link, "link")
 
         main_layout.addLayout(self.first_graph.graph_layout)
-        
+
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
         main_layout.addLayout(self.first_graph.button_layout)
         # button_layout1.addStretch()  # Prevents the buttons from stretching
@@ -120,12 +129,12 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        # self.real_time_plot = RealTimePlot()
-        # return self.real_time_plot
+        self.real_time_plot = RealTimePlot()
+        return self.real_time_plot
         pass
 
-
     # Generating the function responsible for linking/unlinking graphs
+
     def toggle_link(self):
         SignalPlotWidget.is_linked = not SignalPlotWidget.is_linked
         # Sync play state if linked
@@ -166,10 +175,10 @@ class SignalApp(QtWidgets.QWidget):
                     self.second_graph.timer.setInterval(
                         self.first_graph.timer.interval())  # Sync intervals
 
-
     # Generating the function of swapping both signals together (swapping signal,color,title,type)
+
     def swap_signals(self):
-        
+
         self.first_graph.signals, self.second_graph.signals = self.second_graph.signals, self.first_graph.signals
 
         # Swap the text of the title input boxes
@@ -207,7 +216,7 @@ class SignalApp(QtWidgets.QWidget):
 
         # Swap the text content
         self.first_graph.speed_label.setText(label2_text)
-        self.second_graph.speed_label.setText(label1_text)        
+        self.second_graph.speed_label.setText(label1_text)
         self.first_graph.selected_signal, self.second_graph.selected_signal = self.second_graph.selected_signal, self.first_graph.selected_signal
         self.first_graph.plot_signals()
 
@@ -220,6 +229,7 @@ class SignalApp(QtWidgets.QWidget):
             self.interpolation_window.show()  # Showing the Interpolation Window
         else:
             Utils.show_error_message("Each graph must have a selected signal")
+
     def on_signal_clicked_first_graph(self, event):
         self.on_signal_clicked(event, self.first_graph, self.second_graph)
 
@@ -242,7 +252,8 @@ class SignalApp(QtWidgets.QWidget):
             y_data = signal.data
 
             index = (np.abs(x_data - x_mouse)).argmin()  # Find closest x index
-            distance = np.sqrt((x_mouse - x_data[index])**2 + (y_mouse - y_data[index])**2)
+            distance = np.sqrt(
+                (x_mouse - x_data[index])**2 + (y_mouse - y_data[index])**2)
 
             if distance < min_distance:
                 min_distance = distance
@@ -285,6 +296,7 @@ class SignalApp(QtWidgets.QWidget):
             self.source_graph = None
 
         self.releaseMouse()
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
