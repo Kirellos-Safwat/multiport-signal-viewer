@@ -7,6 +7,7 @@ from PyQt5 import QtGui, QtWidgets
 from utils import Utils
 from pyqtgraph import PlotWidget, QtCore
 from PyQt5.QtCore import Qt
+from statistics_window import StatisticsWindow
 from signal import Signal
 
 
