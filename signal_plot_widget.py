@@ -38,7 +38,7 @@ class SignalPlotWidget():
         self.preserve_zoom = preserve_zoom  # Flag to preserve zoom level
 
         self.max_length = len(max(self.signals).data)
-        self.max_time_axis = np.linspace(0, 100, self.max_length)
+        self.max_time_axis = np.linspace(0, self.max_length/100, self.max_length)
         self.other = None
 
         self.yMin = min(min(signal.data)
@@ -91,7 +91,7 @@ class SignalPlotWidget():
         self.speed_slider.setFixedWidth(150)  # Set your desired fixed width
 
         # Create a label above the slider
-        self.speed_label = QtWidgets.QLabel("Signal 1 speed control: ")
+        self.speed_label = QtWidgets.QLabel("Signal speed control: ")
         self.speed_label.setStyleSheet(Utils.label_style_sheet)
 
         # Add the label and slider to a vertical layout
@@ -150,7 +150,7 @@ class SignalPlotWidget():
             self.selected_signal = self.signals[-1]
             self.title_input.setText(self.selected_signal.title)
             self.max_length = len(max(self.signals).data)
-            self.max_time_axis = np.linspace(0, 100, self.max_length)
+            self.max_time_axis = np.linspace(0, self.max_length / 100, self.max_length)
             self.yMin = min(min(self.signals[-1].data), self.yMin)
             self.yMax = max(max(self.signals[-1].data), self.yMin)
         else:
@@ -209,8 +209,8 @@ class SignalPlotWidget():
             self.window_end = self.window_start + window_size
             self.plot_signals()
 
-    @staticmethod
-    def link_viewports():
+
+    def link_viewports(self):
         # Sync the range and zoom between both graphs
         # The sigRangeChanged signal is part of the pyqtgraph library.
         SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.connect(
@@ -252,7 +252,7 @@ class SignalPlotWidget():
 
     def show_statistics(self):
         self.statistics_window = StatisticsWindow(
-            self.selected_signal.data, self.selected_signal.title, self.selected_signal.color)  # Generating the Statistics Window
+            self.selected_signal.data, self.selected_signal.title, self.selected_signal.color, self.selected_signal)  # Generating the Statistics Window
         self.statistics_window.show()  # Showing the Statistics Window
 
     def play_pause_signal(self):
@@ -321,7 +321,8 @@ class SignalPlotWidget():
 
             # Keep Y-axis range fixed for signal1
             if not self.preserve_zoom:
-                self.plot_widget.setYRange(-1, 1)
+                global_min, global_max = self.get_global_min_and_max()
+                self.plot_widget.setYRange(global_min, global_max)
             self.plot_widget.setTitle(self.title_input.text())
 
             # Allow panning but set limis
@@ -457,4 +458,17 @@ class SignalPlotWidget():
             self.selected_signal = closest_signal
             self.title_input.setText(self.selected_signal.title)
             self.plot_signals()
- 
+
+    def update_max_time(self, new_max_time):
+        self.max_time_axis = new_max_time
+
+    def get_global_min_and_max(self):
+        # Extract both the minimum and maximum values from each signal's data
+        min_values = [np.min(signal.data) for signal in self.signals]
+        max_values = [np.max(signal.data) for signal in self.signals]
+        
+        # Get the global minimum and maximum values across all signals
+        global_min = min(min_values)
+        global_max = max(max_values)
+        
+        return global_min, global_max

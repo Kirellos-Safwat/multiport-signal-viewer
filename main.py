@@ -152,11 +152,11 @@ class SignalApp(QtWidgets.QWidget):
                 self.first_graph.timer.setInterval(new_timer_interval)
             if self.second_graph.timer is not None:
                 self.second_graph.timer.setInterval(new_timer_interval)
-            SignalPlotWidget.link_viewports()
+            self.first_graph.link_viewports()
         else:
             self.link_button = Utils.update_button(
                 self.link_button, "", "link")
-            SignalPlotWidget.unlink_viewports()
+            self.first_graph.unlink_viewports()
 
         # Ensure consistent signal speeds
         if SignalPlotWidget.is_linked:
@@ -270,14 +270,16 @@ class SignalApp(QtWidgets.QWidget):
 
             # Move the signal from the source graph to the target graph
             if target_graph and target_graph != self.source_graph:
-                self.source_graph.signals.remove(self.selected_signal)
-                target_graph.signals.append(self.selected_signal)
-                # target_graph.selected_signal = self.selected_signal
-                target_graph.update_graph()
-                # Re-plot both graphs after moving the signal
-                self.source_graph.update_graph()
-                # target_graph.plot_signals()
-
+                if len(self.source_graph.signals) > 1:
+                    self.source_graph.signals.remove(self.selected_signal)
+                    target_graph.signals.append(self.selected_signal)
+                    # target_graph.selected_signal = self.selected_signal
+                    target_graph.update_graph()
+                    # Re-plot both graphs after moving the signal
+                    self.source_graph.update_graph()
+                    # target_graph.plot_signals()
+                else:
+                    print("Empty graph")
             # Clear the selected signal and source graph
             self.selected_signal = None
             self.source_graph = None
