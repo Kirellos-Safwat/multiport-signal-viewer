@@ -3,6 +3,9 @@ from PyQt5 import QtGui, QtWidgets
 from pyqtgraph import PlotWidget, QtCore
 import os
 import numpy as np
+import random
+from signal import Signal
+
 
 class Utils:
     button_style_sheet = """
@@ -26,7 +29,7 @@ class Utils:
                 background-color: #86b9b0;
             }
         """
-    
+
     slider_style_sheet = """
             QSlider {
                 background-color: #042630;
@@ -59,7 +62,7 @@ class Utils:
                 border-radius: 4px;
             }
         """
-    
+
     window_style_sheet = "background-color: #042630;"
 
     checkBox_style_sheet = """
@@ -96,7 +99,7 @@ class Utils:
                 background-color: #1e1e1e;
             }
         """
-    
+
     label_style_sheet = """
             QLabel {
                 color: white;
@@ -137,6 +140,24 @@ class Utils:
             }
         """
     # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
+    # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
+
+    @staticmethod
+    def generate_square_wave(points):
+        t = np.linspace(0, points/100, points)
+        return (t < 0.5).astype(int)
+
+    # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
+    @staticmethod
+    def generate_cosine_wave(points):
+        t = np.linspace(0, points/100, points)
+        return (np.cos(2*np.pi*5*t))
+
+    @staticmethod
+    def generate_sine_wave(points):
+        t = np.linspace(0, points/100, points)
+        return (np.sin(2*np.pi*5*t))
+
     @staticmethod
     def create_button(text, method, icon_name='', stylesheet=button_style_sheet, set_enabled=True):
         button = QtWidgets.QPushButton(text)
@@ -144,22 +165,26 @@ class Utils:
         # Adjust the button to be a perfect circle
         button.setStyleSheet(stylesheet)
         # Set size policy to allow stretching
-        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                             QtWidgets.QSizePolicy.Fixed)
 
         # Optional icon for the button
         if icon_name:
-            icon = QtGui.QIcon('assets\\button_icons\\' + icon_name + '.png')
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(
+                base_path, 'assets', 'button_icons', icon_name + '.png')
+            icon = QtGui.QIcon(icon_path)
             button.setIcon(icon)
-            button.setIconSize(QtCore.QSize(55,55 ))  # Enlarge the icon size
+            button.setIconSize(QtCore.QSize(55, 55))  # Enlarge the icon size
 
         else:
             button.setText(text)
         # Connect the button to the method
         button.clicked.connect(method)
         button.setEnabled(set_enabled)
-        
+
         return button
-    
+
     @staticmethod
     def update_button(button, text, icon_name):
         button.setText(text)
@@ -188,7 +213,8 @@ class Utils:
         if glue:
             # Add custom buttons for glue
             reset_button = msg_box.addButton("Reset", QMessageBox.ActionRole)
-            continue_button = msg_box.addButton("Continue", QMessageBox.AcceptRole)
+            continue_button = msg_box.addButton(
+                "Continue", QMessageBox.AcceptRole)
             # Execute the message box
             msg_box.exec_()
             # Determine which button was clicked
@@ -196,7 +222,7 @@ class Utils:
                 return "reset"
             else:
                 return "continue"
-        
+
     @staticmethod
     def show_warning_message(message):
         # Create a QMessageBox for warning
@@ -207,16 +233,23 @@ class Utils:
         msg_box.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))
         msg_box.exec_()
 
-    
     @staticmethod
-        # browsing local signal files, returning signal data as np array
-    def import_signal_file(signal):
+    # browsing local signal files, returning signal data as np array
+    def import_signal_file(plot):
         file_name, _ = QFileDialog.getOpenFileName()
+        sampling_rate = 1
         if file_name:
             extension = os.path.splitext(file_name)[1].lower()
             if extension == '.csv':
-                # Assuming each row in the CSV represents signal data
-                signal_data = np.genfromtxt(file_name, delimiter=',')
+                with open(file_name, mode='r') as file:
+                    # Read the sampling rate from the first line
+                    sampling_rate = float(file.readline().strip())
+
+                    # Load the remaining data into a NumPy array
+                    signal_data = np.genfromtxt(file, delimiter=',')
+
+                # Optionally, you can return or use the sampling rate as needed
+                print("Sampling Rate:", sampling_rate)
             elif extension == '.txt':
                 # Assuming space-separated signal data in TXT file
                 signal_data = np.loadtxt(file_name)
@@ -227,18 +260,31 @@ class Utils:
             else:
                 Utils.show_error_message("Unsupported file format.")
                 return
+        else:
+            return
 
         if signal_data.ndim == 1:
-            signal.data = signal_data
-            signal.time_axis = np.linspace(0, 1000, len(signal.data))
-            signal.title = os.path.splitext(os.path.basename(file_name))[0]
-
-            # signal2.data = signal_data
-            # signal2.time_axis = np.linspace(0, 1000, len(signal2.data))
-            # signal2.title = os.path.splitext(os.path.basename(file_name))[0]
+            new_signal = Signal(
+                signal_data=signal_data,
+                color=Utils.generate_random_light_color(),
+                title=os.path.splitext(os.path.basename(file_name))[0],
+                f_sample=sampling_rate
+            )
+            
+            # Append the newly created Signal instance to the signals list
+            plot.signals.append(new_signal)
+            plot.max_length = max(plot.max_length, len(signal_data))
+            plot.update_max_time(np.linspace(0, plot.max_length / sampling_rate, plot.max_length))
+            plot.plot_signals()
 
         else:
             Utils.show_error_message(
                 "Unsupported signal dimension." + str(signal_data.ndim))
 
-# Example usage within a PyQt application
+    @staticmethod
+    def generate_random_light_color():
+        # Generate RGB values that are in a range that avoids dark colors
+        r = random.randint(128, 255)
+        g = random.randint(128, 255)
+        b = random.randint(128, 255)
+        return (r, g, b)

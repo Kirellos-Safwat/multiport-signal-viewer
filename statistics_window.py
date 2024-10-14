@@ -3,11 +3,12 @@ from PyQt5 import QtWidgets
 from pyqtgraph import PlotWidget
 
 class StatisticsWindow(QtWidgets.QWidget):
-    def __init__(self, signal, title, color):
+    def __init__(self, signal, title, color, actual_signal):
         super().__init__()
         self.signal = signal
         self.title = title
         self.color = color
+        self.actual_signal = actual_signal
         self.initUI()
 
     def initUI(self):
@@ -19,7 +20,7 @@ class StatisticsWindow(QtWidgets.QWidget):
         # Plot for Signal
         self.plot_widget = PlotWidget()
         self.plot_widget.setBackground('#001414')
-        self.plot_widget.plot(self.signal, pen=self.color)
+        self.plot_widget.plot(self.actual_signal.time_axis,self.signal, pen=self.color)
         self.plot_widget.setTitle(self.title)
         self.plot_widget.setYRange(0, 1)
         layout.addWidget(self.plot_widget)
@@ -107,7 +108,7 @@ class StatisticsWindow(QtWidgets.QWidget):
         """Calculate and update all statistics in the labels."""
         self.result_labels[0].setText(f"{self.calculate_mean():.2f}")
         self.result_labels[1].setText(f"{self.calculate_std():.2f}")
-        self.result_labels[2].setText(f"{self.calculate_duration()} units")
+        self.result_labels[2].setText(f"{self.calculate_duration()} mS")
         self.result_labels[3].setText(f"{self.calculate_min():.2f}")
         self.result_labels[4].setText(f"{self.calculate_max():.2f}")
         self.result_labels[5].setText(f"{self.calculate_sampling_rate()} Hz")
@@ -119,7 +120,7 @@ class StatisticsWindow(QtWidgets.QWidget):
         return np.std(self.signal)
 
     def calculate_duration(self):
-        return len(self.signal)  # Assuming 1 sample = 1 unit time
+        return len(self.signal)*1000/self.actual_signal.f_sample
 
     def calculate_min(self):
         return np.min(self.signal)
@@ -128,4 +129,4 @@ class StatisticsWindow(QtWidgets.QWidget):
         return np.max(self.signal)
 
     def calculate_sampling_rate(self):
-        return 100  # Assuming fixed sampling rate for this example
+        return self.actual_signal.f_sample
