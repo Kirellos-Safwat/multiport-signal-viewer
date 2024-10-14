@@ -129,4 +129,3 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
 
     def calculate_sampling_rate(self):
         return 100  # Assuming fixed sampling rate for this example
-

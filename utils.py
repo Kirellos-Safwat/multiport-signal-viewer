@@ -188,7 +188,10 @@ class Utils:
     @staticmethod
     def update_button(button, text, icon_name):
         button.setText(text)
-        icon = QtGui.QIcon('assets\\button_icons\\'+str(icon_name)+'.png')
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(
+                base_path, 'assets', 'button_icons', icon_name + '.png')
+        icon = QtGui.QIcon(icon_path  )
         button.setIcon(icon)
         return button
 
