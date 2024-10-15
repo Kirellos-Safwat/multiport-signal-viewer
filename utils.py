@@ -107,6 +107,17 @@ class Utils:
                 padding-bottom: 5px;
             }
         """
+    tab_style_sheet = """
+    QTabBar::tab {
+        color: white; 
+    }
+    QTabBar::tab:selected {
+        background: lightblue; 
+    }
+    QTabBar::tab:hover {
+        color: lightblue;  
+    }
+"""
 
     comboBox_style_sheet = """
             QComboBox {
@@ -188,7 +199,10 @@ class Utils:
     @staticmethod
     def update_button(button, text, icon_name):
         button.setText(text)
-        icon = QtGui.QIcon('assets\\button_icons\\'+str(icon_name)+'.png')
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(
+            base_path, 'assets', 'button_icons', icon_name + '.png')
+        icon = QtGui.QIcon(icon_path)
         button.setIcon(icon)
         return button
 
@@ -270,11 +284,12 @@ class Utils:
                 title=os.path.splitext(os.path.basename(file_name))[0],
                 f_sample=sampling_rate
             )
-            
+
             # Append the newly created Signal instance to the signals list
             plot.signals.append(new_signal)
             plot.max_length = max(plot.max_length, len(signal_data))
-            plot.update_max_time(np.linspace(0, plot.max_length / sampling_rate, plot.max_length))
+            plot.update_max_time(np.linspace(
+                0, plot.max_length / sampling_rate, plot.max_length))
             plot.plot_signals()
 
         else:

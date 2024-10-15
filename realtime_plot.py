@@ -9,6 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime, timedelta
 import sys
 from selenium.webdriver.chrome.options import Options
+from utils import Utils
 
 
 class RealTimePlot(QMainWindow):
@@ -45,6 +46,9 @@ class RealTimePlot(QMainWindow):
         self.lat_label = QLabel('Latitude: ')
         self.lon_label = QLabel('Longitude: ')
         self.time_label = QLabel('Time: ')
+        self.lat_label.setStyleSheet(Utils.label_style_sheet)
+        self.lon_label.setStyleSheet(Utils.label_style_sheet)
+        self.time_label.setStyleSheet(Utils.label_style_sheet)
         self.layout.addWidget(self.lat_label)
         self.layout.addWidget(self.lon_label)
         self.layout.addWidget(self.time_label)
@@ -106,8 +110,8 @@ class RealTimePlot(QMainWindow):
         self.layout.addWidget(self.chart_view_lon)
 
         # Play/Pause button
-        self.play_pause_button = QPushButton("Pause")
-        self.play_pause_button.clicked.connect(self.toggle_timer)
+        self.play_pause_button = Utils.create_button("", self.toggle_timer, "pause")
+        # self.play_pause_button.clicked.connect(self.toggle_timer)
         self.layout.addWidget(self.play_pause_button)
 
         central_widget = QWidget()
@@ -176,10 +180,12 @@ class RealTimePlot(QMainWindow):
     def toggle_timer(self):
         if self.timer.isActive():
             self.timer.stop()
-            self.play_pause_button.setText("Play")
+            self.play_pause_button = Utils.update_button(
+                self.play_pause_button, "", "play")
         else:
             self.timer.start(500)
-            self.play_pause_button.setText("Pause")
+            self.play_pause_button = Utils.update_button(
+                self.play_pause_button, "", "pause")
 
     def closeEvent(self, event):
         self.driver.quit()

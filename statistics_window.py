@@ -22,7 +22,6 @@ class StatisticsWindow(QtWidgets.QWidget):
         self.plot_widget.setBackground('#001414')
         self.plot_widget.plot(self.actual_signal.time_axis,self.signal, pen=self.color)
         self.plot_widget.setTitle(self.title)
-        self.plot_widget.setYRange(0, 1)
         layout.addWidget(self.plot_widget)
 
         # Create the statistics labels and add them to the layout
