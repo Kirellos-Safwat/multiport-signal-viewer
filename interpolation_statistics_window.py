@@ -29,8 +29,7 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
             ("Standard Deviation: ", self.calculate_std),
             ("Duration: ", self.calculate_duration),
             ("Min: ", self.calculate_min),
-            ("Max: ", self.calculate_max),
-            ("Sampling Rate: ", self.calculate_sampling_rate)
+            ("Max: ", self.calculate_max)
         ]
 
         self.result_labels = []  # List to hold the result value labels
@@ -107,10 +106,9 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
         """Calculate and update all statistics in the labels."""
         self.result_labels[0].setText(f"{self.calculate_mean():.2f}")
         self.result_labels[1].setText(f"{self.calculate_std():.2f}")
-        self.result_labels[2].setText(f"{self.calculate_duration()} units")
+        self.result_labels[2].setText(f"{self.calculate_duration()} mS")
         self.result_labels[3].setText(f"{self.calculate_min():.2f}")
         self.result_labels[4].setText(f"{self.calculate_max():.2f}")
-        self.result_labels[5].setText(f"{self.calculate_sampling_rate()} Hz")
 
     def calculate_mean(self):
         return np.mean(self.signal)
@@ -127,5 +125,3 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
     def calculate_max(self):
         return np.max(self.signal)
 
-    def calculate_sampling_rate(self):
-        return 100  # Assuming fixed sampling rate for this example

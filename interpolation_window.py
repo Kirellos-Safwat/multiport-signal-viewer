@@ -315,7 +315,24 @@ class InterpolationWindow(QWidget):
         img_path = f'snapshot{self.snapshot_count}.png'  # Create a filename for the snapshot
         exporter = ImageExporter(self.plot_widget.getPlotItem())
         exporter.export(img_path)  # Save the current plot as an image
-        QtWidgets.QMessageBox.information(self, "Snapshot Saved", f"Snapshot saved as '{img_path}'.")
+
+        # Notify user
+        msg_box_1 = QtWidgets.QMessageBox(self)
+        msg_box_1.setWindowTitle("Snapshot Saved")
+        msg_box_1.setText(f"<font color='white'>Snapshot saved as '{img_path}'.</font>")
+        msg_box_1.setIcon(QtWidgets.QMessageBox.Information)
+
+        # Customize the button text
+        msg_box_1.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        ok_button = msg_box_1.button(QtWidgets.QMessageBox.Ok)
+        ok_button.setText("OK")  # Set button text
+
+        # Change button text color to white and background color to grey
+        ok_button.setStyleSheet("color: white; background-color: grey;")
+
+        # Display the message box
+        msg_box_1.exec_()
+
 
     def export_report(self):
         # Calculate statistics
@@ -397,4 +414,18 @@ class InterpolationWindow(QWidget):
         pdf.output('glue_report.pdf')  # Save PDF report
 
         # Notify user
-        QtWidgets.QMessageBox.information(self, "Report Exported", "The report has been successfully exported as 'glue_report.pdf'.")
+        msg_box = QtWidgets.QMessageBox(self)
+        msg_box.setWindowTitle("Report Exported")
+        msg_box.setText("<font color='white'>The report has been successfully exported as 'glue_report.pdf'.</font>")
+        msg_box.setIcon(QtWidgets.QMessageBox.Information)
+
+        # Customize the button text
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        ok_button = msg_box.button(QtWidgets.QMessageBox.Ok)
+        ok_button.setText("OK")  # Set button text
+
+        # Change button text color to white and background color to grey
+        ok_button.setStyleSheet("color: white; background-color: grey;")
+
+        # Display the message box
+        msg_box.exec_()
