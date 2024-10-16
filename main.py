@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -35,7 +35,8 @@ class SignalApp(QtWidgets.QWidget):
             1]  # Get the initial y range
 
         SignalPlotWidget.user_interacting = False  # Flag to allow mouse panning
-        # Plotting Siganls with initialized properties
+        self.shift_pressed = False
+        
         self.first_graph.plot_signals()
 
     def initUI(self):
@@ -65,13 +66,10 @@ class SignalApp(QtWidgets.QWidget):
     def main_tab(self):
         main_tab = QtWidgets.QWidget()
 
-        # Setting the Main layout (Organizing Structure On Top Of Each Other)
-        # Vertical Layout for the positioning of child widgets within a parent widget
         main_layout = QtWidgets.QVBoxLayout(main_tab)
 
         # Creating signals plotting widgets
         self.first_graph = SignalPlotWidget(name='Graph One', signals=[
-            Signal(Utils.generate_square_wave(100), 'b'),
             Signal(Utils.generate_sine_wave(100), 'r')])
         self.second_graph = SignalPlotWidget(name='Graph Two', signals=[
                                              Signal(Utils.generate_cosine_wave(100), 'r')])
@@ -129,8 +127,8 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        self.real_time_plot = RealTimePlot()
-        return self.real_time_plot
+        # self.real_time_plot = RealTimePlot()
+        # return self.real_time_plot
         pass
 
     # Generating the function responsible for linking/unlinking graphs
@@ -231,10 +229,12 @@ class SignalApp(QtWidgets.QWidget):
             Utils.show_error_message("Each graph must have a selected signal")
 
     def on_signal_clicked_first_graph(self, event):
-        self.on_signal_clicked(event, self.first_graph, self.second_graph)
+        if self.shift_pressed:
+            self.on_signal_clicked(event, self.first_graph, self.second_graph)
 
     def on_signal_clicked_second_graph(self, event):
-        self.on_signal_clicked(event, self.second_graph, self.first_graph)
+        if self.shift_pressed:
+            self.on_signal_clicked(event, self.second_graph, self.first_graph)
 
     def on_signal_clicked(self, event, source_graph, target_graph):
         pos = event.scenePos()  # Get the mouse position in scene coordinates
@@ -269,7 +269,7 @@ class SignalApp(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event):
         # Check if the mouse release occurred on a different graph
-        if self.selected_signal and self.source_graph:
+        if self.selected_signal and self.source_graph and self.shift_pressed:
             release_pos = event.pos()  # Get the release position in the widget
             target_graph = None
 
@@ -297,6 +297,17 @@ class SignalApp(QtWidgets.QWidget):
 
         self.releaseMouse()
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Shift:
+            if not self.shift_pressed:
+                self.shift_pressed = True
+                print("clicked")
+                
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Shift:
+            if self.shift_pressed:
+                self.shift_pressed = False
+                print("released")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

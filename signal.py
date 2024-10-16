@@ -23,4 +23,7 @@ class Signal():
 
     def __lt__(self, other):
         return len(self.data) < len(other.data)
+
+    def __repr__(self):
+        return str(self.data)
     

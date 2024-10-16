@@ -87,7 +87,7 @@ class InterpolationWindow(QWidget):
         # Create a QComboBox (dropdown list)
         self.select_order_comboBox = QComboBox(self)
         # Add items to the combo box
-        self.select_order_comboBox.addItems(["Linear", "Zero", "Quadratic", "Cubic"])
+        self.select_order_comboBox.addItems(["Linear", "Nearest", "Quadratic", "Cubic"])
         # Connect the signal to the slot (function)
         self.select_order_comboBox.currentTextChanged.connect(self.on_select_order)
         self.select_order_comboBox.setStyleSheet(Utils.comboBox_style_sheet)
