@@ -248,15 +248,16 @@ class SignalApp(QtWidgets.QWidget):
             
             #move signal from source graph to target graph
             if target_graph and target_graph != self.source_graph:
-            #    if len(self.source_graph.signals) > 1:
+                if len(self.source_graph.signals) > 1:
                     self.source_graph.signals.remove(self.signal_to_be_moved)
                     target_graph.signals.append(self.signal_to_be_moved)
                     # target_graph.selected_signal = self.signal_to_be_moved
+                    
                     target_graph.update_graph()
                     self.source_graph.update_graph()
-                    target_graph.plot_signals()
-             #   else:
-              #      print("Empty graph")
+                    # target_graph.plot_signals()
+                else:
+                    print("Empty graph")
             #clear selected signal and source graph
             self.signal_to_be_moved = None
             self.source_graph = None

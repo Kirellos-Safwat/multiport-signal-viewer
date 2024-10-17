@@ -8,148 +8,161 @@ from signal import Signal
 
 
 class Utils:
+# Button Style
     button_style_sheet = """
-            QPushButton {
-            background-color: #adb4b4;
-            color: black;
-            font-size: 14px;
-            padding: 2;
-            font-weight: bold;
-            border-radius: 10px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #4c7273;
-            }
-            QPushButton:hover {
-            background-color: #4c7273;
-            border-radius: 10px;
-            border: 2px solid white;
-            }
-            QPushButton:pressed {
-            background-color: #86b9b0;
-            }
-            """
+    QPushButton {
+        background-color: #d3d3d3;  
+        color: black;
+        font-size: 14px;
+        padding: 2px;
+        font-weight: bold;
+        border-radius: 10px;
+        width:20px;
+        height:20px;
+        border: 2px solid #28a745; 
+        border-width: 3px; 
+    }
+    QPushButton:hover {
+        background-color: #5a6268;  
+        border: 2px solid #ffffff;  
+    }
+    QPushButton:pressed {
+        background-color: #495057;   
+    }
+    """
 
+    # Slider Style
     slider_style_sheet = """
-            QSlider {
-                background-color: #042630;
-                padding: 0px;
-            }
-            QSlider::groove:horizontal {
-                border: 1px solid #4c7273;
-                height: 8px;
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: #86b9b0;
-                border: 2px solid #4c7273;
-                width: 16px;
-                height: 16px;
-                margin: -5px 0;
-                border-radius: 8px;
-            }
-            QSlider::handle:horizontal:hover {
-                background: #083838;
-                border: 2px solid #4c7273;
-            }
-            QSlider::sub-page:horizontal {
-                background: #86b9b0;
-                border-radius: 4px;
-            }
-            QSlider::add-page:horizontal {
-                background: #1e1e1e;
-                border-radius: 4px;
-            }
-        """
+    QSlider {
+        background-color: #343a40;  
+        padding :0px;
+    }
+    QSlider::groove:horizontal {
+        border: 1px solid #495057;  
+        height: 8px;
+        background: #212529;  
+        border-radius: 4px;
+    }
+    QSlider::handle:horizontal {
+        background: #28a745;  
+        border: 2px solid #495057;  
+        width: 16px;
+        height: 16px;
+        margin: -5px 0;
+        border-radius: 8px;
+    }
+    QSlider::handle:horizontal:hover {
+        background: #218838; 
+        border: 2px solid #495057;
 
-    window_style_sheet = "background-color: #042630;"
+    }
+    QSlider::sub-page:horizontal {
+        background: #28a745; 
+        border-radius: 4px;
+    }
+    QSlider::add-page:horizontal {
+        background: #212529;  
+        border-radius: 4px;
+    }
+    """
 
+    # Window Style
+    window_style_sheet = "background-color: #343a40;"
+
+    # CheckBox Style
     checkBox_style_sheet = """
-            QCheckBox {
-                color: #d0d6d6;           
-                font-size: 14px;          
-                padding: 5px;             
-            }
-            QCheckBox::indicator {
-                width: 18px;              
-                height: 18px;
-                border-radius: 5px;       
-                border: 2px solid #4c7273;
-                background-color: #4c7273; 
-            }
-            QCheckBox::indicator:checked {
-                background-color: #86b9b0; 
-                border: 2px solid #4c7273; 
-            }
-            QCheckBox::indicator:hover {
-                border: 2px solid #86b9b0; 
-            }
-        """
+    QCheckBox {
+        color: #cfd8dc;  
+        font-size: 14px;
+        padding: 5px;
+    }
+    QCheckBox::indicator {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 2px solid #495057;  
+        background-color: #495057; 
+    }
+    QCheckBox::indicator:checked {
+        background-color: #28a745;  
+        border: 2px solid #495057;  
+    }
+    QCheckBox::indicator:hover {
+        border: 2px solid #28a745;  
+    }
+    """
 
+    # LineEdit Style
     lineEdit_style_sheet = """
-            QLineEdit {
-                color: white;
-                font-size: 16px;
-                padding: 5px;
-                margin-top: 10px;
-                margin-bottom: 10px;
-                border: 2px solid #4c7273;
-                border-radius: 10px;
-                background-color: #1e1e1e;
-            }
-        """
+    QLineEdit {
+        color: white;
+        font-size: 16px;
+        padding: 5px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border: 2px solid #495057; 
+        border-radius: 10px;
+        background-color: #212529;  
+    }
+    """
 
+    # Label Style
     label_style_sheet = """
-            QLabel {
-                color: white;
-                font-size: 14px;
-                padding-bottom: 5px;
-            }
-        """
+    QLabel {
+        color: white;
+        font-size: 14px;
+        padding-bottom: 5px;
+    }
+    """
+
+    # Tab Style
     tab_style_sheet = """
     QTabBar::tab {
-        color: white; 
+        color: black;  /* Bold black text */
+        font-weight: bold;  /* Making the text bold */
+        background-color: #495057;  /* Darker gray for normal state */
+        padding: 10px;  /* Adding some padding for better appearance */
+        border: 1px solid #343a40;  /* Border color, slightly darker gray */
+        border-radius: 10px;
     }
     QTabBar::tab:selected {
-        background: lightblue; 
+        background: #28a745;  /* Green for selected tab */
+        color: black;  /* Ensure text remains black when selected */
     }
     QTabBar::tab:hover {
-        color: lightblue;  
+        background: #6c757d;  /* Light gray on hover */
+        color: black;  /* Keep text black on hover */
     }
-"""
+    """
 
+    # ComboBox Style
     comboBox_style_sheet = """
-            QComboBox {
-                color: white; /* Color of the text */
-                font-size: 16px;
-                padding: 5px;
-                margin-top: 10px;
-                margin-bottom: 10px;
-                border: 2px solid #4c7273;
-                border-radius: 10px;
-                background-color: #1e1e1e; 
-            }
-
-            QComboBox::drop-down {
-                border: none;
-            }
-
-            QComboBox QAbstractItemView {
-                background-color: #1e1e1e;
-                color: white; 
-            }
-
-            QComboBox QAbstractItemView::item {
-                background-color: #1e1e1e; 
-                color: white; 
-            }
-
-            QComboBox::item:selected {
-                background-color: #4c7273; 
-                color: white; 
-            }
-        """
+    QComboBox {
+        color: white;
+        font-size: 16px;
+        padding: 5px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border: 2px solid #495057;  
+        border-radius: 10px;
+        background-color: #212529; 
+    }
+    QComboBox::drop-down {
+        border: none;
+    }
+    QComboBox QAbstractItemView {
+        background-color: #212529;  
+        color: white;
+    }
+    QComboBox QAbstractItemView::item {
+        background-color: #212529;  
+        color: white;
+    }
+    QComboBox::item:selected {
+        background-color: #495057;  
+        color: white;
+    }
+    """
   
     @staticmethod
     def generate_square_wave(points):

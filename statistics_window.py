@@ -17,14 +17,12 @@ class StatisticsWindow(QtWidgets.QWidget):
         
         layout = QtWidgets.QVBoxLayout()
         
-        # Plot for Signal
         self.plot_widget = PlotWidget()
         self.plot_widget.setBackground('#001414')
         self.plot_widget.plot(self.actual_signal.time_axis,self.signal, pen=self.color)
         self.plot_widget.setTitle(self.title)
         layout.addWidget(self.plot_widget)
 
-        # Create the statistics labels and add them to the layout
         self.stats_labels = [
             ("Mean: ", self.calculate_mean),
             ("Standard Deviation: ", self.calculate_std),
@@ -34,14 +32,11 @@ class StatisticsWindow(QtWidgets.QWidget):
             ("Sampling Rate: ", self.calculate_sampling_rate)
         ]
 
-        self.result_labels = []  # List to hold the result value labels
+        self.result_labels = []  
 
-        # Add each statistic to the layout without borders
         for stat_name, method in self.stats_labels:
-            # Create a horizontal layout for each statistic
             h_layout = QtWidgets.QHBoxLayout()
 
-            # Create label for statistic name
             name_label = QtWidgets.QLabel(stat_name)
             name_label.setStyleSheet("""
                 QLabel {
@@ -52,8 +47,7 @@ class StatisticsWindow(QtWidgets.QWidget):
                 }
             """)
 
-            # Create label for statistic value
-            value_label = QtWidgets.QLabel("Calculating...")  # Placeholder text
+            value_label = QtWidgets.QLabel("Calculating...") 
             value_label.setStyleSheet("""
                 QLabel {
                     color: #d0d6d6;  /* Light grey color */
@@ -63,17 +57,14 @@ class StatisticsWindow(QtWidgets.QWidget):
                 }
             """)
 
-            # Add the labels to the horizontal layout
             h_layout.addWidget(name_label)
             h_layout.addWidget(value_label)
 
-            # Add the horizontal layout to the main layout
             layout.addLayout(h_layout)
 
-            # Store the value label in the list
             self.result_labels.append(value_label)
 
-        # Back button
+        #back button
         self.back_button = QtWidgets.QPushButton("Back")
         self.back_button.setStyleSheet("""
             QPushButton {
@@ -100,7 +91,6 @@ class StatisticsWindow(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-        # Calculate and display statistics after initializing the UI
         self.update_statistics()
 
     def update_statistics(self):

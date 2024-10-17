@@ -15,11 +15,9 @@ class Signal():
 
 
     def change_color(self):
-        # Open the color picker dialog
         color = QtWidgets.QColorDialog.getColor()
         if color.isValid():
             self.color = color.name()
-            # print(self.color)
 
     def __lt__(self, other):
         return len(self.data) < len(other.data)

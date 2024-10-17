@@ -16,18 +16,15 @@ class InterpolationWindow(QWidget):
         super().__init__()
         self.signal1 = signal1
         self.signal2 = signal2
-        # Initialize snapshot count here
         self.snapshot_count = 0 
-        # Store sub-signals
         self.first_sub_signal = None
         self.second_sub_signal = None
-        # To store the starting and ending points of selection
+        #storing starting and ending points of selection
         self.start_pos = None
         self.end_pos = None
-        # Track whether the signal is connected
         self.color = 'g'
 
-        # Disable mouse panning when performing selection
+        #disable mouse panning when performing selection
         self.mouse_move_connected = False
 
         self.gap = 0
@@ -44,13 +41,12 @@ class InterpolationWindow(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Create a plot widget
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.setBackground('#001414')
         self.plot_widget.setTitle("First Signal")
         layout.addWidget(self.plot_widget)
         self.first_signal_plot = self.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
-        # Disable mouse panning when performing selection
+        #disable mouse panning when performing selection
         self.plot_widget.setMouseEnabled(x=False, y=False)
         self.plot_widget.scene().sigMouseClicked.connect(self.on_mouse_clicked)
 
@@ -68,7 +64,8 @@ class InterpolationWindow(QWidget):
         self.export_report_button =Utils.create_button(f"", self.export_report, "export_report", set_enabled=False)
         button_layout.addWidget(self.export_report_button)
         layout.addLayout(button_layout)
-        # Slider for Signal 1
+
+        #signal 1 slider
         self.gap_slider = QtWidgets.QSlider(Qt.Horizontal)
         self.gap_slider.setMinimum(-80)  
         self.gap_slider.setMaximum(80)  
@@ -79,91 +76,92 @@ class InterpolationWindow(QWidget):
         self.gap_slider.setEnabled(False)
 
 
-        # Create a QLabel to display the selected item
+        #QLabel to display selected item
         order_layout = QHBoxLayout()
         self.order_label = QLabel("Select Interpolation Order: ", self)
         self.order_label.setStyleSheet(Utils.label_style_sheet)
         order_layout.addWidget(self.order_label)
-        # Create a QComboBox (dropdown list)
+
+        #(dropdown list)
         self.select_order_comboBox = QComboBox(self)
-        # Add items to the combo box
+
+        #add items to combo box
         self.select_order_comboBox.addItems(["Linear", "Zero", "Quadratic", "Cubic"])
-        # Connect the signal to the slot (function)
+
+        #connect signal to function
         self.select_order_comboBox.currentTextChanged.connect(self.on_select_order)
         self.select_order_comboBox.setStyleSheet(Utils.comboBox_style_sheet)
-        # Add the combo box to the layout
+
+        #add combo box to layout
         order_layout.addWidget(self.select_order_comboBox)
         layout.addLayout(order_layout)
         layout.addWidget(self.gap_slider)
 
-        # Create a region item to highlight selected area
+        #create region item to highlight selected area
         self.region = pg.LinearRegionItem()
-        self.region.setZValue(10)  # Make sure it's on top of the plot
-        self.region.hide()  # Hide until used
+        self.region.setZValue(10)  
+        self.region.hide()  # default is hidden till used
         self.plot_widget.addItem(self.region)
 
 
     def on_mouse_clicked(self, event):
-        # Handle mouse click
+        #mouse click
         if event.button() == Qt.LeftButton:
             pos = event.scenePos()
             mouse_point = self.plot_widget.plotItem.vb.mapSceneToView(pos)
 
-            if self.start_pos is None:  # First click
+            if self.start_pos is None:  #1st click
                 self.start_pos = mouse_point.x()
-                self.region.setRegion([self.start_pos, self.start_pos])  # Initialize region
+                self.region.setRegion([self.start_pos, self.start_pos])  #start ur region
                 self.region.show()
 
-                # Temporarily disable panning and zooming
+                #temporarily disable panning and zooming
                 self.plot_widget.setMouseEnabled(x=False, y=False)
 
-                # Connect to mouse move event if not already connected
                 if not self.mouse_move_connected:
                     self.plot_widget.scene().sigMouseMoved.connect(self.on_mouse_moved)
                     self.mouse_move_connected = True
 
-            else:  # Second click, finalize selection
+            else:  #2nd click
                 self.end_pos = mouse_point.x()
-                self.region.setRegion([self.start_pos, self.end_pos])  # Finalize the region
+                self.region.setRegion([self.start_pos, self.end_pos])  #end ur region
 
-                # Call create_sub_signal with the selected range
                 selected_range = (self.start_pos, self.end_pos)
                 self.create_sub_signal(selected_range)
 
-                # Reset after selection
+                #reset after selection
                 self.plot_widget.setMouseEnabled(x=True, y=True)
-                self.start_pos = None  # Reset start_pos to allow for a new selection
+                self.start_pos = None 
 
     def on_mouse_moved(self, event):
-        # Handle mouse movement
+        #mouse movement
         pos = event
         mouse_point = self.plot_widget.plotItem.vb.mapSceneToView(pos)
 
         if self.start_pos is not None:
             self.end_pos = mouse_point.x()
-            self.region.setRegion([self.start_pos, self.end_pos])  # Update the region to follow the mouse
+            self.region.setRegion([self.start_pos, self.end_pos])  #update region to follow mouse
 
     def create_sub_signal(self, selected_range):
-        # Get the start and end positions from the selected range
+        #get start, end positions from selected range
         start, end = selected_range
 
-        # Find the corresponding indices in the signal data (self.signal2)
+        #find corresponding indices in signal data (self.signal2)
         start_idx = int(start)
         end_idx = int(end)
 
-        # Store the first or second sub-signal
+        #store 1st / 2nd sub-signal
         if self.first_sub_signal is None:
-            # Ensure indices are within valid bounds
             start_idx = max(0, min(start_idx, len(self.signal1.data) - 1))
             end_idx = max(0, min(end_idx, len(self.signal1.data) - 1))
 
-            if start_idx > end_idx:  # Ensure the order of the indices is correct
+            if start_idx > end_idx:  
                 start_idx, end_idx = end_idx, start_idx
 
-            # Extract the sub-signal
+            #extraction of sub-signal
             sub_signal = self.signal1.data[start_idx:end_idx + 1]
             self.first_sub_signal = sub_signal
-            # self.plot_widget.clear()
+
             self.first_signal_plot = self.plot_widget.removeItem(self.first_signal_plot)
             self.plot_widget.plot(self.signal2.data, pen=self.signal2.color)
             self.plot_widget.setTitle("Second Signal")
@@ -171,30 +169,28 @@ class InterpolationWindow(QWidget):
             if response == "reset":
                 self.reset_graph()
         else:
-                # Ensure indices are within valid bounds
             start_idx = max(0, min(start_idx, len(self.signal2.data) - 1))
             end_idx = max(0, min(end_idx, len(self.signal2.data) - 1))
 
-            if start_idx > end_idx:  # Ensure the order of the indices is correct
+            if start_idx > end_idx:  
                 start_idx, end_idx = end_idx, start_idx
 
-            # Extract the sub-signal
+            #extraction of sub-signal
             sub_signal = self.signal2.data[start_idx:end_idx + 1]
             self.second_sub_signal = sub_signal
             response = Utils.show_info_message("Second Sub-Signal Selected", True)
             if response == "continue":
                 self.glue_signals()
-        # Hide the region after selection
+        #hide region after selection
         self.region.hide()
 
     def reset_graph(self):
-        # Clear the plot for a new signal
         self.plot_widget.clear()
         self.first_sub_signal = None
         self.second_sub_signal = None
         self.start_pos = None
         self.end_pos = None
-        self.region.hide()  # Hide the selection region
+        self.region.hide()  
         self.first_signal_plot = self.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
         self.plot_widget.setTitle("First Signal")
         self.plot_widget.setMouseEnabled(x=False, y=False)
@@ -202,24 +198,22 @@ class InterpolationWindow(QWidget):
         self.change_color_button.setEnabled(False)
         self.show_statistics_button.setEnabled(False)
         self.export_report_button.setEnabled(False)
-        # Re-enable region selection after clearing
         self.region = pg.LinearRegionItem()
-        self.region.setZValue(10)  # Make sure it's on top of the plot
-        self.region.hide()  # Hide until used
+        self.region.setZValue(10)  
+        self.region.hide()  #default is hidden till used
         self.plot_widget.addItem(self.region)
 
     def glue_signals(self, gap = 0):
-        # Ensure both sub-signals are selected before gluing
         if self.first_sub_signal is None or self.second_sub_signal is None:
             Utils.show_warning_message("Both signals need to be selected before gluing.")
             return
 
-        # Glue the two sub-signals together by concatenating their x and y values
+        #concatenating sub-signals' x and y values
         sub_y1 = self.first_sub_signal
         sub_y2 = self.second_sub_signal
 
-        # Plot the glued signal
-        # Positive for gap, negative for overlap (in samples)
+        #plot glued signal
+        #+ve for gap, -ve for overlap
         overlap = abs(gap)
         interpolated_part, new_x = self.interpolate_signals(sub_y1[-overlap:], sub_y2[:overlap], gap)
         self.glued_signal = np.concatenate([sub_y1[:-overlap], interpolated_part, sub_y2[overlap:]])
@@ -234,37 +228,33 @@ class InterpolationWindow(QWidget):
     
     def interpolate_signals(self, sub_y1, sub_y2, gap, interpolation_order = 'linear'):
         interpolation_order = self.interpolation_order
-        # Determine overlap or gap
-        if gap < 0:  # Overlap case
+        #determine whether overlap/gap
+        if gap < 0:  #overlap 
             overlap = abs(gap)
-            # Ensure overlap does not exceed the length of the shorter signal
             overlap = min(overlap, len(sub_y1), len(sub_y2))
-            # Slice overlapping regions
+            #slice overlapping regions
             sub_y1_overlap = sub_y1[-overlap:]
             sub_y2_overlap = sub_y2[:overlap]
-        else:  # Gap case (positive or zero)
+        else:  #gap( positive or zero)
             overlap = 0
             sub_y1_overlap = sub_y1
             sub_y2_overlap = sub_y2
 
-        # Create a combined x-axis for the signals with a gap (if applicable)
+        #create combined x-axis for signals with gap 
         x1 = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
         x2 = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
 
-        # Combine the x-axis
+        #combine x-axis
         x_combined = np.concatenate([x1, x2])
         y_combined = np.concatenate([sub_y1_overlap, sub_y2_overlap])
 
-        # Define the interpolation function
-        # f = interp1d(x_combined, y_combined, kind=interpolation_order, fill_value="extrapolate")
+        #interpolation 
         f = interp1d(x_combined, y_combined, kind=interpolation_order, fill_value=0)
 
-        # Create a new x-axis for interpolation (dense for smooth result)
+        #new x-axis for interpolation
         new_x = np.linspace(min(x_combined), max(x_combined), num=100)
 
-        # Interpolate the signal
         interpolated_signal = f(new_x)
-
         return interpolated_signal, new_x
 
     def keyPressEvent(self, event):
@@ -299,7 +289,7 @@ class InterpolationWindow(QWidget):
         std_val = np.std(self.glued_signal)
         min_val = np.min(self.glued_signal)
         max_val = np.max(self.glued_signal)
-        duration = len(self.glued_signal)  # Assuming duration is the number of samples
+        duration = len(self.glued_signal) 
         return mean_val, std_val, min_val, max_val, duration
 
     def change_color(self, signal_index):
@@ -311,62 +301,56 @@ class InterpolationWindow(QWidget):
             self.plot_widget.setTitle("Glued Signal")
 
     def take_snapshot(self):
-        self.snapshot_count += 1  # Increment the snapshot counter
-        img_path = f'snapshot{self.snapshot_count}.png'  # Create a filename for the snapshot
+        self.snapshot_count += 1  # snapshot counter
+        img_path = f'snapshot{self.snapshot_count}.png'  # create filename for snapshot
         exporter = ImageExporter(self.plot_widget.getPlotItem())
-        exporter.export(img_path)  # Save the current plot as an image
+        exporter.export(img_path)  #save plot as img
 
-        # Notify user
         msg_box_1 = QtWidgets.QMessageBox(self)
         msg_box_1.setWindowTitle("Snapshot Saved")
         msg_box_1.setText(f"<font color='white'>Snapshot saved as '{img_path}'.</font>")
         msg_box_1.setIcon(QtWidgets.QMessageBox.Information)
 
-        # Customize the button text
         msg_box_1.setStandardButtons(QtWidgets.QMessageBox.Ok)
         ok_button = msg_box_1.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK")  # Set button text
+        ok_button.setText("OK")  
 
-        # Change button text color to white and background color to grey
         ok_button.setStyleSheet("color: white; background-color: grey;")
 
-        # Display the message box
         msg_box_1.exec_()
 
 
     def export_report(self):
-        # Calculate statistics
         mean, std, min_val, max_val, duration = self.calculate_statistics()
         
-        # Prepare PDF report
         pdf = FPDF()
         pdf.add_page()
 
-        pdf.ln(5)  # Add space after title
+        pdf.ln(5) 
 
-        # Title
+        #title of page
         pdf.set_font("Times", 'B', 28)
-        pdf.set_text_color(0,0,0)  # Dark blue color
+        pdf.set_text_color(0,0,0)  
         pdf.cell(0, 10, 'Glued Signal Report', 0, 1, 'C')
-        pdf.ln(10)  # Add space after title
+        pdf.ln(10)
 
-        # Statistics title
+        #title of stat.
         pdf.set_font("Times", 'B', 20)
-        pdf.set_text_color(0, 51, 102)  # Dark blue color
+        pdf.set_text_color(0, 51, 102)  
         pdf.cell(0, 10, 'Statistical Summary', 0, 1, 'C')
-        pdf.ln(5)  # Add space after section title
+        pdf.ln(5)
 
-        # Center the table on the page
-        pdf.set_x((pdf.w - 160) / 2)  # Center the table (80 + 80 = 160 total width)
+        #table at center
+        pdf.set_x((pdf.w - 160) / 2)
 
-        # Statistics table header
+        #table header
         pdf.set_font("Times", 'B', 16)
-        pdf.set_fill_color(220, 220, 220)  # Light gray background for header
+        pdf.set_fill_color(220, 220, 220) 
         pdf.cell(80, 10, 'Statistic', 1, 0, 'C', 1)
-        pdf.cell(80, 10, 'Value', 1, 1, 'C', 1)  # Header
+        pdf.cell(80, 10, 'Value', 1, 1, 'C', 1)
 
         pdf.set_font("Times", '', 14)
-        pdf.set_text_color(0, 0, 0)  # Black color
+        pdf.set_text_color(0, 0, 0) 
         stats = [
             ('Mean', f'{mean:.2f}'),
             ('Standard Deviation', f'{std:.2f}'),
@@ -376,56 +360,48 @@ class InterpolationWindow(QWidget):
         ]
         
         for label, value in stats:
-            pdf.set_x((pdf.w - 160) / 2)  # Center the table
-            pdf.cell(80, 10, label, 1, 0, 'C')  # Center the label
-            pdf.cell(80, 10, value, 1, 1, 'C')  # Center the value
+            pdf.set_x((pdf.w - 160) / 2)
+            pdf.cell(80, 10, label, 1, 0, 'C')
+            pdf.cell(80, 10, value, 1, 1, 'C') 
 
-
-
-        # Add footer for the first page
-        pdf.set_y(-35)  # Position at 3.5 cm from bottom
+        pdf.set_y(-35) 
         pdf.set_font("Times", 'I', 10)
-        pdf.set_text_color(128, 128, 128)  # Gray color for footer
-        pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')  # Center the page number
+        pdf.set_text_color(128, 128, 128)
+        pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')  
 
-        # Include all snapshots in the PDF, each on a new page
+        #put snapshots in PDF, each on a new page
         for i in range(1, self.snapshot_count + 1):
             img_path = f'snapshot{i}.png'
-            if os.path.exists(img_path):  # Check if the snapshot exists
-                pdf.add_page()  # Add a new page for each snapshot
+            if os.path.exists(img_path): 
+                pdf.add_page() 
 
-                # Title for the figure
+                #figure caption
                 pdf.set_font("Times", 'B', 18)
-                pdf.set_text_color(0, 51, 102)  # Dark blue color
-                pdf.cell(0, 10, f'Snapshot {i}:', 0, 1, 'C')  # Title above the image
-                pdf.ln(5)  # Add space between title and image
+                pdf.set_text_color(0, 51, 102)
+                pdf.cell(0, 10, f'Snapshot {i}:', 0, 1, 'C') 
+                pdf.ln(5) 
 
-                # Add the image to the PDF
-                pdf.image(img_path, x=(pdf.w - 150) / 2, y=20, w=150)  # Center the image
-                pdf.ln(10)  # Add space after the image
+                #put image to pdf
+                pdf.image(img_path, x=(pdf.w - 150) / 2, y=20, w=150)  
+                pdf.ln(10)
                 
-                # Footer with page number
-                pdf.set_y(-35)  # Position at 3.5 cm from bottom
+                #footer
+                pdf.set_y(-35)
                 pdf.set_font("Times", 'I', 10)
-                pdf.set_text_color(128, 128, 128)  # Gray color for footer
-                pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C')  # Center the page number
+                pdf.set_text_color(128, 128, 128) 
+                pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C') 
 
-        # Save the PDF report
-        pdf.output('glue_report.pdf')  # Save PDF report
 
-        # Notify user
+        pdf.output('glue_report.pdf')
+
         msg_box = QtWidgets.QMessageBox(self)
         msg_box.setWindowTitle("Report Exported")
         msg_box.setText("<font color='white'>The report has been successfully exported as 'glue_report.pdf'.</font>")
         msg_box.setIcon(QtWidgets.QMessageBox.Information)
 
-        # Customize the button text
         msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
         ok_button = msg_box.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK")  # Set button text
-
-        # Change button text color to white and background color to grey
+        ok_button.setText("OK") 
         ok_button.setStyleSheet("color: white; background-color: grey;")
 
-        # Display the message box
         msg_box.exec_()
