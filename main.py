@@ -22,7 +22,7 @@ class SignalApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.selected_signal = None
+        self.signal_to_be_moved = None
         # Initialize the original ranges after setting up the plot
         self.original_x_range = self.first_graph.plot_widget.viewRange()[
             0]  # Get the initial x range
@@ -35,9 +35,10 @@ class SignalApp(QtWidgets.QWidget):
             1]  # Get the initial y range
 
         SignalPlotWidget.user_interacting = False  # Flag to allow mouse panning
-        self.shift_pressed = False
-        
+        self.control_pressed = False
+
         self.first_graph.plot_signals()
+        self.source_graph = None
 
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer")  # Window Title
@@ -78,7 +79,7 @@ class SignalApp(QtWidgets.QWidget):
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
 
         self.glue_button = Utils.create_button(
-            "Glue Signals", self.glue_signals)
+            "Glue", self.glue_signals)
         # Link Button
         self.link_button = Utils.create_button("", self.toggle_link, "link")
 
@@ -92,7 +93,6 @@ class SignalApp(QtWidgets.QWidget):
 
         main_layout.addSpacing(15)
 
-
         main_layout.addLayout(self.second_graph.graph_layout)
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
         main_layout.addLayout(self.second_graph.button_layout)
@@ -101,12 +101,12 @@ class SignalApp(QtWidgets.QWidget):
 
         # self.main_layout.addWidget(self.link_button)
         buttons_layout_3 = QtWidgets.QHBoxLayout()
-        buttons_layout_3.addStretch()  
-        buttons_layout_3.addStretch()  
-        buttons_layout_3.addStretch() 
-        buttons_layout_3.addStretch()  
-        buttons_layout_3.addStretch()  
-        buttons_layout_3.addStretch()  
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
+        buttons_layout_3.addStretch()
 
         buttons_layout_3.addWidget(self.swap_button)
         buttons_layout_3.addWidget(self.link_button)
@@ -130,7 +130,6 @@ class SignalApp(QtWidgets.QWidget):
         button_layout.addSpacing(200)
         button_layout.addStretch()
 
-
         self.polar_play_button = Utils.create_button(
             "", self.polar_plot_widget.play_animation, "play")
         button_layout.addWidget(self.polar_play_button)
@@ -148,9 +147,9 @@ class SignalApp(QtWidgets.QWidget):
         return polar_tab
 
     def real_time_tab(self):
-        ##Create an instance of RealTimePlot for the real-time graph
-        ##self.real_time_plot = RealTimePlot()
-        ##return self.real_time_plot
+        # Create an instance of RealTimePlot for the real-time graph
+        # self.real_time_plot = RealTimePlot()
+        # return self.real_time_plot
         pass
 
     # Generating the function responsible for linking/unlinking graphs
@@ -251,47 +250,24 @@ class SignalApp(QtWidgets.QWidget):
             Utils.show_error_message("Each graph must have a selected signal")
 
     def on_signal_clicked_first_graph(self, event):
-        if self.shift_pressed:
-            self.on_signal_clicked(event, self.first_graph, self.second_graph)
+        # if self.control_pressed:
+        self.on_signal_clicked(event, self.first_graph)
 
     def on_signal_clicked_second_graph(self, event):
-        if self.shift_pressed:
-            self.on_signal_clicked(event, self.second_graph, self.first_graph)
+        # if self.control_pressed:
+        self.on_signal_clicked(event, self.second_graph)
 
-    def on_signal_clicked(self, event, source_graph, target_graph):
-        pos = event.scenePos()  # Get the mouse position in scene coordinates
-        mouse_point = source_graph.plot_widget.plotItem.vb.mapSceneToView(pos)
+    def on_signal_clicked(self, event, source_graph):
 
-        x_mouse = mouse_point.x()
-        y_mouse = mouse_point.y()
-
-        closest_signal = None
-        min_distance = float('inf')  # Initialize with infinity for comparison
-
-        # Loop through signals to find the one closest to the click
-        for signal in source_graph.signals:
-            x_data = np.arange(len(signal.data))
-            y_data = signal.data
-
-            index = (np.abs(x_data - x_mouse)).argmin()  # Find closest x index
-            distance = np.sqrt(
-                (x_mouse - x_data[index])**2 + (y_mouse - y_data[index])**2)
-
-            if distance < min_distance:
-                min_distance = distance
-                closest_signal = signal
-
-        if closest_signal:
-            # Store the selected signal and source graph
-            self.selected_signal = closest_signal
-            # self.source_graph.selected_signal = self.selected_signal
-            self.source_graph = source_graph
-
-        self.grabMouse()  # Grab the mouse to track where the release happens
+        self.signal_to_be_moved = source_graph.selected_signal
+        self.source_graph = source_graph
+        print(self.source_graph.name)
+        if self.control_pressed:
+            self.grabMouse()  # Grab the mouse to track where the release happens
 
     def mouseReleaseEvent(self, event):
         # Check if the mouse release occurred on a different graph
-        if self.selected_signal and self.source_graph and self.shift_pressed:
+        if self.signal_to_be_moved:
             release_pos = event.pos()  # Get the release position in the widget
             target_graph = None
 
@@ -300,13 +276,15 @@ class SignalApp(QtWidgets.QWidget):
                 target_graph = self.second_graph
             elif self.first_graph.plot_widget.geometry().contains(release_pos):
                 target_graph = self.first_graph
+            
 
             # Move the signal from the source graph to the target graph
             if target_graph and target_graph != self.source_graph:
                 if len(self.source_graph.signals) > 1:
-                    self.source_graph.signals.remove(self.selected_signal)
-                    target_graph.signals.append(self.selected_signal)
-                    # target_graph.selected_signal = self.selected_signal
+
+                    self.source_graph.signals.remove(self.signal_to_be_moved)
+                    target_graph.signals.append(self.signal_to_be_moved)
+                    # target_graph.selected_signal = self.signal_to_be_moved
                     target_graph.update_graph()
                     # Re-plot both graphs after moving the signal
                     self.source_graph.update_graph()
@@ -314,22 +292,28 @@ class SignalApp(QtWidgets.QWidget):
                 else:
                     print("Empty graph")
             # Clear the selected signal and source graph
-            self.selected_signal = None
+            self.signal_to_be_moved = None
             self.source_graph = None
 
         self.releaseMouse()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Shift:
-            if not self.shift_pressed:
-                self.shift_pressed = True
+        if event.key() == Qt.Key_Control:
+            if not self.control_pressed:
+                self.control_pressed = True
                 print("clicked")
-                
+        if event.key() == Qt.Key_Alt and self.source_graph:
+            print("pressed")
+            if len(self.source_graph.signals) > 1:
+                self.source_graph.signals.remove(self.source_graph.selected_signal)
+                self.source_graph.update_graph()
+
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Shift:
-            if self.shift_pressed:
-                self.shift_pressed = False
+        if event.key() == Qt.Key_Control:
+            if self.control_pressed:
+                self.control_pressed = False
                 print("released")
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

@@ -138,6 +138,7 @@ class SignalPlotWidget():
             f"", self.show_statistics, "statistics"))
         self.button_layout.addWidget(Utils.create_button("", lambda: (
             Utils.import_signal_file(self), self.update_graph()), "import"))
+        self.button_layout.addWidget(Utils.create_button(f"", self.delete_signal, icon_name="delete_1"))
 
         self.button_layout.addStretch()  # Prevents the buttons from stretching
         self.button_layout.addStretch()  # Prevents the buttons from stretching
@@ -484,3 +485,8 @@ class SignalPlotWidget():
         global_max = max(max_values)
         
         return global_min, global_max
+    
+    def delete_signal(self):
+        if len(self.signals) > 1:
+            self.signals.remove(self.selected_signal)
+            self.update_graph()
