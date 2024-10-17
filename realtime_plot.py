@@ -81,11 +81,11 @@ class RealTimePlot(QMainWindow):
         self.axis_x_lon.setTitleText("Time (HH:MM:SS)")
 
         self.axis_y_lat = QValueAxis()
-        self.axis_y_lat.setLabelFormat("%f")
+        self.axis_y_lat.setLabelFormat("%.2f")
         self.axis_y_lat.setTitleText("Latitude")
 
         self.axis_y_lon = QValueAxis()
-        self.axis_y_lon.setLabelFormat("%f")
+        self.axis_y_lon.setLabelFormat("%.2f")
         self.axis_y_lon.setTitleText("Longitude")
 
         self.chart_lat.addAxis(self.axis_x_lat, Qt.AlignBottom)

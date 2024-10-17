@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QScrollBar
 from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
@@ -69,6 +69,7 @@ class SignalApp(QtWidgets.QWidget):
 
         main_layout = QtWidgets.QVBoxLayout(main_tab)
 
+
         # Creating signals plotting widgets
         self.first_graph = SignalPlotWidget(name='Graph One', signals=[
             Signal(Utils.generate_sine_wave(100), 'r')])
@@ -85,6 +86,7 @@ class SignalApp(QtWidgets.QWidget):
 
         main_layout.addSpacing(5)
         main_layout.addLayout(self.first_graph.graph_layout)
+
         main_layout.addSpacing(5)
 
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
@@ -148,8 +150,8 @@ class SignalApp(QtWidgets.QWidget):
 
     def real_time_tab(self):
         # Create an instance of RealTimePlot for the real-time graph
-        # self.real_time_plot = RealTimePlot()
-        # return self.real_time_plot
+        #self.real_time_plot = RealTimePlot()
+        #return self.real_time_plot
         pass
 
     # Generating the function responsible for linking/unlinking graphs

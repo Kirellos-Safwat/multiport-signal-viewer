@@ -69,7 +69,7 @@ class SignalPlotWidget():
         self.plot_widget.scene().sigMouseClicked.connect(self.on_signal_clicked)
 
         # show/hide checkBox
-        self.show_hide_checkbox = QtWidgets.QCheckBox("Show" + self.name)
+        self.show_hide_checkbox = QtWidgets.QCheckBox("Show/Hide")
         # Style the checkbox with white text and better appearance
         self.show_hide_checkbox.setStyleSheet(Utils.checkBox_style_sheet)
         # Keep the behavior intact
