@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-# from realtime_plot import RealTimePlot
+from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -82,21 +82,36 @@ class SignalApp(QtWidgets.QWidget):
         # Link Button
         self.link_button = Utils.create_button("", self.toggle_link, "link")
 
+        main_layout.addSpacing(5)
         main_layout.addLayout(self.first_graph.graph_layout)
+        main_layout.addSpacing(5)
 
         # Adding the "horizontal" button layout of signal 1 to the main "vertical" layout
         main_layout.addLayout(self.first_graph.button_layout)
-        # button_layout1.addStretch()  # Prevents the buttons from stretching
+        self.first_graph.button_layout.addSpacing(80)
+
+        main_layout.addSpacing(15)
+
 
         main_layout.addLayout(self.second_graph.graph_layout)
         # Adding the "horizontal" button layout of signal 2 to the main "vertical" layout
         main_layout.addLayout(self.second_graph.button_layout)
+        self.second_graph.button_layout.addSpacing(80)
+        main_layout.addSpacing(15)
 
         # self.main_layout.addWidget(self.link_button)
         buttons_layout_3 = QtWidgets.QHBoxLayout()
+        buttons_layout_3.addStretch()  
+        buttons_layout_3.addStretch()  
+        buttons_layout_3.addStretch() 
+        buttons_layout_3.addStretch()  
+        buttons_layout_3.addStretch()  
+        buttons_layout_3.addStretch()  
+
         buttons_layout_3.addWidget(self.swap_button)
         buttons_layout_3.addWidget(self.link_button)
         buttons_layout_3.addWidget(self.glue_button)
+
         main_layout.addLayout(buttons_layout_3)
 
         # Return the main tab widget
@@ -112,6 +127,10 @@ class SignalApp(QtWidgets.QWidget):
 
         button_layout = QtWidgets.QHBoxLayout()
 
+        button_layout.addSpacing(200)
+        button_layout.addStretch()
+
+
         self.polar_play_button = Utils.create_button(
             "", self.polar_plot_widget.play_animation, "play")
         button_layout.addWidget(self.polar_play_button)
@@ -121,14 +140,17 @@ class SignalApp(QtWidgets.QWidget):
 
         button_layout.addWidget(self.polar_pause_button)
 
+        button_layout.addSpacing(200)
+        button_layout.addStretch()
+
         layout.addLayout(button_layout)
 
         return polar_tab
 
     def real_time_tab(self):
-        # Create an instance of RealTimePlot for the real-time graph
-        # self.real_time_plot = RealTimePlot()
-        # return self.real_time_plot
+        ##Create an instance of RealTimePlot for the real-time graph
+        ##self.real_time_plot = RealTimePlot()
+        ##return self.real_time_plot
         pass
 
     # Generating the function responsible for linking/unlinking graphs

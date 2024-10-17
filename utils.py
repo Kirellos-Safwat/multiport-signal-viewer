@@ -22,7 +22,7 @@ class Utils:
             }
             QPushButton:hover {
             background-color: #4c7273;
-            border-radius: 15px;
+            border-radius: 10px;
             border: 2px solid white;
             }
             QPushButton:pressed {

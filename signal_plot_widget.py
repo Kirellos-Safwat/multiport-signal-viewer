@@ -48,8 +48,11 @@ class SignalPlotWidget():
 
         # graph layout
         self.graph_layout = QtWidgets.QHBoxLayout()
+        self.graph_layout.addSpacing(10)
+
         # buttons layout
         self.controls_layout = QtWidgets.QVBoxLayout()
+
         # Create a PlotWidget
         self.plot_widget = PlotWidget()
         self.plot_widget.setMouseEnabled(x=True, y=True)
@@ -110,15 +113,15 @@ class SignalPlotWidget():
             "", self.play_pause_signal, "play")
 
         self.button_layout = QtWidgets.QHBoxLayout()
+
+        self.button_layout.addStretch()
+        self.button_layout.addSpacing(100)
+
         self.button_layout.addWidget(self.play_pause_button)
 
         self.stop_signal_button = Utils.create_button(
             f"", self.stop_signal, "rewind")
         self.button_layout.addWidget(self.stop_signal_button)
-
-        # change color button
-        self.button_layout.addWidget(Utils.create_button(f"", lambda: (
-            self.selected_signal.change_color(), self.plot_signals()), "color"))
 
         self.zoom_in_button = Utils.create_button(f"", self.zoom_in, "zoom_in")
         self.button_layout.addWidget(self.zoom_in_button)
@@ -127,14 +130,23 @@ class SignalPlotWidget():
             f"", self.zoom_out, "zoom_out")
         self.button_layout.addWidget(self.zoom_out_button)
 
+        # change color button
+        self.button_layout.addWidget(Utils.create_button(f"", lambda: (
+            self.selected_signal.change_color(), self.plot_signals()), "color"))
+        
         self.button_layout.addWidget(Utils.create_button(
             f"", self.show_statistics, "statistics"))
         self.button_layout.addWidget(Utils.create_button("", lambda: (
             Utils.import_signal_file(self), self.update_graph()), "import"))
 
         self.button_layout.addStretch()  # Prevents the buttons from stretching
+        self.button_layout.addStretch()  # Prevents the buttons from stretching
+
+        self.button_layout.addSpacing(110)
+
 
         self.graph_layout.addWidget(self.plot_widget)
+        self.graph_layout.addSpacing(10)
         self.controls_layout.addWidget(self.title_input)
         self.controls_layout.addWidget(self.show_hide_checkbox)
         self.controls_layout.addLayout(self.speed_layout)

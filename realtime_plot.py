@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QVBoxLayout, QLabel, QMainWindow, QPushButton
 from PyQt5.QtCore import QTimer, QDateTime, Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis, QDateTimeAxis
@@ -41,6 +41,8 @@ class RealTimePlot(QMainWindow):
 
     def initUI(self):
         self.layout = QVBoxLayout()
+        self.button_layout = QHBoxLayout()
+
 
         # Labels
         self.lat_label = QLabel('Latitude: ')
@@ -112,7 +114,12 @@ class RealTimePlot(QMainWindow):
         # Play/Pause button
         self.play_pause_button = Utils.create_button("", self.toggle_timer, "pause")
         # self.play_pause_button.clicked.connect(self.toggle_timer)
-        self.layout.addWidget(self.play_pause_button)
+        self.button_layout.addSpacing(120)
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.play_pause_button)
+        self.button_layout.addSpacing(120)
+        self.button_layout.addStretch()
+        self.layout.addLayout(self.button_layout)
 
         central_widget = QWidget()
         central_widget.setLayout(self.layout)
