@@ -10,25 +10,25 @@ from signal import Signal
 class Utils:
     button_style_sheet = """
             QPushButton {
-                background-color: #adb4b4; 
-                color: black;
-                font-size: 14px;
-                padding: 10;
-                font-weight: bold; 
-                border-radius: 25px;  /* Makes the button a perfect circle */
-                width: 30px;  /* Set the width to 50px */
-                height: 30px;  /* Set the height to 50px */
-                border: 2px solid #4c7273;
+            background-color: #adb4b4;
+            color: black;
+            font-size: 14px;
+            padding: 2;
+            font-weight: bold;
+            border-radius: 10px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4c7273;
             }
             QPushButton:hover {
-                background-color: #4c7273; 
-                border-radius: 15px;  
-                border: 2px solid white;                       
+            background-color: #4c7273;
+            border-radius: 15px;
+            border: 2px solid white;
             }
             QPushButton:pressed {
-                background-color: #86b9b0;
+            background-color: #86b9b0;
             }
-        """
+            """
 
     slider_style_sheet = """
             QSlider {
@@ -46,7 +46,7 @@ class Utils:
                 border: 2px solid #4c7273;
                 width: 16px;
                 height: 16px;
-                margin: -5px 0; /* Centers the handle with the groove */
+                margin: -5px 0;
                 border-radius: 8px;
             }
             QSlider::handle:horizontal:hover {
@@ -128,37 +128,34 @@ class Utils:
                 margin-bottom: 10px;
                 border: 2px solid #4c7273;
                 border-radius: 10px;
-                background-color: #1e1e1e; /* Background color */
+                background-color: #1e1e1e; 
             }
 
             QComboBox::drop-down {
-                border: none; /* Remove border from the dropdown */
+                border: none;
             }
 
             QComboBox QAbstractItemView {
-                background-color: #1e1e1e; /* Background color for the dropdown */
-                color: white; /* Text color for unselected items */
+                background-color: #1e1e1e;
+                color: white; 
             }
 
             QComboBox QAbstractItemView::item {
-                background-color: #1e1e1e; /* Background color for items */
-                color: white; /* Text color for items */
+                background-color: #1e1e1e; 
+                color: white; 
             }
 
             QComboBox::item:selected {
-                background-color: #4c7273; /* Background color for selected item */
-                color: white; /* Text color for selected item */
+                background-color: #4c7273; 
+                color: white; 
             }
         """
-    # A method for creating each button as a Pushbutton from QT and setting the method to be called when the button is pressed:
-    # Generating the square wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=1 when t<0.5 and f=0 when t>0.5
-
+  
     @staticmethod
     def generate_square_wave(points):
         t = np.linspace(0, points/100, points)
         return (t < 0.5).astype(int)
 
-    # Generating the cosine wave by creating an array of "points" number of evenly spaced values over interval[0,1] then setting f=cos(2*pi*F*t) for a periodic function of freq = 5Hz
     @staticmethod
     def generate_cosine_wave(points):
         t = np.linspace(0, points/100, points)
@@ -173,7 +170,6 @@ class Utils:
     def create_button(text, method, icon_name='', stylesheet=button_style_sheet, set_enabled=True):
         button = QtWidgets.QPushButton(text)
 
-        # Adjust the button to be a perfect circle
         button.setStyleSheet(stylesheet)
         # Set size policy to allow stretching
         button.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
@@ -186,7 +182,7 @@ class Utils:
                 base_path, 'assets', 'button_icons', icon_name + '.png')
             icon = QtGui.QIcon(icon_path)
             button.setIcon(icon)
-            button.setIconSize(QtCore.QSize(55, 55))  # Enlarge the icon size
+            button.setIconSize(QtCore.QSize(30, 30))  # Enlarge the icon size
 
         else:
             button.setText(text)
@@ -208,7 +204,7 @@ class Utils:
 
     @staticmethod
     def show_error_message(message):
-        # Create a QMessageBox for error
+        # Create a message for error
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Critical)
         msg_box.setText(message)
@@ -218,7 +214,7 @@ class Utils:
 
     @staticmethod
     def show_info_message(message, glue=False):
-        # Create a QMessageBox for information with two options
+        # create message for information with 2 options
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
         msg_box.setText(message)
@@ -229,9 +225,9 @@ class Utils:
             reset_button = msg_box.addButton("Reset", QMessageBox.ActionRole)
             continue_button = msg_box.addButton(
                 "Continue", QMessageBox.AcceptRole)
-            # Execute the message box
+            # Execute message box
             msg_box.exec_()
-            # Determine which button was clicked
+            # know which button was clicked
             if msg_box.clickedButton() == reset_button:
                 return "reset"
             else:
