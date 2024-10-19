@@ -66,9 +66,10 @@ class SignalPlotWidget():
             self.on_user_interaction_start)
 
         self.plot_widget.scene().sigMouseClicked.connect(self.on_signal_clicked)
+        self.plot_widget.setTitle(self.name)
 
         # show/hide checkBox
-        self.show_hide_checkbox = QtWidgets.QCheckBox("Show/Hide")
+        self.show_hide_checkbox = QtWidgets.QCheckBox("Hide")
         self.show_hide_checkbox.setStyleSheet(Utils.checkBox_style_sheet)
         self.show_hide_checkbox.setChecked(True)
         self.show_hide_checkbox.stateChanged.connect(self.toggle_signal)
@@ -118,11 +119,16 @@ class SignalPlotWidget():
         self.zoom_out_button = Utils.create_button(f"", self.zoom_out, "zoom_out")
         self.button_layout.addWidget(self.zoom_out_button)
 
-        self.button_layout.addWidget(Utils.create_button(f"", lambda: (self.selected_signal.change_color(), self.plot_signals()), "color"))
+        self.change_color_button = Utils.create_button(f"", lambda: (self.selected_signal.change_color(), self.plot_signals()), "color")
+        self.button_layout.addWidget(self.change_color_button)
         
-        self.button_layout.addWidget(Utils.create_button(f"", self.show_statistics, "statistics"))
+        self.statistics_button = Utils.create_button(f"", self.show_statistics, "statistics")
+        self.button_layout.addWidget(self.statistics_button)
+
         self.button_layout.addWidget(Utils.create_button("", lambda: (Utils.import_signal_file(self), self.update_graph()), "import"))
-        self.button_layout.addWidget(Utils.create_button(f"", self.delete_signal, icon_name="delete_1"))
+
+        self.delete_signal_button = Utils.create_button(f"", self.delete_signal, icon_name="delete_1")
+        self.button_layout.addWidget(self.delete_signal_button)
 
         self.button_layout.addStretch() 
         self.button_layout.addStretch()  
@@ -150,9 +156,11 @@ class SignalPlotWidget():
             self.max_time_axis = np.linspace(0, self.max_length / 100, self.max_length)
             self.yMin = min(min(self.signals[-1].data), self.yMin)
             self.yMax = max(max(self.signals[-1].data), self.yMin)
+            self.plot_signals()
         else:
             self.selected_signal = None
-        self.plot_signals()
+            self.plot_widget.clear()
+        self.enable_buttons()
 
     def on_user_interaction_start(self):
         SignalPlotWidget.user_interacting = True
@@ -160,7 +168,7 @@ class SignalPlotWidget():
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
         self.selected_signal.title = self.title_input.text()
-        self.plot_widget.setTitle(self.selected_signal.title)
+        # self.plot_widget.setTitle(self.selected_signal.title)
 
     def update_timer_speed(self):
         #current slider value in sig.1
@@ -184,6 +192,7 @@ class SignalPlotWidget():
     def toggle_signal(self, state):
         if state == Qt.Checked:
             #plot signal only if checked
+            self.show_hide_checkbox.setText("Hide")
             self.plot_widget.clear()
             for signal in self.signals:
                 if signal == self.selected_signal:
@@ -193,9 +202,11 @@ class SignalPlotWidget():
                 self.plot_widget.plot(self.max_time_axis,
                                       signal.data, pen=pen)
             self.plot_widget.setYRange(-1, 1)
-            self.plot_widget.setTitle(self.title_input.text())
+            # self.plot_widget.setTitle(self.title_input.text())
         else:
             self.plot_widget.clear()  #clear plot if unchecked
+            self.show_hide_checkbox.setText("Show")
+
 
     def update_plot(self, user_interacting):
         if self.is_playing and user_interacting:
@@ -295,7 +306,7 @@ class SignalPlotWidget():
             if not self.preserve_zoom:
                 global_min, global_max = self.get_global_min_and_max()
                 self.plot_widget.setYRange(global_min, global_max)
-            self.plot_widget.setTitle(self.title_input.text())
+            # self.plot_widget.setTitle(self.title_input.text())
 
             # panning within limis
             self.plot_widget.setLimits(
@@ -319,7 +330,7 @@ class SignalPlotWidget():
                     min(current_time_window), max(current_time_window), padding=0)
 
             # self.other.plot_widget.setYRange(-1, 1)
-            self.other.plot_widget.setTitle(self.other.title_input.text())
+            # self.other.plot_widget.setTitle(self.other.title_input.text())
 
             #panning within limis
             self.other.plot_widget.setLimits(
@@ -423,6 +434,16 @@ class SignalPlotWidget():
         return global_min, global_max
     
     def delete_signal(self):
-        if len(self.signals) > 1:
+        if self.signals:
             self.signals.remove(self.selected_signal)
             self.update_graph()
+
+    def enable_buttons(self):
+        enable = bool(self.selected_signal)
+        self.play_pause_button.setEnabled(enable)
+        self.stop_signal_button.setEnabled(enable)
+        self.change_color_button.setEnabled(enable)
+        self.delete_signal_button.setEnabled(enable)
+        self.statistics_button.setEnabled(enable)
+        self.zoom_in_button.setEnabled(enable)
+        self.zoom_out_button.setEnabled(enable)
