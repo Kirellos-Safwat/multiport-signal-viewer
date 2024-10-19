@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, QtCore
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QScrollBar
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QScrollBar, QMenu, QAction
 from utils import Utils
 from statistics_window import StatisticsWindow
 from interpolation_window import InterpolationWindow
@@ -30,12 +30,17 @@ class SignalApp(QtWidgets.QWidget):
         self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # get initial y range
 
         SignalPlotWidget.user_interacting = False  #flag for mouse panning
-        self.control_pressed = False
+        # self.control_pressed = False
 
         self.first_graph.plot_signals()
         self.source_graph = None
 
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
 
+    def contextMenuEvent(self, event):
+        # Do nothing to suppress the default context menu
+        pass  
 
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer")  
@@ -231,21 +236,35 @@ class SignalApp(QtWidgets.QWidget):
         self.signal_to_be_moved = source_graph.selected_signal
         self.source_graph = source_graph
         print(self.source_graph.name)
-        if self.control_pressed:
-            self.grabMouse()  #grab mouse to track where release happens
 
-    def mouseReleaseEvent(self, event):
-        #check if mouse release occurred on different graph
+    def show_context_menu(self, pos):
         if self.signal_to_be_moved:
-            release_pos = event.pos()  #get release position in widget
+            context_menu = QMenu(self)
+
+            move_action = QAction("Move Signal", self)
+            context_menu.addAction(move_action)
+            
+            if self.second_graph.plot_widget.geometry().contains(pos):
+                move_action.triggered.connect(lambda: self.move_signal(2))
+            elif self.first_graph.plot_widget.geometry().contains(pos):
+                move_action.triggered.connect(lambda: self.move_signal(1))
+            
+            context_menu.setStyleSheet("QMenu { background-color: #f0f0f0; border: 1px solid black; }"
+                                       "QMenu::item { padding: 8px 20px; }"
+                                        "QMenu::item:selected { background-color: #a8a8a8; }")
+                                       
+
+            context_menu.exec_(self.tab_widget.mapToGlobal(pos))
+
+    def move_signal(self,index):
+        if self.signal_to_be_moved:
             target_graph = None
 
-            #determine if mouse release is on 2nd graph
-            if self.second_graph.plot_widget.geometry().contains(release_pos):
+            if index == 1:
                 target_graph = self.second_graph
-            elif self.first_graph.plot_widget.geometry().contains(release_pos):
+            elif index == 2:
                 target_graph = self.first_graph
-            
+
             #move signal from source graph to target graph
             if target_graph and target_graph != self.source_graph:
                 if len(self.source_graph.signals) > 1:
@@ -255,14 +274,43 @@ class SignalApp(QtWidgets.QWidget):
                     
                     target_graph.update_graph()
                     self.source_graph.update_graph()
-                    # target_graph.plot_signals()
+
                 else:
                     print("Empty graph")
             #clear selected signal and source graph
             self.signal_to_be_moved = None
             self.source_graph = None
+        
+    
+    # def mouseReleaseEvent(self, event):
+    #     #check if mouse release occurred on different graph
+    #     if self.signal_to_be_moved:
+    #         release_pos = event.pos()  #get release position in widget
+    #         target_graph = None
 
-        self.releaseMouse()
+    #         #determine if mouse release is on 2nd graph
+    #         if self.second_graph.plot_widget.geometry().contains(release_pos):
+    #             target_graph = self.second_graph
+    #         elif self.first_graph.plot_widget.geometry().contains(release_pos):
+    #             target_graph = self.first_graph
+            
+    #         #move signal from source graph to target graph
+    #         if target_graph and target_graph != self.source_graph:
+    #             if len(self.source_graph.signals) > 1:
+    #                 self.source_graph.signals.remove(self.signal_to_be_moved)
+    #                 target_graph.signals.append(self.signal_to_be_moved)
+    #                 # target_graph.selected_signal = self.signal_to_be_moved
+                    
+    #                 target_graph.update_graph()
+    #                 self.source_graph.update_graph()
+    #                 # target_graph.plot_signals()
+    #             else:
+    #                 print("Empty graph")
+    #         #clear selected signal and source graph
+    #         self.signal_to_be_moved = None
+    #         self.source_graph = None
+
+    #     self.releaseMouse()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Control:
