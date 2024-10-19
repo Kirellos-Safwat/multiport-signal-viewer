@@ -30,7 +30,7 @@ class SignalApp(QtWidgets.QWidget):
         # self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # get initial y range
 
         SignalPlotWidget.user_interacting = False  #flag for mouse panning
-        # self.control_pressed = False
+        self.control_pressed = False
 
         self.first_graph.plot_signals()
         self.source_graph = None
@@ -65,6 +65,11 @@ class SignalApp(QtWidgets.QWidget):
             self.on_signal_clicked_first_graph)
         self.second_graph.plot_widget.scene().sigMouseClicked.connect(
             self.on_signal_clicked_second_graph)
+
+        self.first_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_right_click_first_graph)
+        self.second_graph.plot_widget.scene().sigMouseClicked.connect(
+            self.on_right_click_second_graph)
 
 
 
@@ -224,18 +229,26 @@ class SignalApp(QtWidgets.QWidget):
             Utils.show_error_message("Each graph must have a selected signal")
 
     def on_signal_clicked_first_graph(self, event):
-        # if self.control_pressed:
-        self.on_signal_clicked(event, self.first_graph)
+        if self.control_pressed:
+            self.on_signal_clicked(event, self.first_graph)
 
     def on_signal_clicked_second_graph(self, event):
-        # if self.control_pressed:
+        if self.control_pressed:
+            self.on_signal_clicked(event, self.second_graph)
+
+    def on_right_click_first_graph(self, event):
+        self.on_signal_clicked(event, self.first_graph)
+
+    def on_right_click_second_graph(self, event):
         self.on_signal_clicked(event, self.second_graph)
 
     def on_signal_clicked(self, event, source_graph):
 
         self.signal_to_be_moved = source_graph.selected_signal
         self.source_graph = source_graph
-        print(self.source_graph.name)
+        
+        if self.control_pressed:
+            self.grabMouse()  #grab mouse to track where release happens
 
     def show_context_menu(self, pos):
         if self.signal_to_be_moved:
@@ -282,35 +295,32 @@ class SignalApp(QtWidgets.QWidget):
             self.source_graph = None
         
     
-    # def mouseReleaseEvent(self, event):
-    #     #check if mouse release occurred on different graph
-    #     if self.signal_to_be_moved:
-    #         release_pos = event.pos()  #get release position in widget
-    #         target_graph = None
+    def mouseReleaseEvent(self, event):
+        #check if mouse release occurred on different graph
+        if self.signal_to_be_moved:
+            release_pos = event.pos()  #get release position in widget
+            target_graph = None
 
-    #         #determine if mouse release is on 2nd graph
-    #         if self.second_graph.plot_widget.geometry().contains(release_pos):
-    #             target_graph = self.second_graph
-    #         elif self.first_graph.plot_widget.geometry().contains(release_pos):
-    #             target_graph = self.first_graph
+            #determine if mouse release is on 2nd graph
+            if self.second_graph.plot_widget.geometry().contains(release_pos):
+                target_graph = self.second_graph
+            elif self.first_graph.plot_widget.geometry().contains(release_pos):
+                target_graph = self.first_graph
             
-    #         #move signal from source graph to target graph
-    #         if target_graph and target_graph != self.source_graph:
-    #             if len(self.source_graph.signals) > 1:
-    #                 self.source_graph.signals.remove(self.signal_to_be_moved)
-    #                 target_graph.signals.append(self.signal_to_be_moved)
-    #                 # target_graph.selected_signal = self.signal_to_be_moved
-                    
-    #                 target_graph.update_graph()
-    #                 self.source_graph.update_graph()
-    #                 # target_graph.plot_signals()
-    #             else:
-    #                 print("Empty graph")
-    #         #clear selected signal and source graph
-    #         self.signal_to_be_moved = None
-    #         self.source_graph = None
+            #move signal from source graph to target graph
+            if target_graph and target_graph != self.source_graph:
+                self.source_graph.signals.remove(self.signal_to_be_moved)
+                target_graph.signals.append(self.signal_to_be_moved)
+                # target_graph.selected_signal = self.signal_to_be_moved
+                
+                target_graph.update_graph()
+                self.source_graph.update_graph()
+                # target_graph.plot_signals()
+            #clear selected signal and source graph
+            self.signal_to_be_moved = None
+            self.source_graph = None
 
-    #     self.releaseMouse()
+        self.releaseMouse()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Control:

@@ -22,14 +22,13 @@ class InterpolationWindow(QWidget):
         #storing starting and ending points of selection
         self.start_pos = None
         self.end_pos = None
-        self.color = 'g'
 
         #disable mouse panning when performing selection
         self.mouse_move_connected = False
 
         self.gap = 0
-        self.glued_signal = None
-        self.glued_signal_color = 'r'
+        self.glued_signal = []
+        self.glued_signal_color = 'b'
         self.interpolation_order = 'linear'
 
         self.initUI()
@@ -86,7 +85,7 @@ class InterpolationWindow(QWidget):
         self.select_order_comboBox = QComboBox(self)
 
         #add items to combo box
-        self.select_order_comboBox.addItems(["Linear", "Zero", "Quadratic", "Cubic"])
+        self.select_order_comboBox.addItems(["Linear", "Nearest", "Quadratic", "Cubic"])
 
         #connect signal to function
         self.select_order_comboBox.currentTextChanged.connect(self.on_select_order)
@@ -178,9 +177,10 @@ class InterpolationWindow(QWidget):
             #extraction of sub-signal
             sub_signal = self.signal2.data[start_idx:end_idx + 1]
             self.second_sub_signal = sub_signal
-            response = Utils.show_info_message("Second Sub-Signal Selected", True)
-            if response == "continue":
-                self.glue_signals()
+            if len(self.glued_signal) == 0:
+                response = Utils.show_info_message("Second Sub-Signal Selected", True)
+                if response == "continue":
+                    self.glue_signals()
         #hide region after selection
         self.region.hide()
 
@@ -190,6 +190,7 @@ class InterpolationWindow(QWidget):
         self.second_sub_signal = None
         self.start_pos = None
         self.end_pos = None
+        self.glued_signal = []
         self.region.hide()  
         self.first_signal_plot = self.plot_widget.plot(self.signal1.data, pen=self.signal1.color)
         self.plot_widget.setTitle("First Signal")
@@ -203,55 +204,73 @@ class InterpolationWindow(QWidget):
         self.region.hide()  #default is hidden till used
         self.plot_widget.addItem(self.region)
 
-    def glue_signals(self, gap = 0):
+    def glue_signals(self):
         if self.first_sub_signal is None or self.second_sub_signal is None:
             Utils.show_warning_message("Both signals need to be selected before gluing.")
             return
 
-        #concatenating sub-signals' x and y values
         sub_y1 = self.first_sub_signal
         sub_y2 = self.second_sub_signal
+        
+        overlap = abs(self.gap)
+        interpolated_part, new_x = self.interpolate_signals(sub_y1[-overlap:], sub_y2[:overlap], self.gap)
 
-        #plot glued signal
-        #+ve for gap, -ve for overlap
-        overlap = abs(gap)
-        interpolated_part, new_x = self.interpolate_signals(sub_y1[-overlap:], sub_y2[:overlap], gap)
+        # Create the glued signal
         self.glued_signal = np.concatenate([sub_y1[:-overlap], interpolated_part, sub_y2[overlap:]])
 
+        # Clear the plot
         self.plot_widget.clear()
-        self.plot_widget.plot(self.glued_signal, pen=self.glued_signal_color)
+
+        # Plot the first sub-signal with one color
+        x1 = np.arange(len(sub_y1[:-overlap]))  # x-axis for the first sub-signal
+        self.plot_widget.plot(x1, sub_y1[:-overlap], pen=pg.mkPen(self.signal1.color, width=2), name="First Sub-signal")
+
+        # Plot the interpolated (glued) part with a different color
+        # if self.gap != 0:
+        x_interpolated = np.arange(len(sub_y1[:-overlap]), len(sub_y1[:-overlap]) + len(interpolated_part))  # x-axis for the interpolated part
+        self.plot_widget.plot(x_interpolated, interpolated_part, pen=pg.mkPen(self.glued_signal_color, width=5), name="Interpolated Signal")
+
+        # Plot the second sub-signal with another color
+        x2 = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
+        self.plot_widget.plot(x2, sub_y2[overlap:], pen=pg.mkPen(self.signal2.color, width=2), name="Second Sub-signal")
+
+        # Add vertical lines to mark the edges between the sections
+        self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between first sub-signal and interpolated part
+        self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]) + len(interpolated_part), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between interpolated part and second sub-signal
+
+        # Enable additional features
         self.gap_slider.setEnabled(True)
         self.change_color_button.setEnabled(True)
         self.show_statistics_button.setEnabled(True)
         self.export_report_button.setEnabled(True)
         self.plot_widget.setTitle("Glued Signal")
-    
+
     def interpolate_signals(self, sub_y1, sub_y2, gap, interpolation_order = 'linear'):
         interpolation_order = self.interpolation_order
-        #determine whether overlap/gap
-        if gap < 0:  #overlap 
+        
+        if gap < 0:  
             overlap = abs(gap)
             overlap = min(overlap, len(sub_y1), len(sub_y2))
-            #slice overlapping regions
+            
             sub_y1_overlap = sub_y1[-overlap:]
             sub_y2_overlap = sub_y2[:overlap]
-        else:  #gap( positive or zero)
+        else:  
             overlap = 0
             sub_y1_overlap = sub_y1
             sub_y2_overlap = sub_y2
 
-        #create combined x-axis for signals with gap 
+        
         x1 = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
         x2 = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
 
-        #combine x-axis
+        
         x_combined = np.concatenate([x1, x2])
         y_combined = np.concatenate([sub_y1_overlap, sub_y2_overlap])
 
-        #interpolation 
+        
         f = interp1d(x_combined, y_combined, kind=interpolation_order, fill_value=0)
 
-        #new x-axis for interpolation
+        
         new_x = np.linspace(min(x_combined), max(x_combined), num=100)
 
         interpolated_signal = f(new_x)
@@ -260,28 +279,24 @@ class InterpolationWindow(QWidget):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Left:
             self.gap -= 5
-            self.glue_signals(self.gap)
+            self.glue_signals()
             # print("Gap: ", self.gap)
         elif event.key() == Qt.Key_Right:
             self.gap += 5
-            self.glue_signals(self.gap)
+            self.glue_signals()
             # print("Gap: ", self.gap)
 
     def update_gap(self):
-        self.glue_signals(self.gap_slider.value())
+        self.gap = self.gap_slider.value()
+        self.glue_signals()
 
     def on_select_order(self, text):
         self.interpolation_order = str(text).lower()
+        self.glue_signals()
 
     def show_statistics(self):
         self.statistics_window = InterpolationStatisticsWindow(self.glued_signal, self.glued_signal_color)
         self.statistics_window.show()
-
-    def update_plot(self):
-        self.plot_widget.clear()
-        self.plot_widget.plot(self.glued_signal, pen=self.color)
-        self.plot_widget.setTitle("Interpolated Signal")
-        self.plot_widget.setYRange(0, 1)
 
 
     def calculate_statistics(self):
@@ -297,7 +312,7 @@ class InterpolationWindow(QWidget):
         if color.isValid():
             self.glued_signal_color = color.name()
             self.plot_widget.clear()
-            self.plot_widget.plot(self.glued_signal, pen=self.glued_signal_color)
+            self.glue_signals()
             self.plot_widget.setTitle("Glued Signal")
 
     def take_snapshot(self):
