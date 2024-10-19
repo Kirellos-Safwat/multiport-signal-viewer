@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-# from realtime_plot import RealTimePlot
+from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -23,6 +23,10 @@ class SignalApp(QtWidgets.QWidget):
         super().__init__()
         self.initUI()
         self.signal_to_be_moved = None
+        self.real_time_plot = None
+
+        # Connect the tab change event
+        self.tab_widget.currentChanged.connect(self.on_tab_changed)
 
         SignalPlotWidget.user_interacting = False  #flag for mouse panning
         self.control_pressed = False
@@ -43,8 +47,9 @@ class SignalApp(QtWidgets.QWidget):
 
         #adding tabs
         self.tab_widget.addTab(self.main_tab(), "Main")
-        # self.tab_widget.addTab(self.Polar_tab(), "Polar")
+        self.tab_widget.addTab(self.Polar_tab(), "Polar")
         # self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
+        self.tab_widget.addTab(QtWidgets.QWidget(), "Real-Time") 
         self.tab_widget.setStyleSheet(Utils.tab_style_sheet)
 
         #setting layout of main window to hold tab widget
@@ -137,7 +142,13 @@ class SignalApp(QtWidgets.QWidget):
 
         return polar_tab
 
-
+    def on_tab_changed(self, index):
+        if index == 2:  # Assuming "Real-Time" is the third tab (index 2)
+            if self.real_time_plot is None:  # Only create if it hasn't been created
+                self.real_time_plot = RealTimePlot()
+                real_time_layout = QtWidgets.QVBoxLayout(self.tab_widget.widget(index))
+                real_time_layout.addWidget(self.real_time_plot)
+                self.tab_widget.widget(index).setLayout(real_time_layout)
 
     def real_time_tab(self):
         #creating instance of RealTimePlot for real-time graph
