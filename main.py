@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -24,10 +24,10 @@ class SignalApp(QtWidgets.QWidget):
         self.initUI()
         self.signal_to_be_moved = None
 
-        self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # get initial x range
-        self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # get initial y range
-        self.original_x_range = self.second_graph.plot_widget.viewRange()[0]  # get initial x range
-        self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # get initial y range
+        # self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # get initial x range
+        # self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # get initial y range
+        # self.original_x_range = self.second_graph.plot_widget.viewRange()[0]  # get initial x range
+        # self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # get initial y range
 
         SignalPlotWidget.user_interacting = False  #flag for mouse panning
         # self.control_pressed = False
@@ -51,8 +51,8 @@ class SignalApp(QtWidgets.QWidget):
 
         #adding tabs
         self.tab_widget.addTab(self.main_tab(), "Main")
-        self.tab_widget.addTab(self.Polar_tab(), "Polar")
-        self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
+        # self.tab_widget.addTab(self.Polar_tab(), "Polar")
+        # self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
         self.tab_widget.setStyleSheet(Utils.tab_style_sheet)
 
         #setting layout of main window to hold tab widget
@@ -76,7 +76,7 @@ class SignalApp(QtWidgets.QWidget):
 
         #creating plotting widgets
         self.first_graph = SignalPlotWidget(name='Graph One', signals=[Signal(Utils.generate_sine_wave(100), 'r')])
-        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'r')])
+        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'y')])
 
         #setting some buttons
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
@@ -267,16 +267,16 @@ class SignalApp(QtWidgets.QWidget):
 
             #move signal from source graph to target graph
             if target_graph and target_graph != self.source_graph:
-                if len(self.source_graph.signals) > 1:
-                    self.source_graph.signals.remove(self.signal_to_be_moved)
-                    target_graph.signals.append(self.signal_to_be_moved)
-                    # target_graph.selected_signal = self.signal_to_be_moved
-                    
-                    target_graph.update_graph()
-                    self.source_graph.update_graph()
-
-                else:
-                    print("Empty graph")
+                # if len(self.source_graph.signals) > 1:
+                self.source_graph.signals.remove(self.signal_to_be_moved)
+                target_graph.signals.append(self.signal_to_be_moved)
+                # target_graph.selected_signal = self.signal_to_be_moved
+                
+                target_graph.update_graph()
+                self.source_graph.update_graph()
+                    # target_graph.plot_signals()
+                # else:
+                #     print("Empty graph")
             #clear selected signal and source graph
             self.signal_to_be_moved = None
             self.source_graph = None
@@ -316,12 +316,9 @@ class SignalApp(QtWidgets.QWidget):
         if event.key() == Qt.Key_Control:
             if not self.control_pressed:
                 self.control_pressed = True
-                print("clicked")
         if event.key() == Qt.Key_Alt and self.source_graph:
-            print("pressed")
-            if len(self.source_graph.signals) > 1:
-                self.source_graph.signals.remove(self.source_graph.selected_signal)
-                self.source_graph.update_graph()
+            # if len(self.source_graph.signals) > 1:
+            self.source_graph.signals.delete_signal()
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
