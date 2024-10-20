@@ -55,6 +55,7 @@ class SignalPlotWidget():
 
  
         self.plot_widget = PlotWidget()
+        self.plot_widget.setMenuEnabled(False)    # disable default context menu
         self.plot_widget.setMouseEnabled(x=True, y=True)
         self.plot_widget.setBackground('#001414')
         self.plot_widget.setSizePolicy(
