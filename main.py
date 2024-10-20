@@ -80,8 +80,8 @@ class SignalApp(QtWidgets.QWidget):
 
 
         #creating plotting widgets
-        self.first_graph = SignalPlotWidget(name='Graph One', signals=[Signal(Utils.generate_sine_wave(100), 'r')])
-        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'y')])
+        self.first_graph = SignalPlotWidget(name='Graph One', signals=[Signal(Utils.generate_sine_wave(100), 'r', title='Sine Wave')])
+        self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'y', title='Cosine Wave')])
 
         #setting some buttons
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
@@ -160,6 +160,9 @@ class SignalApp(QtWidgets.QWidget):
 
 
     def toggle_link(self):
+        if not self.first_graph.selected_signal or not self.second_graph.selected_signal:
+            Utils.show_error_message("Import signals to link graphs")
+            return
         SignalPlotWidget.is_linked = not SignalPlotWidget.is_linked
         #sync play state if linked
         if SignalPlotWidget.is_linked:
@@ -216,7 +219,8 @@ class SignalApp(QtWidgets.QWidget):
         self.second_graph.toggle_signal(Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked)
 
         self.first_graph.selected_signal, self.second_graph.selected_signal = self.second_graph.selected_signal, self.first_graph.selected_signal
-        self.first_graph.plot_signals()
+        self.first_graph.update_graph()
+        self.second_graph.update_graph()
 
 
 
@@ -256,11 +260,16 @@ class SignalApp(QtWidgets.QWidget):
 
             move_action = QAction("Move Signal", self)
             context_menu.addAction(move_action)
+
+            clear_graph_action = QAction("Clear Graph", self)
+            context_menu.addAction(clear_graph_action)
             
             if self.second_graph.plot_widget.geometry().contains(pos):
                 move_action.triggered.connect(lambda: self.move_signal(2))
+                clear_graph_action.triggered.connect(self.second_graph.clear_graph)
             elif self.first_graph.plot_widget.geometry().contains(pos):
                 move_action.triggered.connect(lambda: self.move_signal(1))
+                clear_graph_action.triggered.connect(self.first_graph.clear_graph)
             
             context_menu.setStyleSheet("QMenu { background-color: #f0f0f0; border: 1px solid black; }"
                                        "QMenu::item { padding: 8px 20px; }"

@@ -167,7 +167,8 @@ class SignalPlotWidget():
 
     def update_signal_titles(self):
         """ Updates the plot titles dynamically as the user changes the title inputs. """
-        self.selected_signal.title = self.title_input.text()
+        if self.selected_signal and self.title_input.text() != '':
+            self.selected_signal.title = self.title_input.text()
         # self.plot_widget.setTitle(self.selected_signal.title)
 
     def update_timer_speed(self):
@@ -438,6 +439,11 @@ class SignalPlotWidget():
             self.signals.remove(self.selected_signal)
             self.update_graph()
 
+    def clear_graph(self):
+        self.selected_signal = None
+        self.signals = []
+        self.update_graph()
+
     def enable_buttons(self):
         enable = bool(self.selected_signal)
         self.play_pause_button.setEnabled(enable)
@@ -447,3 +453,8 @@ class SignalPlotWidget():
         self.statistics_button.setEnabled(enable)
         self.zoom_in_button.setEnabled(enable)
         self.zoom_out_button.setEnabled(enable)
+        if not enable:
+            self.title_input.setText('')
+        else:
+            self.title_input.setText(self.selected_signal.title)
+        self.title_input.setEnabled(enable)

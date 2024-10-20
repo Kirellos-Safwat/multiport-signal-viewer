@@ -212,11 +212,15 @@ class InterpolationWindow(QWidget):
         sub_y1 = self.first_sub_signal
         sub_y2 = self.second_sub_signal
         
+        interpolated_part = np.array([])
+
         overlap = abs(self.gap)
-        interpolated_part, new_x = self.interpolate_signals(sub_y1[-overlap:], sub_y2[:overlap], self.gap)
+        if overlap in (0, 1):
+            overlap += 1
+        else:
+            interpolated_part = self.interpolate_signals(sub_y1[-overlap:], sub_y2[:overlap], self.gap)
 
         # Create the glued signal
-        self.glued_signal = np.concatenate([sub_y1[:-overlap], interpolated_part, sub_y2[overlap:]])
 
         # Clear the plot
         self.plot_widget.clear()
@@ -227,8 +231,9 @@ class InterpolationWindow(QWidget):
 
         # Plot the interpolated (glued) part with a different color
         # if self.gap != 0:
-        x_interpolated = np.arange(len(sub_y1[:-overlap]), len(sub_y1[:-overlap]) + len(interpolated_part))  # x-axis for the interpolated part
-        self.plot_widget.plot(x_interpolated, interpolated_part, pen=pg.mkPen(self.glued_signal_color, width=5), name="Interpolated Signal")
+        if overlap != 0:
+            x_interpolated = np.arange(len(sub_y1[:-overlap]), len(sub_y1[:-overlap]) + len(interpolated_part))  # x-axis for the interpolated part
+            self.plot_widget.plot(x_interpolated, interpolated_part, pen=pg.mkPen(self.glued_signal_color, width=5), name="Interpolated Signal")
 
         # Plot the second sub-signal with another color
         x2 = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
@@ -238,6 +243,7 @@ class InterpolationWindow(QWidget):
         self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between first sub-signal and interpolated part
         self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]) + len(interpolated_part), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between interpolated part and second sub-signal
 
+        self.glued_signal = np.concatenate([sub_y1[:-overlap], interpolated_part, sub_y2[overlap:]])
         # Enable additional features
         self.gap_slider.setEnabled(True)
         self.change_color_button.setEnabled(True)
@@ -254,6 +260,8 @@ class InterpolationWindow(QWidget):
             
             sub_y1_overlap = sub_y1[-overlap:]
             sub_y2_overlap = sub_y2[:overlap]
+            if interpolation_order in ('cubic', 'quadratic'):
+                return (sub_y1_overlap + sub_y2_overlap) / 2
         else:  
             overlap = 0
             sub_y1_overlap = sub_y1
@@ -274,7 +282,7 @@ class InterpolationWindow(QWidget):
         new_x = np.linspace(min(x_combined), max(x_combined), num=100)
 
         interpolated_signal = f(new_x)
-        return interpolated_signal, new_x
+        return interpolated_signal
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Left:
