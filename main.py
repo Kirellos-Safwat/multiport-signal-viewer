@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -23,15 +23,6 @@ class SignalApp(QtWidgets.QWidget):
         super().__init__()
         self.initUI()
         self.signal_to_be_moved = None
-        self.real_time_plot = None
-
-        # Connect the tab change event
-        self.tab_widget.currentChanged.connect(self.on_tab_changed)
-
-        # self.original_x_range = self.first_graph.plot_widget.viewRange()[0]  # get initial x range
-        # self.original_y_range = self.first_graph.plot_widget.viewRange()[1]  # get initial y range
-        # self.original_x_range = self.second_graph.plot_widget.viewRange()[0]  # get initial x range
-        # self.original_y_range = self.second_graph.plot_widget.viewRange()[1]  # get initial y range
 
         SignalPlotWidget.user_interacting = False  #flag for mouse panning
         self.control_pressed = False
@@ -55,9 +46,8 @@ class SignalApp(QtWidgets.QWidget):
 
         #adding tabs
         self.tab_widget.addTab(self.main_tab(), "Main")
-        self.tab_widget.addTab(self.Polar_tab(), "Polar")
+        # self.tab_widget.addTab(self.Polar_tab(), "Polar")
         # self.tab_widget.addTab(self.real_time_tab(), "Real-Time")
-        self.tab_widget.addTab(QtWidgets.QWidget(), "Real-Time") 
         self.tab_widget.setStyleSheet(Utils.tab_style_sheet)
 
         #setting layout of main window to hold tab widget
@@ -71,10 +61,6 @@ class SignalApp(QtWidgets.QWidget):
         self.second_graph.plot_widget.scene().sigMouseClicked.connect(
             self.on_signal_clicked_second_graph)
 
-        self.first_graph.plot_widget.scene().sigMouseClicked.connect(
-            self.on_right_click_first_graph)
-        self.second_graph.plot_widget.scene().sigMouseClicked.connect(
-            self.on_right_click_second_graph)
 
 
 
@@ -154,13 +140,7 @@ class SignalApp(QtWidgets.QWidget):
 
         return polar_tab
 
-    def on_tab_changed(self, index):
-        if index == 2:  # Assuming "Real-Time" is the third tab (index 2)
-            if self.real_time_plot is None:  # Only create if it hasn't been created
-                self.real_time_plot = RealTimePlot()
-                real_time_layout = QtWidgets.QVBoxLayout(self.tab_widget.widget(index))
-                real_time_layout.addWidget(self.real_time_plot)
-                self.tab_widget.widget(index).setLayout(real_time_layout)
+
 
     def real_time_tab(self):
         #creating instance of RealTimePlot for real-time graph
@@ -213,12 +193,11 @@ class SignalApp(QtWidgets.QWidget):
     def swap_signals(self):
         self.first_graph.signals, self.second_graph.signals = self.second_graph.signals, self.first_graph.signals
 
-        #swappin text of  title input boxes
-        title_text_1 = self.first_graph.title_input.text()
-        title_text_2 = self.second_graph.title_input.text()
-        self.first_graph.title_input.setText(title_text_2)
-        self.second_graph.title_input.setText(title_text_1)
 
+        # swap speed
+        speed_one, speed_two = self.first_graph.speed_slider.value(), self.second_graph.speed_slider.value()
+        self.first_graph.speed_slider.setValue(speed_two)
+        self.second_graph.speed_slider.setValue(speed_one)
         #swapping state of visibility checkboxes
         self.first_graph.show_hide_checkbox1_stat = self.first_graph.show_hide_checkbox.isChecked()
         self.second_graph.show_hide_checkbox2_stat = self.second_graph.show_hide_checkbox.isChecked()
@@ -230,6 +209,11 @@ class SignalApp(QtWidgets.QWidget):
         self.second_graph.toggle_signal(Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked)
 
         self.first_graph.selected_signal, self.second_graph.selected_signal = self.second_graph.selected_signal, self.first_graph.selected_signal
+        
+        
+        self.first_graph.title_input.setText(self.first_graph.selected_signal.title)
+        self.second_graph.title_input.setText(self.second_graph.selected_signal.title)
+
         self.first_graph.update_graph()
         self.second_graph.update_graph()
 
@@ -244,18 +228,14 @@ class SignalApp(QtWidgets.QWidget):
             Utils.show_error_message("Each graph must have a selected signal")
 
     def on_signal_clicked_first_graph(self, event):
+        self.on_signal_clicked(event, self.first_graph)
         if self.control_pressed:
             self.on_signal_clicked(event, self.first_graph)
 
     def on_signal_clicked_second_graph(self, event):
+        self.on_signal_clicked(event, self.second_graph)
         if self.control_pressed:
             self.on_signal_clicked(event, self.second_graph)
-
-    def on_right_click_first_graph(self, event):
-        self.on_signal_clicked(event, self.first_graph)
-
-    def on_right_click_second_graph(self, event):
-        self.on_signal_clicked(event, self.second_graph)
 
     def on_signal_clicked(self, event, source_graph):
 
