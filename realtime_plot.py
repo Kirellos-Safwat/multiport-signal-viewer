@@ -135,10 +135,7 @@ class RealTimePlot(QMainWindow):
             longitude = self.driver.find_element(
                 By.ID, 'satLon').text.replace('°', '').strip()
             time_str = self.driver.find_element(By.ID, 'satUTC').text.strip()
-
-            self.lat_label.setText(f'Latitude: {latitude}')
-            self.lon_label.setText(f'Longitude: {longitude}')
-            self.time_label.setText(f'Time: {time_str}')
+            
 
             # Clean and convert strings to floats
             if latitude == '.':
@@ -150,6 +147,10 @@ class RealTimePlot(QMainWindow):
                 longitude = 0.0
             else:
                 longitude = float(longitude.replace(',', '.'))
+
+            self.lat_label.setText(f'Latitude: {latitude:.2f}') 
+            self.lon_label.setText(f'Longitude: {longitude:.2f}')
+            self.time_label.setText(f'Time: {time_str}')
 
             # Calculate elapsed time
             current_time = datetime.now()
