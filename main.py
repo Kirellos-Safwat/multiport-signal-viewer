@@ -33,9 +33,6 @@ class SignalApp(QtWidgets.QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
 
-    def contextMenuEvent(self, event):
-        # Do nothing to suppress the default context menu
-        pass  
 
     def initUI(self):
         self.setWindowTitle("Multi-Channel Signal Viewer")  
@@ -252,15 +249,20 @@ class SignalApp(QtWidgets.QWidget):
             move_action = QAction("Move Signal", self)
             context_menu.addAction(move_action)
 
+            delete_signal_action = QAction("Remove selected signal", self)
+            context_menu.addAction(delete_signal_action)
+
             clear_graph_action = QAction("Clear Graph", self)
             context_menu.addAction(clear_graph_action)
             
             if self.second_graph.plot_widget.geometry().contains(pos):
                 move_action.triggered.connect(lambda: self.move_signal(2))
                 clear_graph_action.triggered.connect(self.second_graph.clear_graph)
+                delete_signal_action.triggered.connect(self.second_graph.delete_signal)
             elif self.first_graph.plot_widget.geometry().contains(pos):
                 move_action.triggered.connect(lambda: self.move_signal(1))
                 clear_graph_action.triggered.connect(self.first_graph.clear_graph)
+                delete_signal_action.triggered.connect(self.first_graph.delete_signal)
             
             context_menu.setStyleSheet("QMenu { background-color: #f0f0f0; border: 1px solid black; }"
                                        "QMenu::item { padding: 8px 20px; }"
