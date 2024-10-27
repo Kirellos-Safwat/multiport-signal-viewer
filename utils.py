@@ -297,8 +297,13 @@ class Utils:
             # Append the newly created Signal instance to the signals list
             plot.signals.append(new_signal)
             plot.max_length = max(plot.max_length, len(signal_data))
+            print(" Max length: ", plot.max_length)
+            
             plot.update_max_time(np.linspace(
                 0, plot.max_length / sampling_rate, plot.max_length))
+            print(" Max time: ", plot.max_time_axis)
+            
+
             plot.plot_signals()
 
         else:
