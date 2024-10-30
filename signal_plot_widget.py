@@ -437,6 +437,8 @@ class SignalPlotWidget():
     
     def delete_signal(self):
         if self.signals:
+            if len(self.signals) == 1 and self.is_playing:
+                self.play_pause_signal()
             self.signals.remove(self.selected_signal)
             self.update_graph()
 

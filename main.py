@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 

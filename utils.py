@@ -11,68 +11,68 @@ class Utils:
 # Button Style
     button_style_sheet = """
     QPushButton {
-            background-color: #adb4b4;
-            color: black;
-            font-size: 14px;
-            padding: 2;
-            font-weight: bold;
-            border-radius: 10px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #4c7273;
+        background-color: #d3d3d3;  
+        color: black;
+        font-size: 14px;
+        padding: 2px;
+        font-weight: bold;
+        border-radius: 10px;
+        width:20px;
+        height:20px;
+        border: 2px solid #28a745; 
+        border-width: 3px; 
     }
     QPushButton:hover {
-            background-color: #4c7273;
-            border-radius: 10px;
-            border: 2px solid white;
+        background-color: #5a6268;  
+        border: 2px solid #ffffff;  
     }
     QPushButton:pressed {
-            background-color: #86b9b0;
+        background-color: #495057;   
     }
     """
 
     # Slider Style
     slider_style_sheet = """
     QSlider {
-        background-color: #042630;  
+        background-color: #343a40;  
         padding :0px;
     }
     QSlider::groove:horizontal {
-        border: 1px solid #4c7273;  
+        border: 1px solid #495057;  
         height: 8px;
-        background: #1e1e1e;  
+        background: #212529;  
         border-radius: 4px;
     }
     QSlider::handle:horizontal {
-        background: #86b9b0;  
-        border: 2px solid #4c7273;  
+        background: #28a745;  
+        border: 2px solid #495057;  
         width: 16px;
         height: 16px;
         margin: -5px 0;
         border-radius: 8px;
     }
     QSlider::handle:horizontal:hover {
-        background: #083838; 
-        border: 2px solid #4c7273;
+        background: #218838; 
+        border: 2px solid #495057;
 
     }
     QSlider::sub-page:horizontal {
-        background: #86b9b0; 
+        background: #28a745; 
         border-radius: 4px;
     }
     QSlider::add-page:horizontal {
-        background: #1e1e1e;  
+        background: #212529;  
         border-radius: 4px;
     }
     """
 
     # Window Style
-    window_style_sheet = "background-color: #042630;"
+    window_style_sheet = "background-color: #343a40;"
 
     # CheckBox Style
     checkBox_style_sheet = """
     QCheckBox {
-        color: #d0d6d6;  
+        color: #cfd8dc;  
         font-size: 14px;
         padding: 5px;
     }
@@ -80,15 +80,15 @@ class Utils:
         width: 18px;
         height: 18px;
         border-radius: 5px;
-        border: 2px solid #4c7273;  
-        background-color: #4c7273; 
+        border: 2px solid #495057;  
+        background-color: #495057; 
     }
     QCheckBox::indicator:checked {
-        background-color: #86b9b0;  
-        border: 2px solid #4c7273;  
+        background-color: #28a745;  
+        border: 2px solid #495057;  
     }
     QCheckBox::indicator:hover {
-        border: 2px solid #86b9b0;  
+        border: 2px solid #28a745;  
     }
     """
 
@@ -100,9 +100,9 @@ class Utils:
         padding: 5px;
         margin-top: 10px;
         margin-bottom: 10px;
-        border: 2px solid #4c7273; 
+        border: 2px solid #495057; 
         border-radius: 10px;
-        background-color: #1e1e1e;  
+        background-color: #212529;  
     }
     """
 
@@ -118,35 +118,22 @@ class Utils:
     # Tab Style
     tab_style_sheet = """
     QTabBar::tab {
-        color: black;  
-        font-weight: bold; 
-        font-size : 11.5px;
-        background-color: #adb4b4;  
-        padding: 7px;  
-        border: 2px solid #4c7273;  
-        border-radius: 5px;
+        color: black;  /* Bold black text */
+        font-weight: bold;  /* Making the text bold */
+        background-color: #495057;  /* Darker gray for normal state */
+        padding: 10px;  /* Adding some padding for better appearance */
+        border: 1px solid #343a40;  /* Border color, slightly darker gray */
+        border-radius: 10px;
     }
     QTabBar::tab:selected {
-        background: #86b9b0;  
-        color: black;  
+        background: #28a745;  /* Green for selected tab */
+        color: black;  /* Ensure text remains black when selected */
     }
     QTabBar::tab:hover {
-        background: #4c7273;  
-        color: black;  
-        border: 2px solid white;
-
+        background: #6c757d;  /* Light gray on hover */
+        color: black;  /* Keep text black on hover */
     }
-
-    QTabWidget::pane {
-        border: 2.3px solid #4c7273;  
-        border-radius: 8px;         
-        background-color: #1e1e1e;  
-        padding: 5px;             
-    }
-
-
     """
-    
 
     # ComboBox Style
     comboBox_style_sheet = """
@@ -285,7 +272,7 @@ class Utils:
                     signal_data = np.genfromtxt(file, delimiter=',')
 
                 # Optionally, you can return or use the sampling rate as needed
-                print("Sampling Rate:", sampling_rate)
+                # print("Sampling Rate:", sampling_rate)
             elif extension == '.txt':
                 # Assuming space-separated signal data in TXT file
                 signal_data = np.loadtxt(file_name)
@@ -310,11 +297,11 @@ class Utils:
             # Append the newly created Signal instance to the signals list
             plot.signals.append(new_signal)
             plot.max_length = max(plot.max_length, len(signal_data))
-            print(" Max length: ", plot.max_length)
+            # print(" Max length: ", plot.max_length)
             
             plot.update_max_time(np.linspace(
                 0, plot.max_length / sampling_rate, plot.max_length))
-            print(" Max time: ", plot.max_time_axis)
+            # print(" Max time: ", plot.max_time_axis)
             
 
             plot.plot_signals()
