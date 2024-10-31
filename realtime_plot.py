@@ -28,11 +28,13 @@ class RealTimePlot(QMainWindow):
         options = Options()
         options.add_argument("--headless")  # Run in headless mode
         options.add_argument("--no-sandbox")  # Needed for certain environments
+        
         # Overcome limited resource problems
         options.add_argument("--disable-dev-shm-usage")
         ################################################
         self.driver = webdriver.Chrome(service=Service(
             ChromeDriverManager().install()), options=options)
+        
 
         self.driver.get('https://www.orbtrack.org/#/?satName=ISS%20(ZARYA)')
         self.timer = QTimer(self)
