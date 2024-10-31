@@ -402,7 +402,7 @@ class SignalPlotWidget():
         # Loop through each signal to find the closest one to the click
         for signal in self.signals:
             signal_data = signal.data
-            x_data = self.max_time_axis
+            x_data = self.max_time_axis[:len(signal_data)] # avoid out of bounds error
             y_data = signal_data
             index = (np.abs(x_data - x_mouse)).argmin()
             y_value_at_index = y_data[index]

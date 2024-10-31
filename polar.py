@@ -6,11 +6,12 @@ from PyQt5.QtCore import Qt, QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from utils import Utils
 
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None):
         fig = Figure(figsize=(6, 6))
-        fig.patch.set_facecolor((0, 0, 0, 0))
+        # fig.patch.set_facecolor((0, 0, 0, 0))
         self.ax_polar = fig.add_subplot(111, projection='polar')
         super().__init__(fig)
         self.setParent(parent)
@@ -21,7 +22,7 @@ class PolarPlotWidget(QtWidgets.QWidget):
         df = pd.read_csv('iss_location_data.csv')
 
         self.theta = np.radians(df['Longitude'].values)  # Convert longitude to radians
-        self.radius = (df['Latitude'].values + 90) / 180  # Normalize latitude to [0, 1]
+        self.radius = (df['Latitude'].values + 90) / 180  # Normalize latitude to [0, 1] 0 close to south pole, 1 close to north pole
 
         
         self.canvas = MplCanvas(self)
@@ -42,6 +43,21 @@ class PolarPlotWidget(QtWidgets.QWidget):
         self.timer.timeout.connect(self.update_plot)
         self.update_speed()
 
+        button_layout = QtWidgets.QHBoxLayout()
+
+        button_layout.addSpacing(200)
+        button_layout.addStretch()
+
+        self.polar_play_button = Utils.create_button("", self.handle_animation, "play")
+        button_layout.addWidget(self.polar_play_button)
+
+        button_layout.addSpacing(200)
+        button_layout.addStretch()
+
+        layout.addLayout(button_layout)
+        self.canvas.ax_polar.set_title("Sequential Polar Plot of ISS Latitude and Longitude", pad=10)
+
+
     def update_plot(self):
         if self.current_index >= len(self.theta):
             self.timer.stop()
@@ -58,11 +74,20 @@ class PolarPlotWidget(QtWidgets.QWidget):
         self.canvas.draw()
         self.current_index += 1
 
+    def handle_animation(self):
+        if self.timer.isActive():
+            self.pause_animation()
+        else:
+            self.play_animation()
     def play_animation(self):
         self.timer.start() 
+        self.polar_play_button = Utils.update_button(
+                self.polar_play_button, "", "pause")
 
     def pause_animation(self):
         self.timer.stop()
+        self.polar_play_button = Utils.update_button(
+                self.polar_play_button, "", "play")
 
     def update_speed(self):
         speed_factor = self.speed_slider.value()

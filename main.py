@@ -124,26 +124,12 @@ class SignalApp(QtWidgets.QWidget):
         self.polar_plot_widget = PolarPlotWidget()
         layout.addWidget(self.polar_plot_widget)
 
-        button_layout = QtWidgets.QHBoxLayout()
 
-        button_layout.addSpacing(200)
-        button_layout.addStretch()
-
-        self.polar_play_button = Utils.create_button("", self.polar_plot_widget.play_animation, "play")
-        button_layout.addWidget(self.polar_play_button)
-
-        self.polar_pause_button = Utils.create_button("", self.polar_plot_widget.pause_animation, "pause")
-        button_layout.addWidget(self.polar_pause_button)
-
-        button_layout.addSpacing(200)
-        button_layout.addStretch()
-
-        layout.addLayout(button_layout)
 
         return polar_tab
 
     def on_tab_changed(self, index):
-        if index == 2:  # Assuming "Real-Time" is the third tab (index 2)
+        if index == 2:  
             if self.real_time_plot is None:  # Only create if it hasn't been created
                 self.real_time_plot = RealTimePlot()
                 real_time_layout = QtWidgets.QVBoxLayout(self.tab_widget.widget(index))
