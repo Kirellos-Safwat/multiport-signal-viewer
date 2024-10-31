@@ -15,12 +15,12 @@ from utils import Utils
 class RealTimePlot(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.series_lat = QLineSeries()
+        self.series_lat = QLineSeries()     # create series for each of latitude and longitude
         self.series_lon = QLineSeries()
         self.series_lat.setName("Latitude")
         self.series_lon.setName("Longitude")
         self.data = {'time': [], 'latitude': [], 'longitude': []}
-        self.start_time = datetime.now()
+        self.start_time = datetime.now()    # record the start time
 
         self.initUI()
         # !!! IMPORTANT !!!
@@ -33,15 +33,15 @@ class RealTimePlot(QMainWindow):
         options.add_argument("--disable-dev-shm-usage")
         ################################################
         self.driver = webdriver.Chrome(service=Service(
-            ChromeDriverManager().install()), options=options)
+            ChromeDriverManager().install()), options=options)  # Initialize the Chrome driver
         
 
         self.driver.get('https://www.orbtrack.org/#/?satName=ISS%20(ZARYA)')
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_data)
+        self.timer.timeout.connect(self.update_data)    # connect timer with update method
         self.timer.start(500)  # update every 500 ms
 
-    def initUI(self):
+    def initUI(self):   
         self.layout = QVBoxLayout()
         self.button_layout = QHBoxLayout()
 
@@ -101,8 +101,8 @@ class RealTimePlot(QMainWindow):
         self.series_lon.attachAxis(self.axis_y_lon)
 
         self.chart_view_lat = QChartView(self.chart_lat)
-        self.chart_view_lat.setRenderHint(QPainter.Antialiasing)
-        self.chart_view_lat.setRubberBand(QChartView.RectangleRubberBand)
+        self.chart_view_lat.setRenderHint(QPainter.Antialiasing)    # Enable antialiasing for smoother rendering
+        self.chart_view_lat.setRubberBand(QChartView.RectangleRubberBand) # click and drag to zoom in
         self.chart_lat.axisY(self.series_lat).setRange(-20, 80)
 
         self.chart_view_lon = QChartView(self.chart_lon)
@@ -131,7 +131,7 @@ class RealTimePlot(QMainWindow):
         self.show()
 
     def update_data(self):
-        try:
+        try:    # get values from website
             latitude = self.driver.find_element(
                 By.ID, 'satLat').text.replace('°', '').strip()
             longitude = self.driver.find_element(
@@ -155,7 +155,7 @@ class RealTimePlot(QMainWindow):
             self.time_label.setText(f'Time: {time_str}')
 
             # Calculate elapsed time
-            current_time = datetime.now()
+            current_time = datetime.now()   # returns the current local date
             self.data['time'].append(current_time)
             self.data['latitude'].append(latitude)
             self.data['longitude'].append(longitude)
@@ -166,10 +166,10 @@ class RealTimePlot(QMainWindow):
             self.series_lon.append(
                 int(current_time.timestamp() * 1000), longitude)
 
-            self.axis_x_lat.setMin(QDateTime.fromMSecsSinceEpoch(
-                int(self.data['time'][0].timestamp() * 1000)))
+            self.axis_x_lat.setMin(QDateTime.fromMSecsSinceEpoch(   # converts this millisecond timestamp into a QDateTime object
+                int(self.data['time'][0].timestamp() * 1000)))  # Set minimum for latitude chart
             self.axis_x_lat.setMax(QDateTime.fromMSecsSinceEpoch(
-                int(self.data['time'][-1].timestamp() * 1000)))
+                int(self.data['time'][-1].timestamp() * 1000))) # Set max for latitude chart
 
             self.axis_x_lon.setMin(QDateTime.fromMSecsSinceEpoch(
                 int(self.data['time'][0].timestamp() * 1000)))
@@ -188,12 +188,12 @@ class RealTimePlot(QMainWindow):
             print(f"Error: {e}")
 
     def toggle_timer(self):
-        if self.timer.isActive():
+        if self.timer.isActive():   # when you pause
             self.timer.stop()
             self.play_pause_button = Utils.update_button(
                 self.play_pause_button, "", "play")
         else:
-            self.timer.start(500)
+            self.timer.start(500)   # Start the timer if it's not active (when you play)
             self.play_pause_button = Utils.update_button(
                 self.play_pause_button, "", "pause")
 
