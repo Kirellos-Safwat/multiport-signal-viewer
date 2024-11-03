@@ -226,8 +226,8 @@ class InterpolationWindow(QWidget):
         self.plot_widget.clear()
 
         # Plot the first sub-signal with one color
-        x1 = np.arange(len(sub_y1[:-overlap]))  # x-axis for the first sub-signal
-        self.plot_widget.plot(x1, sub_y1[:-overlap], pen=pg.mkPen(self.signal1.color, width=2), name="First Sub-signal")
+        first_signal = np.arange(len(sub_y1[:-overlap]))  # x-axis for the first sub-signal
+        self.plot_widget.plot(first_signal, sub_y1[:-overlap], pen=pg.mkPen(self.signal1.color, width=2), name="First Sub-signal")
 
         # Plot the interpolated (glued) part with a different color
         # if self.gap != 0:
@@ -236,8 +236,8 @@ class InterpolationWindow(QWidget):
             self.plot_widget.plot(x_interpolated, interpolated_part, pen=pg.mkPen(self.glued_signal_color, width=5), name="Interpolated Signal")
 
         # Plot the second sub-signal with another color
-        x2 = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
-        self.plot_widget.plot(x2, sub_y2[overlap:], pen=pg.mkPen(self.signal2.color, width=2), name="Second Sub-signal")
+        second_signal = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
+        self.plot_widget.plot(second_signal, sub_y2[overlap:], pen=pg.mkPen(self.signal2.color, width=2), name="Second Sub-signal")
 
         # Add vertical lines to mark the edges between the sections
         self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between first sub-signal and interpolated part
@@ -268,11 +268,11 @@ class InterpolationWindow(QWidget):
             sub_y2_overlap = sub_y2
 
         
-        x1 = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
-        x2 = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
+        frist_subsignal_x_axis = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
+        second_sub_signal_x_axis = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
 
         
-        x_combined = np.concatenate([x1, x2])
+        x_combined = np.concatenate([frist_subsignal_x_axis, second_sub_signal_x_axis])
         y_combined = np.concatenate([sub_y1_overlap, sub_y2_overlap])
 
         

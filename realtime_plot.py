@@ -20,7 +20,7 @@ class RealTimePlot(QMainWindow):
         self.series_lat.setName("Latitude")
         self.series_lon.setName("Longitude")
         self.data = {'time': [], 'latitude': [], 'longitude': []}
-        self.start_time = datetime.now()    # record the start time
+        # self.start_time = datetime.now()    # record the start time
 
         self.initUI()
         # !!! IMPORTANT !!!

@@ -60,8 +60,7 @@ class PolarPlotWidget(QtWidgets.QWidget):
 
     def update_plot(self):
         if self.current_index >= len(self.theta):
-            self.timer.stop()
-            return
+            self.current_index = 0
 
         # Update the plot with the next data point
         angle = self.theta[:self.current_index + 1]
