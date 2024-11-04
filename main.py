@@ -148,11 +148,6 @@ class SignalApp(QtWidgets.QWidget):
                 real_time_layout.addWidget(self.real_time_plot)
                 self.tab_widget.widget(index).setLayout(real_time_layout)
 
-    def real_time_tab(self):
-        #creating instance of RealTimePlot for real-time graph
-        #self.real_time_plot = RealTimePlot()
-        #return self.real_time_plot
-        pass
 
 
 
@@ -160,12 +155,16 @@ class SignalApp(QtWidgets.QWidget):
         if not self.first_graph.selected_signal or not self.second_graph.selected_signal:
             Utils.show_error_message("Import signals to link graphs")
             return
+        #toggle link state
         SignalPlotWidget.is_linked = not SignalPlotWidget.is_linked
+
         #sync play state if linked
         if SignalPlotWidget.is_linked:
             #sync visibility of checkboxes
             self.second_graph.show_hide_checkbox.setChecked(self.first_graph.show_hide_checkbox.isChecked())
+
             self.link_button = Utils.update_button(self.link_button, "", "unlink")
+
             #dedicated to the case where one of the signals is already playing before linking the 2 graphs together
             if self.first_graph.is_playing:
                 self.second_graph.play_pause_signal()
@@ -195,27 +194,27 @@ class SignalApp(QtWidgets.QWidget):
                     self.second_graph.timer.setInterval(self.first_graph.timer.interval())  #sync intervals
 
 
-
     def swap_signals(self):
+        #swap signals
         self.first_graph.signals, self.second_graph.signals = self.second_graph.signals, self.first_graph.signals
 
-
-        # swap speed
+        #swap speed
         speed_one, speed_two = self.first_graph.speed_slider.value(), self.second_graph.speed_slider.value()
         self.first_graph.speed_slider.setValue(speed_two)
         self.second_graph.speed_slider.setValue(speed_one)
-        #swapping state of visibility checkboxes
+
+        #swap checkboxes 
         self.first_graph.show_hide_checkbox1_stat = self.first_graph.show_hide_checkbox.isChecked()
         self.second_graph.show_hide_checkbox2_stat = self.second_graph.show_hide_checkbox.isChecked()
         self.first_graph.show_hide_checkbox.setChecked(self.second_graph.show_hide_checkbox2_stat)
         self.second_graph.show_hide_checkbox.setChecked(self.first_graph.show_hide_checkbox1_stat)
 
-        #ensure visibility reflects swapped states
+        #ensure visibility reflects swapped states of checkboxes
         self.first_graph.toggle_signal(Qt.Checked if self.second_graph.show_hide_checkbox2_stat else Qt.Unchecked)
         self.second_graph.toggle_signal(Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked)
 
+        #swap selescted signals
         self.first_graph.selected_signal, self.second_graph.selected_signal = self.second_graph.selected_signal, self.first_graph.selected_signal
-
 
         self.first_graph.update_graph()
         self.second_graph.update_graph()

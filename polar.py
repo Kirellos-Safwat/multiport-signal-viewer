@@ -20,8 +20,8 @@ class PolarPlotWidget(QtWidgets.QWidget):
         super().__init__()
         df = pd.read_csv('iss_location_data.csv')
 
-        self.theta = np.radians(df['Longitude'].values)  # Convert longitude to radians
-        self.radius = (df['Latitude'].values + 90) / 180  # Normalize latitude to [0, 1]
+        self.theta = np.radians(df['Longitude'].values)  #convert longitude to radians
+        self.radius = (df['Latitude'].values + 90) / 180  #normalize latitude to [0, 1]
 
         
         self.canvas = MplCanvas(self)
@@ -31,10 +31,10 @@ class PolarPlotWidget(QtWidgets.QWidget):
         self.canvas.ax_polar.set_title("Sequential Polar Plot of ISS Latitude and Longitude", pad=10, color='white')
         self.canvas.ax_polar.tick_params(colors="#a6a4a1")  
 
-        # Speed slider
+        #speed slider
         self.speed_slider = QtWidgets.QSlider(Qt.Horizontal)
-        self.speed_slider.setRange(1, 20)  # Set range for speed factor (1 is slowest, 20 is fastest)
-        self.speed_slider.setValue(10)  # Default speed factor at mid-range
+        self.speed_slider.setRange(1, 20)  #set range (1 is slowest, 20 is fastest)
+        self.speed_slider.setValue(10)  #default speed factor at mid-range
         self.speed_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self.speed_slider.setTickInterval(1)
         self.speed_slider.valueChanged.connect(self.update_speed)
@@ -50,7 +50,7 @@ class PolarPlotWidget(QtWidgets.QWidget):
             self.timer.stop()
             return
 
-        # Update the plot with the next data point
+        #update the plot with the next data point
         angle = self.theta[:self.current_index + 1]
         radius = self.radius[:self.current_index + 1]
 

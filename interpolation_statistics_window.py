@@ -37,20 +37,20 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
             name_label = QtWidgets.QLabel(stat_name)
             name_label.setStyleSheet("""
                 QLabel {
-                    color: #adb4b4;  /* Light teal color */
-                    font-size: 18px;  /* Larger font size for visibility */
-                    font-weight: bold;  /* Make font bold */
-                    padding: 5px;      /* Add padding for aesthetics */
+                    color: #adb4b4; 
+                    font-size: 18px;  
+                    font-weight: bold; 
+                    padding: 5px;    
                 }
             """)
 
-            value_label = QtWidgets.QLabel("Calculating...") 
+            value_label = QtWidgets.QLabel() 
             value_label.setStyleSheet("""
                 QLabel {
-                    color: #d0d6d6;  /* Light grey color */
-                    font-size: 16px;  /* Slightly smaller font size for values */
-                    font-weight: bold;  /* Make font bold */
-                    margin-left: 10px;  /* Add space between name and value */
+                    color: #d0d6d6;  
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    margin-left: 10px; 
                 }
             """)
 
@@ -66,24 +66,25 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
         self.back_button = QtWidgets.QPushButton("Back")
         self.back_button.setStyleSheet("""
             QPushButton {
-                background-color: #adb4b4;  /* Custom color */
+                background-color: #adb4b4; 
                 color: black;
-                font-size: 16px;  /* Override the font size */
-                font-weight: bold;  /* Make the font bold */
-                padding: 12px;  /* Custom padding */
-                width: 100px;  /* Set specific width */
-                border-radius: 15px;  /* Custom border radius */
+                font-size: 16px;  
+                font-weight: bold;  
+                padding: 12px; 
+                width: 100px;  
+                border-radius: 15px; 
                 border: 2px solid #4c7273;
             }
             QPushButton:hover {
-                background-color: #4c7273;  /* Custom hover color */
-                border-radius: 15px;  /* Custom border radius */
+                background-color: #4c7273;  
+                border-radius: 15px;  
                 border: 2px solid white;                       
             }
             QPushButton:pressed {
                 background-color: #86b9b0;
             }
         """)
+
         self.back_button.clicked.connect(self.close)
         layout.addWidget(self.back_button)
 
@@ -91,8 +92,8 @@ class InterpolationStatisticsWindow(QtWidgets.QWidget):
 
         self.update_statistics()
 
+        #calc and update all statistics in the labels
     def update_statistics(self):
-        """Calculate and update all statistics in the labels."""
         self.result_labels[0].setText(f"{self.calculate_mean():.2f}")
         self.result_labels[1].setText(f"{self.calculate_std():.2f}")
         self.result_labels[2].setText(f"{self.calculate_duration()} mS")
