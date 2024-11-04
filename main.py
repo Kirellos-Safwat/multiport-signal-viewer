@@ -73,6 +73,7 @@ class SignalApp(QtWidgets.QWidget):
         #creating plotting widgets
         self.first_graph = SignalPlotWidget(name='Graph One', signals=[Signal(Utils.generate_sine_wave(100), 'r', title='Sine Wave')])
         self.second_graph = SignalPlotWidget(name='Graph Two', signals=[Signal(Utils.generate_cosine_wave(100), 'y', title='Cosine Wave')])
+        SignalPlotWidget.toggle_link = self.toggle_link
 
         #setting some buttons
         self.swap_button = Utils.create_button("", self.swap_signals, "swap")
@@ -113,7 +114,6 @@ class SignalApp(QtWidgets.QWidget):
         return main_tab
 
 
-
     def Polar_tab(self):
         polar_tab = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(polar_tab)
@@ -127,7 +127,7 @@ class SignalApp(QtWidgets.QWidget):
         button_layout.addSpacing(200)
         button_layout.addStretch()
 
-        self.polar_play_button = Utils.create_button("", self.polar_plot_widget.play_animation, "play")
+        self.polar_play_button = Utils.create_button("" , self.polar_plot_widget.play_animation, "play")
         button_layout.addWidget(self.polar_play_button)
 
         self.polar_pause_button = Utils.create_button("", self.polar_plot_widget.pause_animation, "pause")
@@ -141,7 +141,7 @@ class SignalApp(QtWidgets.QWidget):
         return polar_tab
 
     def on_tab_changed(self, index):
-        if index == 2:  # Assuming "Real-Time" is the third tab (index 2)
+        if index == 2:  
             if self.real_time_plot is None:  # Only create if it hasn't been created
                 self.real_time_plot = RealTimePlot()
                 real_time_layout = QtWidgets.QVBoxLayout(self.tab_widget.widget(index))
@@ -215,10 +215,7 @@ class SignalApp(QtWidgets.QWidget):
         self.second_graph.toggle_signal(Qt.Checked if self.first_graph.show_hide_checkbox1_stat else Qt.Unchecked)
 
         self.first_graph.selected_signal, self.second_graph.selected_signal = self.second_graph.selected_signal, self.first_graph.selected_signal
-        
-        
-        self.first_graph.title_input.setText(self.first_graph.selected_signal.title)
-        self.second_graph.title_input.setText(self.second_graph.selected_signal.title)
+
 
         self.first_graph.update_graph()
         self.second_graph.update_graph()
@@ -337,9 +334,6 @@ class SignalApp(QtWidgets.QWidget):
         if event.key() == Qt.Key_Control:
             if not self.control_pressed:
                 self.control_pressed = True
-        if event.key() == Qt.Key_Alt and self.source_graph:
-            # if len(self.source_graph.signals) > 1:
-            self.source_graph.signals.delete_signal()
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:

@@ -34,7 +34,7 @@ class PolarPlotWidget(QtWidgets.QWidget):
         # Speed slider
         self.speed_slider = QtWidgets.QSlider(Qt.Horizontal)
         self.speed_slider.setRange(1, 20)  # Set range for speed factor (1 is slowest, 20 is fastest)
-        self.speed_slider.setValue(10)  # Default speed factor
+        self.speed_slider.setValue(10)  # Default speed factor at mid-range
         self.speed_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
         self.speed_slider.setTickInterval(1)
         self.speed_slider.valueChanged.connect(self.update_speed)

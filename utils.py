@@ -176,6 +176,9 @@ class Utils:
         color: white;
     }
     """
+
+    message_box_style_sheet = "QMessageBox { background-color: #042630; color: white; }"
+
   
     @staticmethod
     def generate_square_wave(points):
@@ -233,7 +236,8 @@ class Utils:
         # Create a message for error
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Critical)
-        msg_box.setText(message)
+        msg_box.setText(f"<font color='white'>{message}</font>")
+        msg_box.setStyleSheet(Utils.message_box_style_sheet)
         msg_box.setWindowTitle("Error")
         msg_box.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))
         msg_box.exec_()
@@ -243,7 +247,8 @@ class Utils:
         # create message for information with 2 options
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Information)
-        msg_box.setText(message)
+        msg_box.setText(f"<font color='white'>{message}</font>")
+        msg_box.setStyleSheet(Utils.message_box_style_sheet)
         msg_box.setWindowTitle("Information")
         msg_box.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))
         if glue:
@@ -258,13 +263,16 @@ class Utils:
                 return "reset"
             else:
                 return "continue"
+        else:
+            msg_box.exec_()
 
     @staticmethod
     def show_warning_message(message):
         # Create a QMessageBox for warning
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setText(message)
+        msg_box.setText(f"<font color='white'>{message}</font>")
+        msg_box.setStyleSheet(Utils.message_box_style_sheet)
         msg_box.setWindowTitle("Warning")
         msg_box.setWindowIcon(QtGui.QIcon("assets\\Pulse.png"))
         msg_box.exec_()

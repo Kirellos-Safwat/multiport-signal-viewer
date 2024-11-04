@@ -5,7 +5,7 @@ import os
 from pyqtgraph.exporters import ImageExporter
 from fpdf import FPDF
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QLabel, QHBoxLayout, QFileDialog, QMessageBox
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt
 from interpolation_statistics_window import InterpolationStatisticsWindow
@@ -226,8 +226,8 @@ class InterpolationWindow(QWidget):
         self.plot_widget.clear()
 
         # Plot the first sub-signal with one color
-        x1 = np.arange(len(sub_y1[:-overlap]))  # x-axis for the first sub-signal
-        self.plot_widget.plot(x1, sub_y1[:-overlap], pen=pg.mkPen(self.signal1.color, width=2), name="First Sub-signal")
+        first_signal = np.arange(len(sub_y1[:-overlap]))  # x-axis for the first sub-signal
+        self.plot_widget.plot(first_signal, sub_y1[:-overlap], pen=pg.mkPen(self.signal1.color, width=2), name="First Sub-signal")
 
         # Plot the interpolated (glued) part with a different color
         # if self.gap != 0:
@@ -236,8 +236,8 @@ class InterpolationWindow(QWidget):
             self.plot_widget.plot(x_interpolated, interpolated_part, pen=pg.mkPen(self.glued_signal_color, width=5), name="Interpolated Signal")
 
         # Plot the second sub-signal with another color
-        x2 = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
-        self.plot_widget.plot(x2, sub_y2[overlap:], pen=pg.mkPen(self.signal2.color, width=2), name="Second Sub-signal")
+        second_signal = np.arange(len(sub_y1[:-overlap]) + len(interpolated_part), len(sub_y1[:-overlap]) + len(interpolated_part) + len(sub_y2[overlap:]))  # x-axis for the second sub-signal
+        self.plot_widget.plot(second_signal, sub_y2[overlap:], pen=pg.mkPen(self.signal2.color, width=2), name="Second Sub-signal")
 
         # Add vertical lines to mark the edges between the sections
         self.plot_widget.addItem(pg.InfiniteLine(pos=len(sub_y1[:-overlap]), angle=90, pen=pg.mkPen('w', width=2, style=Qt.DashLine)))  # Line between first sub-signal and interpolated part
@@ -268,11 +268,11 @@ class InterpolationWindow(QWidget):
             sub_y2_overlap = sub_y2
 
         
-        x1 = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
-        x2 = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
+        frist_subsignal_x_axis = np.linspace(0, len(sub_y1_overlap) - 1, len(sub_y1_overlap))
+        second_sub_signal_x_axis = np.linspace(len(sub_y1_overlap) + gap, len(sub_y1_overlap) + gap + len(sub_y2_overlap) - 1, len(sub_y2_overlap))
 
         
-        x_combined = np.concatenate([x1, x2])
+        x_combined = np.concatenate([frist_subsignal_x_axis, second_sub_signal_x_axis])
         y_combined = np.concatenate([sub_y1_overlap, sub_y2_overlap])
 
         
@@ -325,23 +325,10 @@ class InterpolationWindow(QWidget):
 
     def take_snapshot(self):
         self.snapshot_count += 1  # snapshot counter
-        img_path = f'snapshot{self.snapshot_count}.png'  # create filename for snapshot
+        img_path = f'snapshot{self.snapshot_count}.png' 
         exporter = ImageExporter(self.plot_widget.getPlotItem())
-        exporter.export(img_path)  #save plot as img
-
-        msg_box_1 = QtWidgets.QMessageBox(self)
-        msg_box_1.setWindowTitle("Snapshot Saved")
-        msg_box_1.setText(f"<font color='white'>Snapshot saved as '{img_path}'.</font>")
-        msg_box_1.setIcon(QtWidgets.QMessageBox.Information)
-
-        msg_box_1.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        ok_button = msg_box_1.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK")  
-
-        ok_button.setStyleSheet("color: white; background-color: grey;")
-
-        msg_box_1.exec_()
-
+        exporter.export(img_path)  
+        Utils.show_info_message("Snapshot Saved")
 
     def export_report(self):
         mean, std, min_val, max_val, duration = self.calculate_statistics()
@@ -415,16 +402,13 @@ class InterpolationWindow(QWidget):
                 pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C') 
 
 
-        pdf.output('glue_report.pdf')
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save PDF File", "", "PDF Files (*.pdf);;All Files (*)", options=options)
+        
+        if file_name:
+            try:
+                pdf.output(file_name)
+                Utils.show_info_message("Report saved successfully!")
+            except Exception as e:
+                Utils.show_error_message(f"An error occurred: {e}")
 
-        msg_box = QtWidgets.QMessageBox(self)
-        msg_box.setWindowTitle("Report Exported")
-        msg_box.setText("<font color='white'>The report has been successfully exported as 'glue_report.pdf'.</font>")
-        msg_box.setIcon(QtWidgets.QMessageBox.Information)
-
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        ok_button = msg_box.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK") 
-        ok_button.setStyleSheet("color: white; background-color: grey;")
-
-        msg_box.exec_()
