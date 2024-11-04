@@ -17,7 +17,6 @@ class InterpolationWindow(QWidget):
         self.signal1 = signal1
         self.signal2 = signal2
         self.snapshot_count = 0 
-        self.report_count = 0
         self.first_sub_signal = None
         self.second_sub_signal = None
         #storing starting and ending points of selection
@@ -332,7 +331,6 @@ class InterpolationWindow(QWidget):
         Utils.show_info_message("Snapshot Saved")
 
     def export_report(self):
-        report_filename = f"report_{self.report_count}.pdf"
         mean, std, min_val, max_val, duration = self.calculate_statistics()
         
         pdf = FPDF()
@@ -405,13 +403,12 @@ class InterpolationWindow(QWidget):
 
 
         options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save PDF File", report_filename, "PDF Files (*.pdf);;All Files (*)", options=options)
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save PDF File", "", "PDF Files (*.pdf);;All Files (*)", options=options)
         
         if file_name:
             try:
                 pdf.output(file_name)
                 Utils.show_info_message("Report saved successfully!")
-                self.report_count += 1
             except Exception as e:
                 Utils.show_error_message(f"An error occurred: {e}")
 
