@@ -64,8 +64,6 @@ class SignalApp(QtWidgets.QWidget):
             self.on_signal_clicked_second_graph)
 
 
-
-
     def main_tab(self):
         main_tab = QtWidgets.QWidget()
 

@@ -51,9 +51,7 @@ class SignalPlotWidget():
         self.graph_layout.addSpacing(10)
 
         # buttons layout
-        self.controls_layout = QtWidgets.QVBoxLayout()
-
- 
+        self.controls_layout = QtWidgets.QVBoxLayout() 
         self.plot_widget = PlotWidget()
         self.plot_widget.setMenuEnabled(False)    # disable default context menu
         self.plot_widget.setMouseEnabled(x=True, y=True)
