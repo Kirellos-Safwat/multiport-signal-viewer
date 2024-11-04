@@ -24,6 +24,7 @@ class SignalPlotWidget():
         2: 50,   # x2 speed
         3: 25    # x4 speed
     }
+    toggle_link = lambda: None
 
     def __init__(self, signals, is_playing=False, speed=1, window_range=(0, 30), timer=None, name='', preserve_zoom=False):
         super().__init__()
@@ -210,8 +211,8 @@ class SignalPlotWidget():
             self.show_hide_checkbox.setText("Show")
 
 
-    def update_plot(self, user_interacting):
-        if self.is_playing and user_interacting:
+    def update_plot(self):
+        if self.is_playing and SignalPlotWidget.user_interacting:
             window_size = self.window_end - self.window_start  # how much is visible at once
             self.window_start = (self.window_start + 1) % (len(self.selected_signal.data) - window_size)  
             self.window_end = self.window_start + window_size
@@ -262,8 +263,7 @@ class SignalPlotWidget():
                 self.play_pause_button, "", "pause")
             if self.timer is None:
                 self.timer = pg.QtCore.QTimer()
-                self.timer.timeout.connect(lambda:
-                                            (self.update_plot(SignalPlotWidget.user_interacting)))
+                self.timer.timeout.connect(self.update_plot)
                 self.timer.start(100) 
             if SignalPlotWidget.is_linked and not self.other.is_playing:
                 self.other.play_pause_signal()
@@ -437,8 +437,12 @@ class SignalPlotWidget():
     
     def delete_signal(self):
         if self.signals:
-            if len(self.signals) == 1 and self.is_playing:
-                self.play_pause_signal()
+            if len(self.signals) == 1:
+                if SignalPlotWidget.is_linked:
+                    SignalPlotWidget.toggle_link()
+                if self.is_playing:
+                    self.play_pause_signal()
+                
             self.signals.remove(self.selected_signal)
             self.update_graph()
 

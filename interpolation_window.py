@@ -5,7 +5,7 @@ import os
 from pyqtgraph.exporters import ImageExporter
 from fpdf import FPDF
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QLabel, QHBoxLayout, QFileDialog, QMessageBox
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt
 from interpolation_statistics_window import InterpolationStatisticsWindow
@@ -325,23 +325,10 @@ class InterpolationWindow(QWidget):
 
     def take_snapshot(self):
         self.snapshot_count += 1  # snapshot counter
-        img_path = f'snapshot{self.snapshot_count}.png'  # create filename for snapshot
+        img_path = f'snapshot{self.snapshot_count}.png' 
         exporter = ImageExporter(self.plot_widget.getPlotItem())
-        exporter.export(img_path)  #save plot as img
-
-        msg_box_1 = QtWidgets.QMessageBox(self)
-        msg_box_1.setWindowTitle("Snapshot Saved")
-        msg_box_1.setText(f"<font color='white'>Snapshot saved as '{img_path}'.</font>")
-        msg_box_1.setIcon(QtWidgets.QMessageBox.Information)
-
-        msg_box_1.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        ok_button = msg_box_1.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK")  
-
-        ok_button.setStyleSheet("color: white; background-color: grey;")
-
-        msg_box_1.exec_()
-
+        exporter.export(img_path)  
+        Utils.show_info_message("Snapshot Saved")
 
     def export_report(self):
         mean, std, min_val, max_val, duration = self.calculate_statistics()
@@ -415,16 +402,13 @@ class InterpolationWindow(QWidget):
                 pdf.cell(0, 10, f'Page {pdf.page_no()}', 0, 0, 'C') 
 
 
-        pdf.output('glue_report.pdf')
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save PDF File", "", "PDF Files (*.pdf);;All Files (*)", options=options)
+        
+        if file_name:
+            try:
+                pdf.output(file_name)
+                Utils.show_info_message("Report saved successfully!")
+            except Exception as e:
+                Utils.show_error_message(f"An error occurred: {e}")
 
-        msg_box = QtWidgets.QMessageBox(self)
-        msg_box.setWindowTitle("Report Exported")
-        msg_box.setText("<font color='white'>The report has been successfully exported as 'glue_report.pdf'.</font>")
-        msg_box.setIcon(QtWidgets.QMessageBox.Information)
-
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        ok_button = msg_box.button(QtWidgets.QMessageBox.Ok)
-        ok_button.setText("OK") 
-        ok_button.setStyleSheet("color: white; background-color: grey;")
-
-        msg_box.exec_()
