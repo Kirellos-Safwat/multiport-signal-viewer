@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from signal import Signal
 from signal_plot_widget import SignalPlotWidget
 from polar import PolarPlotWidget
-from realtime_plot import RealTimePlot
+# from realtime_plot import RealTimePlot
 import pandas as pd
 
 
@@ -127,11 +127,11 @@ class SignalApp(QtWidgets.QWidget):
         button_layout.addSpacing(200)
         button_layout.addStretch()
 
-        self.polar_play_button = Utils.create_button("" , self.polar_plot_widget.play_animation, "play")
-        button_layout.addWidget(self.polar_play_button)
+        # self.polar_play_button = Utils.create_button("" , self.polar_plot_widget.play_animation, "play")
+        # button_layout.addWidget(self.polar_play_button)
 
-        self.polar_pause_button = Utils.create_button("", self.polar_plot_widget.pause_animation, "pause")
-        button_layout.addWidget(self.polar_pause_button)
+        # self.polar_pause_button = Utils.create_button("", self.polar_plot_widget.pause_animation, "pause")
+        # button_layout.addWidget(self.polar_pause_button)
 
         button_layout.addSpacing(200)
         button_layout.addStretch()

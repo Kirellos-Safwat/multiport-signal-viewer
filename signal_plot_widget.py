@@ -216,13 +216,13 @@ class SignalPlotWidget():
 
 
     def link_viewports(self):
-        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.connect(SignalPlotWidget.graph_instances[0].sync_range)
-        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.connect(SignalPlotWidget.graph_instances[1].sync_range)
+        self.plot_widget.sigRangeChanged.connect(self.sync_range)
+        self.other.plot_widget.sigRangeChanged.connect(self.other.sync_range)
         SignalPlotWidget.sync_range(self)
 
     def unlink_viewports(self):
-        SignalPlotWidget.graph_instances[0].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.graph_instances[0].sync_range)
-        SignalPlotWidget.graph_instances[1].plot_widget.sigRangeChanged.disconnect(SignalPlotWidget.graph_instances[1].sync_range)
+        self.plot_widget.sigRangeChanged.disconnect(self.sync_range)
+        self.other.plot_widget.sigRangeChanged.disconnect(self.other.sync_range)
 
     def sync_range(self):
         if SignalPlotWidget.syncing:
