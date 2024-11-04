@@ -28,6 +28,9 @@ class PolarPlotWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.canvas)
 
+        self.canvas.ax_polar.set_title("Sequential Polar Plot of ISS Latitude and Longitude", pad=10, color='white')
+        self.canvas.ax_polar.tick_params(colors="#a6a4a1")  
+
         # Speed slider
         self.speed_slider = QtWidgets.QSlider(Qt.Horizontal)
         self.speed_slider.setRange(1, 20)  # Set range for speed factor (1 is slowest, 20 is fastest)
@@ -53,7 +56,6 @@ class PolarPlotWidget(QtWidgets.QWidget):
 
         self.canvas.ax_polar.clear()
         self.canvas.ax_polar.plot(angle, radius, marker='o', linestyle='-', color='blue')
-        self.canvas.ax_polar.set_title("Sequential Polar Plot of ISS Latitude and Longitude", pad=10)
 
         self.canvas.draw()
         self.current_index += 1
